@@ -24,7 +24,6 @@
     <Folder Include="Controllers\" />
     <Folder Include="DTOs\Responses\" />
     <Folder Include="DTOs\Requests\" />
-    <Folder Include="Entities\" />
     <Folder Include="Middleware\" />
     <Folder Include="Config\" />
     <Folder Include="Repositories\Interfaces\" />

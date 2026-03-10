@@ -17,16 +17,32 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost("/auth/register")]
-        public async Task<ActionResult<User>> Register(RegisterRequestDto registerRequest)
+        public async Task<IActionResult> Register(RegisterRequestDto registerRequest)
         {
             var user = new User
             {
-                UserName = registerRequest.UserName,
+                UserName = registerRequest.UserName != null ? registerRequest.UserName : registerRequest.Email,
                 Email = registerRequest.Email,
                 PasswordHash = registerRequest.Password
             };
             await _authService.RegisterUser(user);
             return Created("", "User registered successfully");
+        }
+
+        [HttpPost("/auth/login")]
+        public async Task<IActionResult> Login(LoginRequestDto loginRequest)
+        {
+            var user = new User
+            {
+                Email = loginRequest.Email,
+                PasswordHash = loginRequest.Password
+            };
+            bool authenticated = await _authService.AuthenticateUser(user);
+            if (!authenticated)
+            {
+                return Unauthorized();
+            }
+            return Ok();
         }
     }
 }

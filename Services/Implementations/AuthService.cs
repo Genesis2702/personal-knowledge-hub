@@ -38,7 +38,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new Exception("Email is invalid");
             }
-            bool exist = await _authRepository.IsEmailExist(user.Email);
+            bool exist = await _authRepository.IsEmailExistAsync(user.Email);
             if (exist == true)
             {
                 throw new Exception("Email already existed");
@@ -46,6 +46,16 @@ namespace PersonalKnowledgeHub.Services.Implementations
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             user.CreatedAt = DateOnly.FromDateTime(DateTime.UtcNow);
             await _authRepository.AddUserAsync(user);
+        }
+
+        public async Task<bool> AuthenticateUser(User user)
+        {
+            var account = await _authRepository.GetUserAsync(user.Email);
+            if (account == null || !BCrypt.Net.BCrypt.Verify(user.PasswordHash, account.PasswordHash))
+            {
+                return false;
+            }
+            return true;
         }
     }
 }

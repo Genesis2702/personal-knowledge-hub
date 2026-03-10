@@ -14,7 +14,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             _dbContext = dbSet;
         }
 
-        public async Task<bool> IsEmailExist(string email)
+        public async Task<bool> IsEmailExistAsync(string email)
         {
             return await _dbContext.Users.AnyAsync(user => user.Email == email);
         }
@@ -23,6 +23,11 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
         {
             await _dbContext.Users.AddAsync(user);
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<User?> GetUserAsync(string email)
+        {
+            return await _dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
         }
     }
 }

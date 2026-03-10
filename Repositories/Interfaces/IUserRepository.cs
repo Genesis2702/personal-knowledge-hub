@@ -2,7 +2,7 @@
 
 namespace PersonalKnowledgeHub.Repositories.Interfaces
 {
-    public interface IAuthRepository
+    public interface IUserRepository
     {
         public Task<bool> IsEmailExist(string email);
         public Task AddUserAsync(User user);

@@ -6,9 +6,9 @@ namespace PersonalKnowledgeHub.Services.Implementations
 {
     public class AuthService : IAuthService
     {
-        private readonly IAuthRepository _authRepository;
+        private readonly IUserRepository _authRepository;
 
-        public AuthService(IAuthRepository authRepository)
+        public AuthService(IUserRepository authRepository)
         {
             _authRepository = authRepository;
         }
@@ -20,20 +20,19 @@ namespace PersonalKnowledgeHub.Services.Implementations
             string local = email.Substring(0, email.IndexOf("@"));
             for (int i = 0; i < local.Length; i++)
             {
-                if (!(local[i] >= 'a' && local[i] <= 'z') && !(local[i] >= 'A' && local[i] <= 'Z') && !(specialChar.Contains(local[i])))
+                if (!(local[i] >= 'a' && local[i] <= 'z') && !(specialChar.Contains(local[i])))
                 {
                     return false;
                 }
             }
             string domain = email.Substring(email.IndexOf("@") + 1);
-            string domainName = domain.Substring(0, domain.IndexOf("."));
-            string topLevelDomain = domain.Substring(domain.IndexOf(".") + 1);
-            if (domainName != "gmail" && topLevelDomain != "com") return false;
+            if (domain != "gmail.com") return false;
             return true;
         }
 
         public async Task RegisterUser(User user)
         {
+            user.Email = user.Email.Trim().ToLower();
             bool valid = IsEmailValid(user.Email);
             if (!valid)
             {
@@ -44,8 +43,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new Exception("Email already existed");
             }
-            string hashPassword = BCrypt.Net.BCrypt.HashPassword(user.Password);
-            user.Password = hashPassword;
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             user.CreatedAt = DateOnly.FromDateTime(DateTime.UtcNow);
             await _authRepository.AddUserAsync(user);
         }

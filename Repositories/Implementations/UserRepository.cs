@@ -5,11 +5,11 @@ using PersonalKnowledgeHub.Repositories.Interfaces;
 
 namespace PersonalKnowledgeHub.Repositories.Implementations
 {
-    public class AuthRepository : IAuthRepository
+    public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _dbContext;
 
-        public AuthRepository(AppDbContext dbSet)
+        public UserRepository(AppDbContext dbSet)
         {
             _dbContext = dbSet;
         }

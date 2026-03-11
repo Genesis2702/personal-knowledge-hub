@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PersonalKnowledgeHub.DTOs.Requests;
-using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Services.Interfaces;
 
 namespace PersonalKnowledgeHub.Controllers
 {
     [ApiController]
-    [Route("controller")]
+    [Route("[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -16,28 +15,17 @@ namespace PersonalKnowledgeHub.Controllers
             _authService = authService;
         }
 
-        [HttpPost("/auth/register")]
+        [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequestDto registerRequest)
         {
-            var user = new User
-            {
-                UserName = registerRequest.UserName != null ? registerRequest.UserName : registerRequest.Email,
-                Email = registerRequest.Email,
-                PasswordHash = registerRequest.Password
-            };
-            await _authService.RegisterUser(user);
+            await _authService.RegisterUser(registerRequest);
             return Created("", "User registered successfully");
         }
 
-        [HttpPost("/auth/login")]
+        [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequestDto loginRequest)
         {
-            var user = new User
-            {
-                Email = loginRequest.Email,
-                PasswordHash = loginRequest.Password
-            };
-            bool authenticated = await _authService.AuthenticateUser(user);
+            bool authenticated = await _authService.AuthenticateUser(loginRequest);
             if (!authenticated)
             {
                 return Unauthorized();

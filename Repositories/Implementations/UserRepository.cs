@@ -9,9 +9,9 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
     {
         private readonly AppDbContext _dbContext;
 
-        public UserRepository(AppDbContext dbSet)
+        public UserRepository(AppDbContext dbContext)
         {
-            _dbContext = dbSet;
+            _dbContext = dbContext;
         }
 
         public async Task<bool> IsEmailExistAsync(string email)
@@ -27,7 +27,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
 
         public async Task<User?> GetUserAsync(string email)
         {
-            return await _dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
+            return await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
     }
 }

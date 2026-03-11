@@ -1,4 +1,5 @@
-﻿using PersonalKnowledgeHub.Entities;
+﻿using PersonalKnowledgeHub.DTOs.Requests;
+using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
 
@@ -30,8 +31,14 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return true;
         }
 
-        public async Task RegisterUser(User user)
+        public async Task RegisterUser(RegisterRequestDto registerRequest)
         {
+            User user = new User
+            {
+                UserName = registerRequest.UserName ?? registerRequest.Email,
+                Email = registerRequest.Email,
+                PasswordHash = registerRequest.Password
+            };
             user.Email = user.Email.Trim().ToLower();
             bool valid = IsEmailValid(user.Email);
             if (!valid)
@@ -44,12 +51,18 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new Exception("Email already existed");
             }
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
-            user.CreatedAt = DateOnly.FromDateTime(DateTime.UtcNow);
+            user.CreatedAt = DateTime.UtcNow;
             await _authRepository.AddUserAsync(user);
         }
 
-        public async Task<bool> AuthenticateUser(User user)
+        public async Task<bool> AuthenticateUser(LoginRequestDto loginRequest)
         {
+            User user = new User
+            {
+                Email = loginRequest.Email,
+                PasswordHash = loginRequest.Password
+            };
+            user.Email = user.Email.Trim().ToLower();
             var account = await _authRepository.GetUserAsync(user.Email);
             if (account == null || !BCrypt.Net.BCrypt.Verify(user.PasswordHash, account.PasswordHash))
             {

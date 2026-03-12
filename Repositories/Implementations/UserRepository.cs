@@ -27,7 +27,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
 
         public async Task<User?> GetUserAsync(string email)
         {
-            return await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+            return await _dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
         }
     }
 }

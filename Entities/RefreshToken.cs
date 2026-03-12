@@ -7,7 +7,7 @@
         public DateTime CreatedAt { get; set; }
         public DateTime ExpiresAt { get; set; }
         public bool Revoked { get; set; }
-        public DateTime RevokedAt { get; set; }
+        public DateTime? RevokedAt { get; set; }
         public int UserId { get; set; }
         public required User User { get; set; }
     }

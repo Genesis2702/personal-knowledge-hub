@@ -12,16 +12,19 @@ namespace PersonalKnowledgeHub.Services.Implementations
     public class TokenService : ITokenService
     {
         private readonly ITokenRepository _tokenRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IConfiguration _configuration;
 
-        public TokenService(ITokenRepository tokenRepository, IConfiguration configuration)
+        public TokenService(ITokenRepository tokenRepository, IUserRepository userRepository, IConfiguration configuration)
         {
             _tokenRepository = tokenRepository;
+            _userRepository = userRepository;
             _configuration = configuration;
         }
 
-        public RefreshToken GenerateRefreshToken(User user)
+        public async Task<RefreshToken> GenerateRefreshToken(int userId)
         {
+            User user = (await _userRepository.GetUserByIdAsync(userId))!;
             RefreshToken refreshToken = new RefreshToken
             {
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
@@ -35,8 +38,9 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return refreshToken;
         }
 
-        public string GenerateAccessToken(User user)
+        public async Task<string> GenerateAccessToken(int userId)
         {
+            User user = (await _userRepository.GetUserByIdAsync(userId))!;
             var handler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!);
             var descriptor = new SecurityTokenDescriptor

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PersonalKnowledgeHub.DTOs.Requests;
+using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Services.Interfaces;
 
 namespace PersonalKnowledgeHub.Controllers
@@ -16,21 +17,17 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterRequestDto registerRequest)
+        public async Task<ActionResult<AuthResponseDto>> Register(RegisterRequestDto registerRequest)
         {
-            await _authService.RegisterUser(registerRequest);
-            return Created("", "User registered successfully");
+            AuthResponseDto authResponse = await _authService.RegisterUser(registerRequest);
+            return Created("", authResponse);
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginRequestDto loginRequest)
+        public async Task<ActionResult<AuthResponseDto>> Login(LoginRequestDto loginRequest)
         {
-            bool authenticated = await _authService.AuthenticateUser(loginRequest);
-            if (!authenticated)
-            {
-                return Unauthorized();
-            }
-            return Ok();
+            AuthResponseDto authResponse = await _authService.AuthenticateUser(loginRequest);
+            return Ok(authResponse);
         }
     }
 }

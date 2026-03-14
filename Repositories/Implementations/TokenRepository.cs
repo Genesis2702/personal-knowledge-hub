@@ -31,8 +31,8 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
 
         public async Task CleanUpRefreshTokenAsync()
         {
-            var expiredTime = DateTime.UtcNow.AddDays(-30);
-            await _dbContext.RefreshTokens.Where(rt => rt.Revoked && rt.RevokedAt != null && rt.RevokedAt < expiredTime).ExecuteDeleteAsync();
+            var revokedTime = DateTime.UtcNow.AddDays(-30);
+            await _dbContext.RefreshTokens.Where(rt => rt.Revoked && rt.RevokedAt != null && rt.RevokedAt < revokedTime).ExecuteDeleteAsync();
         }
     }
 }

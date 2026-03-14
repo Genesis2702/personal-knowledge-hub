@@ -19,13 +19,19 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.Users.AnyAsync(user => user.Email == email);
         }
 
-        public async Task AddUserAsync(User user)
+        public async Task<User> AddUserAsync(User user)
         {
             await _dbContext.Users.AddAsync(user);
             await _dbContext.SaveChangesAsync();
+            return user;
         }
 
-        public async Task<User?> GetUserAsync(string email)
+        public async Task<User?> GetUserByIdAsync(int userId)
+        {
+            return await _dbContext.Users.SingleOrDefaultAsync(user => user.Id == userId);
+        }
+
+        public async Task<User?> GetUserByEmailAsync(string email)
         {
             return await _dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
         }

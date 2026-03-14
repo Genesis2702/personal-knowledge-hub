@@ -19,14 +19,12 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == token);
         }
 
-        public async Task<bool> RevokeRefreshTokenAsync(string token)
+        public async Task RevokeRefreshTokenAsync(string token)
         {
-            RefreshToken? refreshToken = await _dbContext.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == token);
-            if (refreshToken == null) { return false; }
+            RefreshToken refreshToken = (await _dbContext.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == token))!;
             refreshToken.Revoked = true;
             refreshToken.RevokedAt = DateTime.UtcNow;
             await _dbContext.SaveChangesAsync();
-            return true;
         }
 
         public async Task CleanUpRefreshTokenAsync()

@@ -29,5 +29,12 @@ namespace PersonalKnowledgeHub.Controllers
             AuthResponseDto authResponse = await _authService.AuthenticateUser(loginRequest);
             return Ok(authResponse);
         }
+
+        [HttpPost("refresh")]
+        public async Task<ActionResult<AuthResponseDto>> Refresh(RefreshRequestDto refreshRequest)
+        {
+            AuthResponseDto authResponse = await _authService.RefreshUser(refreshRequest);
+            return Ok(authResponse);
+        }
     }
 }

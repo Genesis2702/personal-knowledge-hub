@@ -27,6 +27,11 @@ namespace PersonalKnowledgeHub.Middleware
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync(ex.Message);
             }
+            catch (ResourceConflictException ex)
+            {
+                context.Response.StatusCode = 409;
+                await context.Response.WriteAsync(ex.Message);
+            }
         }
     }
 }

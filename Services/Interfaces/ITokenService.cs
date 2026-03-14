@@ -6,7 +6,7 @@ namespace PersonalKnowledgeHub.Services.Interfaces
     {
         public Task<RefreshToken> GenerateRefreshToken(int userId);
         public Task<string> GenerateAccessToken(int userId);
-        public Task<bool> RevokeRefreshToken(string token);
-        public Task<bool> ValidateRefreshToken(string token);
+        public Task RevokeRefreshToken(string token);
+        public Task<RefreshToken> ValidateRefreshToken(string token);
     }
 }

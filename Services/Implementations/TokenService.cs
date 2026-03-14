@@ -1,5 +1,6 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using PersonalKnowledgeHub.Entities;
+using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
@@ -59,18 +60,18 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return handler.WriteToken(token);
         }
 
-        public async Task<bool> RevokeRefreshToken(string token)
+        public async Task RevokeRefreshToken(string token)
         {
-            return await _tokenRepository.RevokeRefreshTokenAsync(token);
+            await _tokenRepository.RevokeRefreshTokenAsync(token);
         }
 
-        public async Task<bool> ValidateRefreshToken(string token)
+        public async Task<RefreshToken> ValidateRefreshToken(string token)
         {
             var refreshToken = await _tokenRepository.GetRefreshTokenAsync(token);
-            if (refreshToken == null) { return false; }
-            if (refreshToken.Revoked == true) { return false; }
-            if (refreshToken.ExpiresAt < DateTime.UtcNow) { return false; }
-            return true;
+            if (refreshToken == null) { throw new UnauthorizedException("Refresh token not found"); }
+            if (refreshToken.Revoked == true) { throw new UnauthorizedException("Refresh token is revoked"); }
+            if (refreshToken.ExpiresAt < DateTime.UtcNow) { throw new UnauthorizedException("Refresh token is expired"); }
+            return refreshToken;
         }
     }
 }

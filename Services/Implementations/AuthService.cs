@@ -52,7 +52,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             bool exist = await _authRepository.IsEmailExistAsync(user.Email);
             if (exist == true)
             {
-                throw new InvalidCredentialException("Email already existed");
+                throw new ResourceConflictException("Email already existed");
             }
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             user.CreatedAt = DateTime.UtcNow;
@@ -88,6 +88,19 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 RefreshToken = refreshToken.Token,
                 AccessToken = await _tokenService.GenerateAccessToken(loggedInUser.Id)
+            };
+            return authResponse;
+        }
+
+        public async Task<AuthResponseDto> RefreshUser(RefreshRequestDto refreshRequest)
+        {
+            RefreshToken refreshToken = await _tokenService.ValidateRefreshToken(refreshRequest.RefreshToken);
+            await _tokenService.RevokeRefreshToken(refreshToken.Token);
+            RefreshToken newRefreshToken = await _tokenService.GenerateRefreshToken(refreshToken.UserId);
+            AuthResponseDto authResponse = new AuthResponseDto
+            {
+                RefreshToken = newRefreshToken.Token,
+                AccessToken = await _tokenService.GenerateAccessToken(refreshToken.UserId)
             };
             return authResponse;
         }

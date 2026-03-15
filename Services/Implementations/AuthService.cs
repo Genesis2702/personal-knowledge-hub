@@ -25,7 +25,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             string local = email.Substring(0, email.IndexOf("@"));
             for (int i = 0; i < local.Length; i++)
             {
-                if (!(local[i] >= 'a' && local[i] <= 'z') && !(specialChar.Contains(local[i])))
+                if (!(local[i] >= 'a' && local[i] <= 'z') && !(local[i] >= '0' && local[i] <= '9') && !(specialChar.Contains(local[i])))
                 {
                     return false;
                 }

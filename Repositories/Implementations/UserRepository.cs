@@ -33,7 +33,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
-            return await _dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
+            return await _dbContext.Users.SingleOrDefaultAsync(user => user.Email == email);
         }
     }
 }

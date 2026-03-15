@@ -68,9 +68,16 @@ namespace PersonalKnowledgeHub.Services.Implementations
         public async Task<RefreshToken> ValidateRefreshToken(string token)
         {
             var refreshToken = await _tokenRepository.GetRefreshTokenAsync(token);
-            if (refreshToken == null) { throw new UnauthorizedException("Refresh token not found"); }
+            if (refreshToken == null) { throw new NotFoundException("Refresh token not found"); }
             if (refreshToken.Revoked == true) { throw new UnauthorizedException("Refresh token is revoked"); }
             if (refreshToken.ExpiresAt < DateTime.UtcNow) { throw new UnauthorizedException("Refresh token is expired"); }
+            return refreshToken;
+        }
+
+        public async Task<RefreshToken> GetRefreshToken(string token)
+        {
+            RefreshToken? refreshToken = await _tokenRepository.GetRefreshTokenAsync(token);
+            if (refreshToken == null) { throw new NotFoundException("Refresh token not found"); }
             return refreshToken;
         }
     }

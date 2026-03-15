@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Services.Interfaces;
+using System.Security.Claims;
 
 namespace PersonalKnowledgeHub.Controllers
 {
@@ -35,6 +37,14 @@ namespace PersonalKnowledgeHub.Controllers
         {
             AuthResponseDto authResponse = await _authService.RefreshUser(refreshRequest);
             return Ok(authResponse);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Logout(LogoutRequestDto logoutRequest)
+        {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _authService.LogoutUser(logoutRequest, userId);
+            return Ok();
         }
     }
 }

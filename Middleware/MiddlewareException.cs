@@ -17,7 +17,7 @@ namespace PersonalKnowledgeHub.Middleware
             {
                 await _next(context);
             }
-            catch (InvalidCredentialException ex)
+            catch (ValidationException ex)
             {
                 context.Response.StatusCode = 400;
                 await context.Response.WriteAsync(ex.Message);
@@ -27,7 +27,17 @@ namespace PersonalKnowledgeHub.Middleware
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync(ex.Message);
             }
-            catch (ResourceConflictException ex)
+            catch (ForbiddenException ex)
+            {
+                context.Response.StatusCode = 403;
+                await context.Response.WriteAsync(ex.Message);
+            }
+            catch (NotFoundException ex)
+            {
+                context.Response.StatusCode = 404;
+                await context.Response.WriteAsync(ex.Message);
+            }
+            catch (ConflictException ex)
             {
                 context.Response.StatusCode = 409;
                 await context.Response.WriteAsync(ex.Message);

@@ -9,5 +9,6 @@ namespace PersonalKnowledgeHub.Services.Interfaces
         public Task<AuthResponseDto> RegisterUser(RegisterRequestDto registerRequest);
         public Task<AuthResponseDto> AuthenticateUser(LoginRequestDto loginRequest);
         public Task<AuthResponseDto> RefreshUser(RefreshRequestDto refreshRequest);
+        public Task LogoutUser(LogoutRequestDto logoutRequest, int userId);
     }
 }

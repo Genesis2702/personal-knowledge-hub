@@ -47,12 +47,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
             bool valid = IsEmailValid(user.Email);
             if (!valid)
             {
-                throw new InvalidCredentialException("Email is invalid");
+                throw new ValidationException("Email is invalid");
             }
             bool exist = await _authRepository.IsEmailExistAsync(user.Email);
             if (exist == true)
             {
-                throw new ResourceConflictException("Email already existed");
+                throw new ConflictException("Email already existed");
             }
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             user.CreatedAt = DateTime.UtcNow;
@@ -103,6 +103,16 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 AccessToken = await _tokenService.GenerateAccessToken(refreshToken.UserId)
             };
             return authResponse;
+        }
+
+        public async Task LogoutUser(LogoutRequestDto logoutRequest, int userId)
+        {
+            RefreshToken refreshToken = await _tokenService.GetRefreshToken(logoutRequest.RefreshToken);
+            if (refreshToken.UserId != userId)
+            {
+                throw new ForbiddenException("Refresh token belongs to another user");
+            }
+            await _tokenService.RevokeRefreshToken(logoutRequest.RefreshToken);
         }
     }
 }

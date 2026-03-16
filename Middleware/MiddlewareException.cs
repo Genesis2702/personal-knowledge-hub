@@ -42,6 +42,11 @@ namespace PersonalKnowledgeHub.Middleware
                 context.Response.StatusCode = 409;
                 await context.Response.WriteAsync(ex.Message);
             }
+            catch (Exception ex)
+            {
+                context.Response.StatusCode = 500;
+                await context.Response.WriteAsync("An unexpected error occurred.");
+            }
         }
     }
 }

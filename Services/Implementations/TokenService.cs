@@ -36,7 +36,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 UserId = user.Id,
                 User = user
             };
-            return refreshToken;
+            return await _tokenRepository.AddRefreshTokenAsync(refreshToken);
         }
 
         public async Task<string> GenerateAccessToken(int userId)
@@ -52,6 +52,8 @@ namespace PersonalKnowledgeHub.Services.Implementations
                     new Claim(ClaimTypes.Email, user.Email)
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(15),
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"],
                 SigningCredentials = new SigningCredentials(
                     new SymmetricSecurityKey(key),
                     SecurityAlgorithms.HmacSha256)

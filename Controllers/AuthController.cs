@@ -40,6 +40,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [Authorize]
+        [HttpPost("logout")]
         public async Task<IActionResult> Logout(LogoutRequestDto logoutRequest)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

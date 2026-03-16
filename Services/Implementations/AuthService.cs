@@ -10,11 +10,13 @@ namespace PersonalKnowledgeHub.Services.Implementations
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _authRepository;
+        private readonly ITokenRepository _tokenRepository;
         private readonly ITokenService _tokenService;
 
-        public AuthService(IUserRepository authRepository, ITokenService tokenService)
+        public AuthService(IUserRepository authRepository, ITokenRepository tokenRepository, ITokenService tokenService)
         {
             _authRepository = authRepository;
+            _tokenRepository = tokenRepository;
             _tokenService = tokenService;
         }
 
@@ -89,6 +91,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 RefreshToken = refreshToken.Token,
                 AccessToken = await _tokenService.GenerateAccessToken(loggedInUser.Id)
             };
+            await _tokenRepository.CleanUpRefreshTokenAsync();
             return authResponse;
         }
 

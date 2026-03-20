@@ -9,20 +9,32 @@ namespace PersonalKnowledgeHub.Data
         public DbSet<User> Users { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
+        public DbSet<Resource> Resources { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<RefreshToken>().HasKey(rt => rt.Id);
+            modelBuilder.Entity<RefreshToken>().HasKey(refreshToken => refreshToken.Id);
             modelBuilder.Entity<RefreshToken>()
-                .HasOne(rt => rt.User)
-                .WithMany(rt => rt.RefreshTokens)
-                .HasForeignKey(rt => rt.UserId)
+                .HasOne(refreshToken => refreshToken.User)
+                .WithMany(user => user.RefreshTokens)
+                .HasForeignKey(refreshToken => refreshToken.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<RefreshToken>()
-                .Property(rt => rt.Token)
+                .Property(refreshToken => refreshToken.Token)
                 .IsRequired();
             modelBuilder.Entity<RefreshToken>()
-                .HasIndex(rt => rt.Token)
+                .HasIndex(refreshToken => refreshToken.Token)
                 .IsUnique();
+
+            modelBuilder.Entity<Resource>().HasKey(resource => resource.Id);
+            modelBuilder.Entity<Resource>()
+                .HasOne(resource => resource.User)
+                .WithMany(user => user.Resources)
+                .HasForeignKey(resource => resource.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Resource>()
+                .Property(resource => resource.Type)
+                .HasConversion<String>();
         }
     }
 }

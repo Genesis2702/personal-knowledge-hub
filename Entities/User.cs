@@ -8,5 +8,6 @@
         public required string PasswordHash { get; set; }
         public DateTime CreatedAt { get; set; }
         public ICollection<RefreshToken>? RefreshTokens { get; set; } = new List<RefreshToken>();
+        public ICollection<Resource>? Resources { get; set; }
     }
 }

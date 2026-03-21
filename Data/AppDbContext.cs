@@ -20,9 +20,6 @@ namespace PersonalKnowledgeHub.Data
                 .HasForeignKey(refreshToken => refreshToken.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<RefreshToken>()
-                .Property(refreshToken => refreshToken.Token)
-                .IsRequired();
-            modelBuilder.Entity<RefreshToken>()
                 .HasIndex(refreshToken => refreshToken.Token)
                 .IsUnique();
 
@@ -35,6 +32,9 @@ namespace PersonalKnowledgeHub.Data
             modelBuilder.Entity<Resource>()
                 .Property(resource => resource.Type)
                 .HasConversion<String>();
+            modelBuilder.Entity<Resource>()
+                .HasIndex(resource => new { resource.UserId, resource.Title })
+                .IsUnique();
         }
     }
 }

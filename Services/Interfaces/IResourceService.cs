@@ -1,4 +1,5 @@
-﻿using PersonalKnowledgeHub.Entities;
+﻿using PersonalKnowledgeHub.DTOs.Requests;
+using PersonalKnowledgeHub.Entities;
 
 namespace PersonalKnowledgeHub.Services.Interfaces
 {
@@ -7,6 +8,6 @@ namespace PersonalKnowledgeHub.Services.Interfaces
         public Task<List<Resource>> GetResources(int userId);
         public Task<Resource> GetResourceById(int resourceId, int userId);
         public Task DeleteResourceById(int resourceId, int userId);
-        public Task<Resource> AddResource(Resource resource);
+        public Task<Resource> AddResource(ResourceRequestDto resourceRequest, int userId);
     }
 }

@@ -3,12 +3,12 @@
     public class Resource
     {
         public int Id { get; set; }
-        public required String Title { get; set; }
-        public String? Url { get; set; }
-        public String? Description { get; set; }
-        public ResourceType Type { get; set; }
+        public required string Title { get; set; }
+        public string? Url { get; set; }
+        public string? Description { get; set; }
+        public required ResourceType ResourceType { get; set; }
         public required int UserId { get; set; }
-        public required User User { get; set; }
+        public User? User { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 

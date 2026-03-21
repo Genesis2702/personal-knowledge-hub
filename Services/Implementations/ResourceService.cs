@@ -1,4 +1,5 @@
-﻿using PersonalKnowledgeHub.Entities;
+﻿using PersonalKnowledgeHub.DTOs.Requests;
+using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
@@ -47,12 +48,21 @@ namespace PersonalKnowledgeHub.Services.Implementations
             await _resourceRepository.DeleteResourceAsync(resource);
         }
 
-        public async Task<Resource> AddResource(Resource resource)
+        public async Task<Resource> AddResource(ResourceRequestDto resourceRequest, int userId)
         {
-            if (await _resourceRepository.IsTitleExistAsync(resource.Title, resource.UserId))
+            if (await _resourceRepository.IsTitleExistAsync(resourceRequest.Title, userId))
             {
                 throw new ConflictException("Title already existed");
             }
+            Resource resource = new Resource
+            {
+                Title = resourceRequest.Title,
+                Url = resourceRequest.Url,
+                Description = resourceRequest.Description,
+                ResourceType = resourceRequest.ResourceType,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow
+            };
             return await _resourceRepository.AddResourceAsync(resource);
         }
     }

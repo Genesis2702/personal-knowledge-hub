@@ -31,7 +31,7 @@ namespace PersonalKnowledgeHub.Data
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Resource>()
                 .Property(resource => resource.Type)
-                .HasConversion<String>();
+                .HasConversion<string>();
             modelBuilder.Entity<Resource>()
                 .HasIndex(resource => new { resource.UserId, resource.Title })
                 .IsUnique();

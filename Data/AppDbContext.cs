@@ -30,7 +30,7 @@ namespace PersonalKnowledgeHub.Data
                 .HasForeignKey(resource => resource.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Resource>()
-                .Property(resource => resource.Type)
+                .Property(resource => resource.ResourceType)
                 .HasConversion<string>();
             modelBuilder.Entity<Resource>()
                 .HasIndex(resource => new { resource.UserId, resource.Title })

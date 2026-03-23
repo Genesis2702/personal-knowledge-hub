@@ -25,7 +25,6 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<RefreshToken> GenerateRefreshToken(int userId)
         {
-            User user = (await _userRepository.GetUserByIdAsync(userId))!;
             RefreshToken refreshToken = new RefreshToken
             {
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
@@ -33,8 +32,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 ExpiresAt = DateTime.UtcNow.AddDays(30),
                 Revoked = false,
                 RevokedAt = null,
-                UserId = user.Id,
-                User = user
+                UserId = userId
             };
             return await _tokenRepository.AddRefreshTokenAsync(refreshToken);
         }

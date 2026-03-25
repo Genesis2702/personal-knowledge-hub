@@ -35,6 +35,16 @@ namespace PersonalKnowledgeHub.Data
             modelBuilder.Entity<Resource>()
                 .HasIndex(resource => new { resource.UserId, resource.Title })
                 .IsUnique();
+
+            modelBuilder.Entity<Tag>().HasKey(tag => tag.Id);
+            modelBuilder.Entity<Tag>()
+                .HasOne(tag => tag.User)
+                .WithMany(user => user.Tags)
+                .HasForeignKey(tag => tag.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Tag>()
+                .HasIndex(tag => new { tag.UserId, tag.Name })
+                .IsUnique();
         }
     }
 }

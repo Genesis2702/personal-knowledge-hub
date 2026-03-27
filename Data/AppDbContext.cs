@@ -8,8 +8,9 @@ namespace PersonalKnowledgeHub.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         public DbSet<User> Users { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
-
         public DbSet<Resource> Resources { get; set; }
+        public DbSet<Tag> Tags { get; set; }
+        public DbSet<ResourceTag> ResourceTags { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,6 +46,18 @@ namespace PersonalKnowledgeHub.Data
             modelBuilder.Entity<Tag>()
                 .HasIndex(tag => new { tag.UserId, tag.Name })
                 .IsUnique();
+
+            modelBuilder.Entity<ResourceTag>().HasKey(resourceTag => new { resourceTag.TagId, resourceTag.ResourceId });
+            modelBuilder.Entity<ResourceTag>()
+                .HasOne(resourceTag => resourceTag.Tag)
+                .WithMany(tag => tag.ResourceTags)
+                .HasForeignKey(resourceTag => resourceTag.TagId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<ResourceTag>()
+                .HasOne(resourceTag => resourceTag.Resource)
+                .WithMany(resource => resource.ResourceTags)
+                .HasForeignKey(resourceTag => resourceTag.ResourceId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

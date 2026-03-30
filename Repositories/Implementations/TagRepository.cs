@@ -26,9 +26,14 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.Tags.Where(tag => tag.UserId == userId).ToListAsync();
         }
 
-        public async Task UpdateTagAsync(string name, Tag tag)
+        public async Task<Tag?> GetTagByIdAsync(int tagId)
         {
-            tag.Name = name;
+            return await _dbContext.Tags.SingleOrDefaultAsync(tag => tag.Id == tagId);
+        }
+
+        public async Task UpdateTagAsync(string tagName, Tag tag)
+        {
+            tag.Name = tagName;
             await _dbContext.SaveChangesAsync();
         }
 
@@ -36,6 +41,11 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
         {
             _dbContext.Tags.Remove(tag);
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<bool> IsTagExistAsync(string tagName, int userId)
+        {
+            return await _dbContext.Tags.AnyAsync(tag => tag.Name == tagName && tag.UserId == userId);
         }
     }
 }

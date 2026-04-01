@@ -29,5 +29,10 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                 .ThenInclude(resourceTag => resourceTag.Tag)
                 .ToListAsync();
         }
+
+        public async Task<bool> IsResourceTagExistAsync(int tagId, int resourceId)
+        {
+            return await _dbContext.ResourceTags.AnyAsync(resourceTag => resourceTag.TagId == tagId && resourceTag.ResourceId == resourceId);
+        }
     }
 }

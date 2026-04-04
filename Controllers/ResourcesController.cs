@@ -10,6 +10,7 @@ namespace PersonalKnowledgeHub.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class ResourcesController : ControllerBase
     {
         private readonly IResourceService _resourceService;
@@ -19,7 +20,6 @@ namespace PersonalKnowledgeHub.Controllers
             _resourceService = resourceService;
         }
 
-        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<ResourceResponseDto>>> GetResources()
         {
@@ -36,7 +36,6 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(resourceResponses);
         }
 
-        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<ResourceResponseDto>> GetResourceById(int id)
         {
@@ -53,7 +52,6 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(resourceResponse);
         }
 
-        [Authorize]
         [HttpPost]
         public async Task<ActionResult<ResourceResponseDto>> AddResource(ResourceRequestDto resourceRequest)
         {
@@ -70,7 +68,6 @@ namespace PersonalKnowledgeHub.Controllers
             return CreatedAtAction(nameof(GetResourceById), new { id = resource.Id }, resourceResponse);
         }
 
-        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteResourceById(int id)
         {

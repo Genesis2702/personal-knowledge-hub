@@ -34,6 +34,20 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return await _tagRepository.GetTagsAsync(userId);
         }
 
+        public async Task<Tag> GetTagById(int tagId, int userId)
+        {
+            Tag? tag = await _tagRepository.GetTagByIdAsync(tagId);
+            if (tag == null)
+            {
+                throw new NotFoundException("Tag not found");
+            }
+            if (tag.UserId != userId)
+            {
+                throw new ForbiddenException("Tag found doesn't belong to current user");
+            }
+            return tag;
+        }
+
         public async Task UpdateTagById(TagRequestDto tagRequest, int tagId, int userId)
         {
             Tag? tag = await _tagRepository.GetTagByIdAsync(tagId);
@@ -45,7 +59,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("Tag found doesn't belong to current user");
             }
-            if (await _tagRepository.IsTagExistAsync(tagRequest.Name, tagId))
+            if (await _tagRepository.IsTagExistAsync(tagRequest.Name, userId))
             {
                 throw new ConflictException("Tag already existed");
             }

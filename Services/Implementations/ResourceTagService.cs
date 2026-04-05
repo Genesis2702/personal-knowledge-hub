@@ -18,11 +18,11 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _tagRepository = tagRepository;
         }
 
-        public async Task<ResourceTag> AddResourceTag(int tagId, int resourceId, int userId)
+        public async Task<Resource> AddResourceTag(int tagId, int resourceId, int userId)
         {
             if (await _resourceTagRepository.IsResourceTagExistAsync(tagId, resourceId))
             {
-                throw new ConflictException("Resource tag already exited");
+                throw new ConflictException("Resource tag already existed");
             }
             Tag? tag = await _tagRepository.GetTagByIdAsync(tagId);
             if (tag == null)
@@ -49,21 +49,22 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 Resource = resource,
                 ResourceId = resourceId
             };
-            return await _resourceTagRepository.AddResourceTagAsync(resourceTag);
+            await _resourceTagRepository.AddResourceTagAsync(resourceTag);
+            return resource;
         }
 
-        public async Task<List<Resource>> FilterResourceTag(int tagId, int userId)
+        public async Task DeleteResourceTag(int tagId, int resourceId, int userId)
         {
-            Tag? tag = await _tagRepository.GetTagByIdAsync(tagId);
-            if (tag == null)
+            ResourceTag? resourceTag = await _resourceTagRepository.GetResourceTagByIdAsync(tagId, resourceId);
+            if (resourceTag == null)
             {
-                throw new NotFoundException("Tag not found");
+                throw new NotFoundException("Resource's tag not found");
             }
-            if (tag.UserId != userId)
+            if (resourceTag.Tag.UserId != userId || resourceTag.Resource.UserId != userId)
             {
-                throw new ForbiddenException("Tag found doesn't belong to current user");
+                throw new ForbiddenException("Resource's tag found doesn't belong to current user");
             }
-            return await _resourceTagRepository.FilterResourceTagAsync(tagId, userId);
+            await _resourceTagRepository.DeleteResourceTagAsync(resourceTag);
         }
     }
 }

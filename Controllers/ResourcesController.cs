@@ -21,10 +21,11 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<ResourceResponseDto>>> GetResources()
+        public async Task<ActionResult<List<ResourceResponseDto>>> GetResources([FromQuery] int? tagId)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            List<Resource> resources = await _resourceService.GetResources(userId);
+            List<Resource> resources = await
+                (tagId.HasValue ? _resourceService.FilterResourcesByTag(tagId.Value, userId) : _resourceService.GetResources(userId));
             List<ResourceResponseDto> resourceResponses = resources.Select(resource => new ResourceResponseDto
             {
                 Title = resource.Title,
@@ -32,6 +33,7 @@ namespace PersonalKnowledgeHub.Controllers
                 Description = resource.Description,
                 ResourceType = resource.ResourceType,
                 CreatedAt = resource.CreatedAt,
+                Tags = resource.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
             }).ToList();
             return Ok(resourceResponses);
         }
@@ -48,6 +50,7 @@ namespace PersonalKnowledgeHub.Controllers
                 Description = resource.Description,
                 ResourceType = resource.ResourceType,
                 CreatedAt = resource.CreatedAt,
+                Tags = resource.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
             };
             return Ok(resourceResponse);
         }

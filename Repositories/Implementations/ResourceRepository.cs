@@ -16,12 +16,26 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
 
         public async Task<List<Resource>> GetResourcesAsync(int userId)
         {
-            return await _dbContext.Resources.AsNoTracking().Where(resource => resource.UserId == userId).ToListAsync();
+            return await _dbContext.Resources.AsNoTracking()
+                .Where(resource => resource.UserId == userId)
+                .Include(resource => resource.ResourceTags)
+                .ThenInclude(resourceTag => resourceTag.Tag)
+                .ToListAsync();
         }
 
         public async Task<Resource?> GetResourceByIdAsync(int resourceId)
         {
-            return await _dbContext.Resources.AsNoTracking().SingleOrDefaultAsync(resource => resource.Id == resourceId);
+            return await _dbContext.Resources
+                .Include(resource => resource.ResourceTags)
+                .ThenInclude(resourceTag => resourceTag.Tag)
+                .SingleOrDefaultAsync(resource => resource.Id == resourceId);
+        }
+
+        public async Task<Resource> AddResourceAsync(Resource resource)
+        {
+            await _dbContext.Resources.AddAsync(resource);
+            await _dbContext.SaveChangesAsync();
+            return resource;
         }
 
         public async Task DeleteResourceAsync(Resource resource)
@@ -30,11 +44,13 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<Resource> AddResourceAsync(Resource resource)
+        public async Task<List<Resource>> FilterResourcesByTagAsync(int tagId, int userId)
         {
-            await _dbContext.Resources.AddAsync(resource);
-            await _dbContext.SaveChangesAsync();
-            return resource;
+            return await _dbContext.Resources.Where(resource => resource.UserId == userId)
+                .Where(resource => resource.ResourceTags.Any(resourceTag => resourceTag.TagId == tagId))
+                .Include(resource => resource.ResourceTags)
+                .ThenInclude(resourceTag => resourceTag.Tag)
+                .ToListAsync();
         }
 
         public async Task<bool> IsTitleExistAsync(string resourceTitle, int userId)

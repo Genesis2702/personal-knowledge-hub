@@ -21,13 +21,18 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return resourceTag;
         }
 
-        public async Task<List<Resource>> FilterResourceTagAsync(int tagId, int userId)
+        public async Task<ResourceTag?> GetResourceTagByIdAsync(int tagId, int resourceId)
         {
-            return await _dbContext.Resources.Where(resource => resource.UserId == userId)
-                .Where(resource => resource.ResourceTags.Any(resourceTag => resourceTag.TagId == tagId))
-                .Include(resource => resource.ResourceTags)
-                .ThenInclude(resourceTag => resourceTag.Tag)
-                .ToListAsync();
+            return await _dbContext.ResourceTags.
+                Include(resourceTag => resourceTag.Resource).
+                Include(resourceTag => resourceTag.Tag).
+                FirstOrDefaultAsync(resourceTag => resourceTag.TagId == tagId && resourceTag.ResourceId == resourceId);
+        }
+
+        public async Task DeleteResourceTagAsync(ResourceTag resourceTag)
+        {
+            _dbContext.ResourceTags.Remove(resourceTag);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<bool> IsResourceTagExistAsync(int tagId, int resourceId)

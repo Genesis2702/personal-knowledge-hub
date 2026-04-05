@@ -4,7 +4,7 @@ namespace PersonalKnowledgeHub.Services.Interfaces
 {
     public interface IResourceTagService
     {
-        public Task<ResourceTag> AddResourceTag(int tagId, int resourceId, int userId);
-        public Task<List<Resource>> FilterResourceTag(int tagId, int userId);
+        public Task<Resource> AddResourceTag(int tagId, int resourceId, int userId);
+        public Task DeleteResourceTag(int tagId, int resourceId, int userId);
     }
 }

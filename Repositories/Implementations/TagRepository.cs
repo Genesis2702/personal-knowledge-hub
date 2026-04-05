@@ -23,7 +23,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
 
         public async Task<List<Tag>> GetTagsAsync(int userId)
         {
-            return await _dbContext.Tags.Where(tag => tag.UserId == userId).ToListAsync();
+            return await _dbContext.Tags.AsNoTracking().Where(tag => tag.UserId == userId).ToListAsync();
         }
 
         public async Task<Tag?> GetTagByIdAsync(int tagId)

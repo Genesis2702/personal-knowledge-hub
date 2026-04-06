@@ -7,7 +7,8 @@ namespace PersonalKnowledgeHub.Services.Interfaces
     {
         public Task<List<Resource>> GetResources(int userId);
         public Task<Resource> GetResourceById(int resourceId, int userId);
-        public Task DeleteResourceById(int resourceId, int userId);
         public Task<Resource> AddResource(ResourceRequestDto resourceRequest, int userId);
+        public Task DeleteResourceById(int resourceId, int userId);
+        public Task<List<Resource>> FilterResourcesByTag(int tagId, int userId);
     }
 }

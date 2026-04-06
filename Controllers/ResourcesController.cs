@@ -10,6 +10,7 @@ namespace PersonalKnowledgeHub.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class ResourcesController : ControllerBase
     {
         private readonly IResourceService _resourceService;
@@ -19,12 +20,12 @@ namespace PersonalKnowledgeHub.Controllers
             _resourceService = resourceService;
         }
 
-        [Authorize]
         [HttpGet]
-        public async Task<ActionResult<List<ResourceResponseDto>>> GetResources()
+        public async Task<ActionResult<List<ResourceResponseDto>>> GetResources([FromQuery] int? tagId)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            List<Resource> resources = await _resourceService.GetResources(userId);
+            List<Resource> resources = await
+                (tagId.HasValue ? _resourceService.FilterResourcesByTag(tagId.Value, userId) : _resourceService.GetResources(userId));
             List<ResourceResponseDto> resourceResponses = resources.Select(resource => new ResourceResponseDto
             {
                 Title = resource.Title,
@@ -32,11 +33,11 @@ namespace PersonalKnowledgeHub.Controllers
                 Description = resource.Description,
                 ResourceType = resource.ResourceType,
                 CreatedAt = resource.CreatedAt,
+                Tags = resource.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
             }).ToList();
             return Ok(resourceResponses);
         }
 
-        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<ResourceResponseDto>> GetResourceById(int id)
         {
@@ -49,11 +50,11 @@ namespace PersonalKnowledgeHub.Controllers
                 Description = resource.Description,
                 ResourceType = resource.ResourceType,
                 CreatedAt = resource.CreatedAt,
+                Tags = resource.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
             };
             return Ok(resourceResponse);
         }
 
-        [Authorize]
         [HttpPost]
         public async Task<ActionResult<ResourceResponseDto>> AddResource(ResourceRequestDto resourceRequest)
         {
@@ -70,7 +71,6 @@ namespace PersonalKnowledgeHub.Controllers
             return CreatedAtAction(nameof(GetResourceById), new { id = resource.Id }, resourceResponse);
         }
 
-        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteResourceById(int id)
         {

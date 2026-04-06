@@ -10,6 +10,7 @@
         public required int UserId { get; set; }
         public User? User { get; set; }
         public DateTime CreatedAt { get; set; }
+        public ICollection<ResourceTag> ResourceTags { get; set; } = new List<ResourceTag>();
     }
 
     public enum ResourceType

@@ -17,13 +17,14 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<Tag> AddTag(TagRequestDto tagRequest, int userId)
         {
-            if (await _tagRepository.IsTagExistAsync(tagRequest.Name, userId))
+            string tagName = tagRequest.Name.Trim().ToLower();
+            if (await _tagRepository.IsTagExistAsync(tagName, userId))
             {
                 throw new ConflictException("Tag already existed");
             }
             Tag tag = new Tag
             {
-                Name = tagRequest.Name,
+                Name = tagName,
                 UserId = userId,
             };
             return await _tagRepository.AddTagAsync(tag);
@@ -59,11 +60,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("Tag found doesn't belong to current user");
             }
-            if (await _tagRepository.IsTagExistAsync(tagRequest.Name, userId))
+            string tagName = tagRequest.Name.Trim().ToLower();
+            if (await _tagRepository.IsTagExistAsync(tagName, userId))
             {
                 throw new ConflictException("Tag already existed");
             }
-            await _tagRepository.UpdateTagAsync(tagRequest.Name, tag);
+            await _tagRepository.UpdateTagAsync(tagName, tag);
         }
 
         public async Task DeleteTagById(int tagId, int userId)

@@ -1,4 +1,5 @@
-﻿using PersonalKnowledgeHub.DTOs.Requests;
+﻿using PersonalKnowledgeHub.Common;
+using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Repositories.Interfaces;
@@ -17,9 +18,30 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _tagRepository = tagRepository;
         }
 
-        public async Task<List<Resource>> GetResources(int userId)
+        public async Task<PageResult<Resource>> GetResources(int userId, int pageIndex, int pageSize, int? tagId, string? search)
         {
-            return await _resourceRepository.GetResourcesAsync(userId);
+            if (tagId.HasValue)
+            {
+                Tag? tag = await _tagRepository.GetTagByIdAsync(tagId.Value);
+                if (tag == null)
+                {
+                    throw new NotFoundException("Tag not found");
+                }
+                if (tag.UserId != userId)
+                {
+                    throw new ForbiddenException("Tag found doesn't belong to current user");
+                }
+            }
+            List<Resource> resources = await _resourceRepository.GetResourcesAsync(userId, pageIndex, pageSize, tagId, search);
+            int resourcesCount = await _resourceRepository.GetResourcesCount(userId, tagId, search);
+            PageResult<Resource> pageResult = new PageResult<Resource>
+            {
+                Items = resources,
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                PageCount = (int)Math.Ceiling((decimal)resourcesCount / pageSize)
+            };
+            return pageResult;
         }
 
         public async Task<Resource> GetResourceById(int resourceId, int userId)
@@ -66,20 +88,6 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ForbiddenException("Resource found doesn't belong to current user");
             }
             await _resourceRepository.DeleteResourceAsync(resource);
-        }
-
-        public async Task<List<Resource>> FilterResourcesByTag(int tagId, int userId)
-        {
-            Tag? tag = await _tagRepository.GetTagByIdAsync(tagId);
-            if (tag == null)
-            {
-                throw new NotFoundException("Tag not found");
-            }
-            if (tag.UserId != userId)
-            {
-                throw new ForbiddenException("Tag found doesn't belong to current user");
-            }
-            return await _resourceRepository.FilterResourcesByTagAsync(tagId, userId);
         }
     }
 }

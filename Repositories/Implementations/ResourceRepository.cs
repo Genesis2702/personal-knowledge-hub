@@ -14,12 +14,22 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             _dbContext = dbContext;
         }
 
-        public async Task<List<Resource>> GetResourcesAsync(int userId)
+        public async Task<List<Resource>> GetResourcesAsync(int userId, int pageIndex, int pageSize, int? tagId, string? search)
         {
-            return await _dbContext.Resources.AsNoTracking()
-                .Where(resource => resource.UserId == userId)
+            IQueryable<Resource> query = _dbContext.Resources.AsNoTracking().Where(resource => resource.UserId == userId);
+            if (tagId.HasValue)
+            {
+                query = query.Where(resource => resource.ResourceTags.Any(resourceTag => resourceTag.TagId == tagId));
+            }
+            if (!string.IsNullOrEmpty(search))
+            {
+
+            }
+            return await query
                 .Include(resource => resource.ResourceTags)
                 .ThenInclude(resourceTag => resourceTag.Tag)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
         }
 
@@ -29,6 +39,20 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                 .Include(resource => resource.ResourceTags)
                 .ThenInclude(resourceTag => resourceTag.Tag)
                 .SingleOrDefaultAsync(resource => resource.Id == resourceId);
+        }
+
+        public async Task<int> GetResourcesCount(int userId, int? tagId, string? search)
+        {
+            IQueryable<Resource> query = _dbContext.Resources.AsNoTracking().Where(resource => resource.UserId == userId);
+            if (tagId.HasValue)
+            {
+                query = query.Where(resource => resource.ResourceTags.Any(resourceTag => resourceTag.TagId == tagId));
+            }
+            if (!string.IsNullOrEmpty(search))
+            {
+
+            }
+            return await query.CountAsync();
         }
 
         public async Task<Resource> AddResourceAsync(Resource resource)
@@ -42,15 +66,6 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
         {
             _dbContext.Resources.Remove(resource);
             await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task<List<Resource>> FilterResourcesByTagAsync(int tagId, int userId)
-        {
-            return await _dbContext.Resources.Where(resource => resource.UserId == userId)
-                .Where(resource => resource.ResourceTags.Any(resourceTag => resourceTag.TagId == tagId))
-                .Include(resource => resource.ResourceTags)
-                .ThenInclude(resourceTag => resourceTag.Tag)
-                .ToListAsync();
         }
 
         public async Task<bool> IsTitleExistAsync(string resourceTitle, int userId)

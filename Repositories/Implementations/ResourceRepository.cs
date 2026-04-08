@@ -14,7 +14,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             _dbContext = dbContext;
         }
 
-        public async Task<List<Resource>> GetResourcesAsync(int userId, int pageIndex, int pageSize, int? tagId, string? search)
+        public async Task<(List<Resource>, int)> GetResourcesAsync(int userId, int pageIndex, int pageSize, int? tagId, string? search)
         {
             IQueryable<Resource> query = _dbContext.Resources.AsNoTracking().Where(resource => resource.UserId == userId);
             if (tagId.HasValue)
@@ -25,12 +25,14 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             {
 
             }
-            return await query
+            int resourcesCount = await query.CountAsync();
+            List<Resource> resources = await query
                 .Include(resource => resource.ResourceTags)
                 .ThenInclude(resourceTag => resourceTag.Tag)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+            return (resources, resourcesCount);
         }
 
         public async Task<Resource?> GetResourceByIdAsync(int resourceId)
@@ -39,20 +41,6 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                 .Include(resource => resource.ResourceTags)
                 .ThenInclude(resourceTag => resourceTag.Tag)
                 .SingleOrDefaultAsync(resource => resource.Id == resourceId);
-        }
-
-        public async Task<int> GetResourcesCount(int userId, int? tagId, string? search)
-        {
-            IQueryable<Resource> query = _dbContext.Resources.AsNoTracking().Where(resource => resource.UserId == userId);
-            if (tagId.HasValue)
-            {
-                query = query.Where(resource => resource.ResourceTags.Any(resourceTag => resourceTag.TagId == tagId));
-            }
-            if (!string.IsNullOrEmpty(search))
-            {
-
-            }
-            return await query.CountAsync();
         }
 
         public async Task<Resource> AddResourceAsync(Resource resource)

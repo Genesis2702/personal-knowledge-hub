@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PersonalKnowledgeHub.Common;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
@@ -21,21 +22,27 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<ResourceResponseDto>>> GetResources([FromQuery] int? tagId)
+        public async Task<ActionResult<PageResult<ResourceResponseDto>>> GetResources([FromQuery] ResourceQueryRequestDto resourceQueryRequest)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            List<Resource> resources = await
-                (tagId.HasValue ? _resourceService.FilterResourcesByTag(tagId.Value, userId) : _resourceService.GetResources(userId));
-            List<ResourceResponseDto> resourceResponses = resources.Select(resource => new ResourceResponseDto
+            PageResult<Resource> resourcesPageResult = await
+                _resourceService.GetResources(userId, resourceQueryRequest.PageIndex, resourceQueryRequest.PageSize, resourceQueryRequest.TagId, resourceQueryRequest.Search);
+            PageResult<ResourceResponseDto> resourceResponsesPageResult = new PageResult<ResourceResponseDto>
             {
-                Title = resource.Title,
-                Url = resource.Url,
-                Description = resource.Description,
-                ResourceType = resource.ResourceType,
-                CreatedAt = resource.CreatedAt,
-                Tags = resource.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
-            }).ToList();
-            return Ok(resourceResponses);
+                Items = resourcesPageResult.Items.Select(item => new ResourceResponseDto
+                {
+                    Title = item.Title,
+                    Url = item.Url,
+                    Description = item.Description,
+                    ResourceType = item.ResourceType,
+                    CreatedAt = item.CreatedAt,
+                    Tags = item.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
+                }).ToList(),
+                PageIndex = resourcesPageResult.PageIndex,
+                PageSize = resourcesPageResult.PageSize,
+                PageCount = resourcesPageResult.PageCount
+            };
+            return Ok(resourceResponsesPageResult);
         }
 
         [HttpGet("{id}")]

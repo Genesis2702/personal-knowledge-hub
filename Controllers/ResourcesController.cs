@@ -26,7 +26,12 @@ namespace PersonalKnowledgeHub.Controllers
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             PageResult<Resource> resourcesPageResult = await
-                _resourceService.GetResources(userId, resourceQueryRequest.PageIndex, resourceQueryRequest.PageSize, resourceQueryRequest.TagId, resourceQueryRequest.Search);
+                _resourceService.GetResources(userId,
+                resourceQueryRequest.PageIndex,
+                resourceQueryRequest.PageSize,
+                resourceQueryRequest.TagId,
+                resourceQueryRequest.ResourceType,
+                resourceQueryRequest.Search);
             PageResult<ResourceResponseDto> resourceResponsesPageResult = new PageResult<ResourceResponseDto>
             {
                 Items = resourcesPageResult.Items.Select(item => new ResourceResponseDto

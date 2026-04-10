@@ -18,7 +18,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _tagRepository = tagRepository;
         }
 
-        public async Task<PageResult<Resource>> GetResources(int userId, int pageIndex, int pageSize, int? tagId, string? search)
+        public async Task<PageResult<Resource>> GetResources(int userId, int pageIndex, int pageSize, int? tagId, ResourceType? resourceType, string? search)
         {
             if (tagId.HasValue)
             {
@@ -32,7 +32,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                     throw new ForbiddenException("Tag found doesn't belong to current user");
                 }
             }
-            (List<Resource> resources, int resourcesCount) = await _resourceRepository.GetResourcesAsync(userId, pageIndex, pageSize, tagId, search);
+            (List<Resource> resources, int resourcesCount) = await _resourceRepository.GetResourcesAsync(userId, pageIndex, pageSize, tagId, resourceType, search);
             PageResult<Resource> pageResult = new PageResult<Resource>
             {
                 Items = resources,

@@ -14,16 +14,21 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             _dbContext = dbContext;
         }
 
-        public async Task<(List<Resource>, int)> GetResourcesAsync(int userId, int pageIndex, int pageSize, int? tagId, string? search)
+        public async Task<(List<Resource>, int)> GetResourcesAsync(int userId, int pageIndex, int pageSize, int? tagId, ResourceType? resourceType, string? search)
         {
             IQueryable<Resource> query = _dbContext.Resources.AsNoTracking().Where(resource => resource.UserId == userId);
             if (tagId.HasValue)
             {
                 query = query.Where(resource => resource.ResourceTags.Any(resourceTag => resourceTag.TagId == tagId));
             }
+            if (resourceType.HasValue)
+            {
+                query = query.Where(resource => resource.ResourceType == resourceType);
+            }
             if (!string.IsNullOrEmpty(search))
             {
-
+                query = query.Where(resource => EF.Functions.ILike(resource.Title, $"%{search}%")
+                || (resource.Description != null && EF.Functions.ILike(resource.Description, $"%{search}%")));
             }
             int resourcesCount = await query.CountAsync();
             List<Resource> resources = await query

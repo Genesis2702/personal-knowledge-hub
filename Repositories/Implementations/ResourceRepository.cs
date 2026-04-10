@@ -23,7 +23,8 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             }
             if (!string.IsNullOrEmpty(search))
             {
-
+                query = query.Where(resource => EF.Functions.ILike(resource.Title, $"%{search}%")
+                || (resource.Description != null && EF.Functions.ILike(resource.Description, $"%{search}%")));
             }
             int resourcesCount = await query.CountAsync();
             List<Resource> resources = await query

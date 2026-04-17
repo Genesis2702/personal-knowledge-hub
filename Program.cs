@@ -69,6 +69,8 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+app.UseMiddleware<RateLimitMiddleware>();
+
 app.MapControllers();
 
 app.Run();

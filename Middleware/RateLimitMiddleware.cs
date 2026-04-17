@@ -59,11 +59,10 @@ namespace PersonalKnowledgeHub.Middleware
                 }
                 else
                 {
-                    await _distributedCache.SetStringAsync(rateLimitKey, (counter + 1).ToString());
+                    await _distributedCache.SetStringAsync(rateLimitKey, $"{counter + 1}|{expiry}");
                     await _next(context);
                 }
             }
         }
-
     }
 }

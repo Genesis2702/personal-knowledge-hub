@@ -7,7 +7,7 @@ namespace PersonalKnowledgeHub.Middleware
     {
         private readonly IDistributedCache _distributedCache;
         private readonly RequestDelegate _next;
-        private readonly int RequestPerMinute = 10;
+        private readonly int _requestPerMinute = 10;
 
         public RateLimitMiddleware(IDistributedCache distributedCache, RequestDelegate next)
         {
@@ -25,7 +25,14 @@ namespace PersonalKnowledgeHub.Middleware
             }
             else
             {
-                string ip = context.Connection.RemoteIpAddress != null ? context.Connection.RemoteIpAddress.ToString() : "unknown";
+                string ip;
+                if (context.Connection.RemoteIpAddress == null)
+                {
+                    context.Response.StatusCode = 400;
+                    await context.Response.WriteAsync("Connection is invalid");
+                    return;
+                }
+                ip = context.Connection.RemoteIpAddress.ToString();
                 rateLimitKey = $"ratelimit:{ip}";
             }
             string? cachedCounter = await _distributedCache.GetStringAsync(rateLimitKey);
@@ -33,18 +40,22 @@ namespace PersonalKnowledgeHub.Middleware
             {
                 DistributedCacheEntryOptions cacheEntryOption = new DistributedCacheEntryOptions
                 {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
                 };
-                await _distributedCache.SetStringAsync(rateLimitKey, "1", cacheEntryOption);
+                DateTime expiry = DateTime.UtcNow.AddSeconds(60);
+                await _distributedCache.SetStringAsync(rateLimitKey, $"1|{expiry}", cacheEntryOption);
+                await _next(context);
             }
             else
             {
-                int counter = int.Parse(cachedCounter);
-                if (counter >= RequestPerMinute)
+                string[] splitCounter = cachedCounter.Split('|');
+                int counter = int.Parse(splitCounter[0]);
+                DateTime expiry = DateTime.Parse(splitCounter[1]);
+                if (counter >= _requestPerMinute)
                 {
+                    context.Response.Headers.RetryAfter = (expiry - DateTime.UtcNow).ToString();
                     context.Response.StatusCode = 429;
                     await context.Response.WriteAsync("Please try again later");
-                    return;
                 }
                 else
                 {

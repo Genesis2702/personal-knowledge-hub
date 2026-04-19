@@ -8,6 +8,7 @@ using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Security.Claims;
 using System.Text.Json;
+using PersonalKnowledgeHub.Mapper;
 
 namespace PersonalKnowledgeHub.Controllers
 {
@@ -35,13 +36,7 @@ namespace PersonalKnowledgeHub.Controllers
                 string? cachedResources = await _distributedCache.GetStringAsync(cacheKey);
                 if (string.IsNullOrEmpty(cachedResources))
                 {
-                    PageResult<Resource> databaseResourcesPageResult = await
-                    _resourceService.GetResources(userId,
-                    resourceQueryRequest.PageIndex,
-                    resourceQueryRequest.PageSize,
-                    resourceQueryRequest.TagId,
-                    resourceQueryRequest.ResourceType,
-                    resourceQueryRequest.Search);
+                    PageResult<Resource> databaseResourcesPageResult = await _resourceService.GetResources(userId, resourceQueryRequest);
                     cachedResources = JsonSerializer.Serialize(databaseResourcesPageResult);
                     DistributedCacheEntryOptions cacheEntryOption = new DistributedCacheEntryOptions
                     {
@@ -50,47 +45,13 @@ namespace PersonalKnowledgeHub.Controllers
                     await _distributedCache.SetStringAsync(cacheKey, cachedResources, cacheEntryOption);
                 }
                 PageResult<Resource> resourcesPageResult = JsonSerializer.Deserialize<PageResult<Resource>>(cachedResources)!;
-                PageResult<ResourceResponseDto> resourceResponsesPageResult = new PageResult<ResourceResponseDto>
-                {
-                    Items = resourcesPageResult.Items.Select(item => new ResourceResponseDto
-                    {
-                        Title = item.Title,
-                        Url = item.Url,
-                        Description = item.Description,
-                        ResourceType = item.ResourceType,
-                        CreatedAt = item.CreatedAt,
-                        Tags = item.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
-                    }).ToList(),
-                    PageIndex = resourcesPageResult.PageIndex,
-                    PageSize = resourcesPageResult.PageSize,
-                    PageCount = resourcesPageResult.PageCount
-                };
+                PageResult<ResourceResponseDto> resourceResponsesPageResult = ResourceMapper.ToResourceResponsesPageResult(resourcesPageResult);
                 return Ok(resourceResponsesPageResult);
             }
             else
             {
-                PageResult<Resource> resourcesPageResult = await
-                    _resourceService.GetResources(userId,
-                    resourceQueryRequest.PageIndex,
-                    resourceQueryRequest.PageSize,
-                    resourceQueryRequest.TagId,
-                    resourceQueryRequest.ResourceType,
-                    resourceQueryRequest.Search);
-                PageResult<ResourceResponseDto> resourceResponsesPageResult = new PageResult<ResourceResponseDto>
-                {
-                    Items = resourcesPageResult.Items.Select(item => new ResourceResponseDto
-                    {
-                        Title = item.Title,
-                        Url = item.Url,
-                        Description = item.Description,
-                        ResourceType = item.ResourceType,
-                        CreatedAt = item.CreatedAt,
-                        Tags = item.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
-                    }).ToList(),
-                    PageIndex = resourcesPageResult.PageIndex,
-                    PageSize = resourcesPageResult.PageSize,
-                    PageCount = resourcesPageResult.PageCount
-                };
+                PageResult<Resource> resourcesPageResult = await _resourceService.GetResources(userId, resourceQueryRequest);
+                PageResult<ResourceResponseDto> resourceResponsesPageResult = ResourceMapper.ToResourceResponsesPageResult(resourcesPageResult);
                 return Ok(resourceResponsesPageResult);
             }
         }
@@ -112,15 +73,7 @@ namespace PersonalKnowledgeHub.Controllers
                 await _distributedCache.SetStringAsync(cacheKey, cachedResource, cacheEntryOption);
             }
             Resource resource = JsonSerializer.Deserialize<Resource>(cachedResource)!;
-            ResourceResponseDto resourceResponse = new ResourceResponseDto
-            {
-                Title = resource.Title,
-                Url = resource.Url,
-                Description = resource.Description,
-                ResourceType = resource.ResourceType,
-                CreatedAt = resource.CreatedAt,
-                Tags = resource.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
-            };
+            ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
             return Ok(resourceResponse);
         }
 
@@ -129,14 +82,7 @@ namespace PersonalKnowledgeHub.Controllers
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             Resource resource = await _resourceService.AddResource(resourceRequest, userId);
-            ResourceResponseDto resourceResponse = new ResourceResponseDto
-            {
-                Title = resource.Title,
-                Url = resource.Url,
-                Description = resource.Description,
-                ResourceType = resource.ResourceType,
-                CreatedAt = resource.CreatedAt,
-            };
+            ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
             return CreatedAtAction(nameof(GetResourceById), new { id = resource.Id }, resourceResponse);
         }
 

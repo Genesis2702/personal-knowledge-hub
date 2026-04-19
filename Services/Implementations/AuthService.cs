@@ -4,6 +4,7 @@ using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
+using PersonalKnowledgeHub.Mapper;
 
 namespace PersonalKnowledgeHub.Services.Implementations
 {
@@ -39,12 +40,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<AuthResponseDto> RegisterUser(RegisterRequestDto registerRequest)
         {
-            User user = new User
-            {
-                UserName = registerRequest.UserName ?? registerRequest.Email,
-                Email = registerRequest.Email,
-                PasswordHash = registerRequest.Password
-            };
+            User user = UserMapper.ToUser(registerRequest);
             user.Email = user.Email.Trim().ToLower();
             bool valid = IsEmailValid(user.Email);
             if (!valid)
@@ -52,7 +48,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ValidationException("Email is invalid");
             }
             bool exist = await _authRepository.IsEmailExistAsync(user.Email);
-            if (exist == true)
+            if (exist)
             {
                 throw new ConflictException("Email already existed");
             }
@@ -60,21 +56,13 @@ namespace PersonalKnowledgeHub.Services.Implementations
             user.CreatedAt = DateTime.UtcNow;
             User registeredUser = await _authRepository.AddUserAsync(user);
             RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id);
-            AuthResponseDto authResponse = new AuthResponseDto
-            {
-                RefreshToken = refreshToken.Token,
-                AccessToken = await _tokenService.GenerateAccessToken(registeredUser.Id)
-            };
-            return authResponse;
+            string accessToken = await _tokenService.GenerateAccessToken(registeredUser.Id);
+            return AuthMapper.ToAuthResponseDto(refreshToken.Token, accessToken);
         }
 
         public async Task<AuthResponseDto> AuthenticateUser(LoginRequestDto loginRequest)
         {
-            User user = new User
-            {
-                Email = loginRequest.Email,
-                PasswordHash = loginRequest.Password
-            };
+            User user = UserMapper.ToUser(loginRequest);
             user.Email = user.Email.Trim().ToLower();
             User? loggedInUser = await _authRepository.GetUserByEmailAsync(user.Email);
             if (loggedInUser == null)
@@ -86,13 +74,9 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new UnauthorizedException("Password is incorrect");
             }
             RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(loggedInUser.Id);
-            AuthResponseDto authResponse = new AuthResponseDto
-            {
-                RefreshToken = refreshToken.Token,
-                AccessToken = await _tokenService.GenerateAccessToken(loggedInUser.Id)
-            };
+            string accessToken = await _tokenService.GenerateAccessToken(loggedInUser.Id);
             await _tokenRepository.CleanUpRefreshTokenAsync();
-            return authResponse;
+            return AuthMapper.ToAuthResponseDto(refreshToken.Token, accessToken);
         }
 
         public async Task<AuthResponseDto> RefreshUser(RefreshRequestDto refreshRequest)
@@ -100,12 +84,8 @@ namespace PersonalKnowledgeHub.Services.Implementations
             RefreshToken refreshToken = await _tokenService.ValidateRefreshToken(refreshRequest.RefreshToken);
             await _tokenService.RevokeRefreshToken(refreshToken.Token);
             RefreshToken newRefreshToken = await _tokenService.GenerateRefreshToken(refreshToken.UserId);
-            AuthResponseDto authResponse = new AuthResponseDto
-            {
-                RefreshToken = newRefreshToken.Token,
-                AccessToken = await _tokenService.GenerateAccessToken(refreshToken.UserId)
-            };
-            return authResponse;
+            string accessToken = await _tokenService.GenerateAccessToken(refreshToken.UserId);
+            return AuthMapper.ToAuthResponseDto(newRefreshToken.Token, accessToken);
         }
 
         public async Task LogoutUser(LogoutRequestDto logoutRequest, int userId)

@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 using PersonalKnowledgeHub.Common;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace PersonalKnowledgeHub.Controllers
 {
@@ -15,46 +17,101 @@ namespace PersonalKnowledgeHub.Controllers
     public class ResourcesController : ControllerBase
     {
         private readonly IResourceService _resourceService;
+        private readonly IDistributedCache _distributedCache;
 
-        public ResourcesController(IResourceService resourceService)
+        public ResourcesController(IResourceService resourceService, IDistributedCache distributedCache)
         {
             _resourceService = resourceService;
+            _distributedCache = distributedCache;
         }
 
         [HttpGet]
         public async Task<ActionResult<PageResult<ResourceResponseDto>>> GetResources([FromQuery] ResourceQueryRequestDto resourceQueryRequest)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            PageResult<Resource> resourcesPageResult = await
-                _resourceService.GetResources(userId,
-                resourceQueryRequest.PageIndex,
-                resourceQueryRequest.PageSize,
-                resourceQueryRequest.TagId,
-                resourceQueryRequest.ResourceType,
-                resourceQueryRequest.Search);
-            PageResult<ResourceResponseDto> resourceResponsesPageResult = new PageResult<ResourceResponseDto>
+            if (!resourceQueryRequest.TagId.HasValue && !resourceQueryRequest.ResourceType.HasValue && string.IsNullOrEmpty(resourceQueryRequest.Search))
             {
-                Items = resourcesPageResult.Items.Select(item => new ResourceResponseDto
+                string cacheKey = $"resource:{userId}:{resourceQueryRequest.PageIndex}:{resourceQueryRequest.PageSize}";
+                string? cachedResources = await _distributedCache.GetStringAsync(cacheKey);
+                if (string.IsNullOrEmpty(cachedResources))
                 {
-                    Title = item.Title,
-                    Url = item.Url,
-                    Description = item.Description,
-                    ResourceType = item.ResourceType,
-                    CreatedAt = item.CreatedAt,
-                    Tags = item.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
-                }).ToList(),
-                PageIndex = resourcesPageResult.PageIndex,
-                PageSize = resourcesPageResult.PageSize,
-                PageCount = resourcesPageResult.PageCount
-            };
-            return Ok(resourceResponsesPageResult);
+                    PageResult<Resource> databaseResourcesPageResult = await
+                    _resourceService.GetResources(userId,
+                    resourceQueryRequest.PageIndex,
+                    resourceQueryRequest.PageSize,
+                    resourceQueryRequest.TagId,
+                    resourceQueryRequest.ResourceType,
+                    resourceQueryRequest.Search);
+                    cachedResources = JsonSerializer.Serialize(databaseResourcesPageResult);
+                    DistributedCacheEntryOptions cacheEntryOption = new DistributedCacheEntryOptions
+                    {
+                        SlidingExpiration = TimeSpan.FromMinutes(1)
+                    };
+                    await _distributedCache.SetStringAsync(cacheKey, cachedResources, cacheEntryOption);
+                }
+                PageResult<Resource> resourcesPageResult = JsonSerializer.Deserialize<PageResult<Resource>>(cachedResources)!;
+                PageResult<ResourceResponseDto> resourceResponsesPageResult = new PageResult<ResourceResponseDto>
+                {
+                    Items = resourcesPageResult.Items.Select(item => new ResourceResponseDto
+                    {
+                        Title = item.Title,
+                        Url = item.Url,
+                        Description = item.Description,
+                        ResourceType = item.ResourceType,
+                        CreatedAt = item.CreatedAt,
+                        Tags = item.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
+                    }).ToList(),
+                    PageIndex = resourcesPageResult.PageIndex,
+                    PageSize = resourcesPageResult.PageSize,
+                    PageCount = resourcesPageResult.PageCount
+                };
+                return Ok(resourceResponsesPageResult);
+            }
+            else
+            {
+                PageResult<Resource> resourcesPageResult = await
+                    _resourceService.GetResources(userId,
+                    resourceQueryRequest.PageIndex,
+                    resourceQueryRequest.PageSize,
+                    resourceQueryRequest.TagId,
+                    resourceQueryRequest.ResourceType,
+                    resourceQueryRequest.Search);
+                PageResult<ResourceResponseDto> resourceResponsesPageResult = new PageResult<ResourceResponseDto>
+                {
+                    Items = resourcesPageResult.Items.Select(item => new ResourceResponseDto
+                    {
+                        Title = item.Title,
+                        Url = item.Url,
+                        Description = item.Description,
+                        ResourceType = item.ResourceType,
+                        CreatedAt = item.CreatedAt,
+                        Tags = item.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
+                    }).ToList(),
+                    PageIndex = resourcesPageResult.PageIndex,
+                    PageSize = resourcesPageResult.PageSize,
+                    PageCount = resourcesPageResult.PageCount
+                };
+                return Ok(resourceResponsesPageResult);
+            }
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<ResourceResponseDto>> GetResourceById(int id)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            Resource resource = await _resourceService.GetResourceById(id, userId);
+            string cacheKey = $"resource:{userId}:{id}";
+            string? cachedResource = await _distributedCache.GetStringAsync(cacheKey);
+            if (string.IsNullOrEmpty(cachedResource))
+            {
+                Resource databaseResource = await _resourceService.GetResourceById(id, userId);
+                cachedResource = JsonSerializer.Serialize(databaseResource);
+                DistributedCacheEntryOptions cacheEntryOption = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3)
+                };
+                await _distributedCache.SetStringAsync(cacheKey, cachedResource, cacheEntryOption);
+            }
+            Resource resource = JsonSerializer.Deserialize<Resource>(cachedResource)!;
             ResourceResponseDto resourceResponse = new ResourceResponseDto
             {
                 Title = resource.Title,
@@ -88,6 +145,8 @@ namespace PersonalKnowledgeHub.Controllers
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             await _resourceService.DeleteResourceById(id, userId);
+            string cacheKey = $"resource:{userId}:{id}";
+            await _distributedCache.RemoveAsync(cacheKey);
             return NoContent();
         }
     }

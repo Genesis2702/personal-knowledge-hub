@@ -29,6 +29,10 @@ builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IResourceTagService, ResourceTagService>();
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["RedisCacheSettings:ConnectionString"];
+});
 
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
@@ -64,6 +68,8 @@ app.UseMiddleware<MiddlewareException>();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.UseMiddleware<RateLimitMiddleware>();
 
 app.MapControllers();
 

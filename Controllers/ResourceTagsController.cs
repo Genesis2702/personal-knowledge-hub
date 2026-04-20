@@ -5,6 +5,7 @@ using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Security.Claims;
+using PersonalKnowledgeHub.Mapper;
 
 namespace PersonalKnowledgeHub.Controllers
 {
@@ -25,15 +26,7 @@ namespace PersonalKnowledgeHub.Controllers
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             Resource resource = await _resourceTagService.AddResourceTag(resourceTagRequest.TagId, resourceId, userId);
-            ResourceResponseDto resourceResponse = new ResourceResponseDto
-            {
-                Title = resource.Title,
-                Url = resource.Url,
-                Description = resource.Description,
-                ResourceType = resource.ResourceType,
-                CreatedAt = resource.CreatedAt,
-                Tags = resource.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
-            };
+            ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
             return CreatedAtAction(nameof(ResourcesController.GetResourceById), "Resources", new { id = resource.Id }, resourceResponse);
         }
 

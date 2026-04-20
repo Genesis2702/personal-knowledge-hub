@@ -4,6 +4,7 @@ using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
+using PersonalKnowledgeHub.Mapper;
 
 namespace PersonalKnowledgeHub.Services.Implementations
 {
@@ -18,11 +19,11 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _tagRepository = tagRepository;
         }
 
-        public async Task<PageResult<Resource>> GetResources(int userId, int pageIndex, int pageSize, int? tagId, ResourceType? resourceType, string? search)
+        public async Task<PageResult<Resource>> GetResources(int userId, ResourceQueryRequestDto resourceQueryRequest)
         {
-            if (tagId.HasValue)
+            if (resourceQueryRequest.TagId.HasValue)
             {
-                Tag? tag = await _tagRepository.GetTagByIdAsync(tagId.Value);
+                Tag? tag = await _tagRepository.GetTagByIdAsync(resourceQueryRequest.TagId.Value);
                 if (tag == null)
                 {
                     throw new NotFoundException("Tag not found");
@@ -32,15 +33,16 @@ namespace PersonalKnowledgeHub.Services.Implementations
                     throw new ForbiddenException("Tag found doesn't belong to current user");
                 }
             }
-            (List<Resource> resources, int resourcesCount) = await _resourceRepository.GetResourcesAsync(userId, pageIndex, pageSize, tagId, resourceType, search);
-            PageResult<Resource> pageResult = new PageResult<Resource>
-            {
-                Items = resources,
-                PageIndex = pageIndex,
-                PageSize = pageSize,
-                PageCount = (int)Math.Ceiling((decimal)resourcesCount / pageSize)
-            };
-            return pageResult;
+            (List<Resource> resources, int resourcesCount) = await _resourceRepository.GetResourcesAsync
+                (
+                    userId, 
+                    resourceQueryRequest.PageIndex, 
+                    resourceQueryRequest.PageSize, 
+                    resourceQueryRequest.TagId, 
+                    resourceQueryRequest.ResourceType, 
+                    resourceQueryRequest.Search
+                );
+            return ResourceMapper.ToResourcesPageResult(resources, resourcesCount, resourceQueryRequest.PageIndex, resourceQueryRequest.PageSize);
         }
 
         public async Task<Resource> GetResourceById(int resourceId, int userId)
@@ -63,15 +65,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ConflictException("Title already existed");
             }
-            Resource resource = new Resource
-            {
-                Title = resourceRequest.Title,
-                Url = resourceRequest.Url,
-                Description = resourceRequest.Description,
-                ResourceType = resourceRequest.ResourceType,
-                UserId = userId,
-                CreatedAt = DateTime.UtcNow
-            };
+            Resource resource = ResourceMapper.ToResource(resourceRequest, userId);
             return await _resourceRepository.AddResourceAsync(resource);
         }
 

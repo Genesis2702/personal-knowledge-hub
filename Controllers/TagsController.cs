@@ -5,6 +5,7 @@ using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Security.Claims;
+using PersonalKnowledgeHub.Mapper;
 
 namespace PersonalKnowledgeHub.Controllers
 {
@@ -25,10 +26,7 @@ namespace PersonalKnowledgeHub.Controllers
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             Tag tag = await _tagService.AddTag(tagRequest, userId);
-            TagResponseDto tagResponse = new TagResponseDto
-            {
-                Name = tag.Name,
-            };
+            TagResponseDto tagResponse = TagMapper.ToTagResponseDto(tag);
             return CreatedAtAction(nameof(GetTagById), new { id = tag.Id }, tagResponse);
         }
 
@@ -37,10 +35,7 @@ namespace PersonalKnowledgeHub.Controllers
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             List<Tag> tags = await _tagService.GetTags(userId);
-            List<TagResponseDto> tagResponses = tags.Select(tag => new TagResponseDto
-            {
-                Name = tag.Name,
-            }).ToList();
+            List<TagResponseDto> tagResponses = TagMapper.ToTagResponseList(tags);
             return Ok(tagResponses);
         }
 
@@ -49,10 +44,7 @@ namespace PersonalKnowledgeHub.Controllers
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             Tag tag = await _tagService.GetTagById(id, userId);
-            TagResponseDto tagResponse = new TagResponseDto
-            {
-                Name = tag.Name
-            };
+            TagResponseDto tagResponse = TagMapper.ToTagResponseDto(tag);
             return Ok(tagResponse);
         }
 

@@ -3,6 +3,7 @@ using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
+using PersonalKnowledgeHub.Mapper;
 
 namespace PersonalKnowledgeHub.Services.Implementations
 {
@@ -17,16 +18,11 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<Tag> AddTag(TagRequestDto tagRequest, int userId)
         {
-            string tagName = tagRequest.Name.Trim().ToLower();
-            if (await _tagRepository.IsTagExistAsync(tagName, userId))
+            Tag tag = TagMapper.ToTag(tagRequest, userId);
+            if (await _tagRepository.IsTagExistAsync(tag.Name, userId))
             {
                 throw new ConflictException("Tag already existed");
             }
-            Tag tag = new Tag
-            {
-                Name = tagName,
-                UserId = userId,
-            };
             return await _tagRepository.AddTagAsync(tag);
         }
 

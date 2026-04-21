@@ -95,5 +95,14 @@ namespace PersonalKnowledgeHub.Controllers
             await _distributedCache.RemoveAsync(cacheKey);
             return NoContent();
         }
+
+        [HttpPost("{id}/restore")]
+        public async Task<ActionResult<ResourceResponseDto>> RestoreResourceById(int id)
+        {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            Resource resource = await _resourceService.RestoreResourceById(id, userId);
+            ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
+            return Ok(resourceResponse);
+        }
     }
 }

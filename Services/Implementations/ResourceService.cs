@@ -80,7 +80,21 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("Resource found doesn't belong to current user");
             }
-            await _resourceRepository.DeleteResourceAsync(resource);
+            await _resourceRepository.DeleteResourceAsync(resource, userId);
+        }
+
+        public async Task<Resource> RestoreResourceById(int resourceId, int userId)
+        {
+            Resource? resource = await _resourceRepository.RestoreResourceByIdAsync(resourceId);
+            if (resource == null)
+            {
+                throw new NotFoundException("Resource not found");
+            }
+            if (resource.UserId != userId)
+            {
+                throw new ForbiddenException("Resource found doesn't belong to current user");
+            }
+            return await _resourceRepository.RestoreResourceAsync(resource);
         }
     }
 }

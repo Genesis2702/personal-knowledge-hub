@@ -16,7 +16,8 @@ public class ResourceMapper
             Description = resourceRequest.Description,
             ResourceType = resourceRequest.ResourceType,
             UserId = userId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            IsDeleted = false
         };
     }
 

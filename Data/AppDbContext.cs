@@ -36,6 +36,7 @@ namespace PersonalKnowledgeHub.Data
             modelBuilder.Entity<Resource>()
                 .HasIndex(resource => new { resource.UserId, resource.Title })
                 .IsUnique();
+            modelBuilder.Entity<Resource>().HasQueryFilter(resource => !resource.IsDeleted);
 
             modelBuilder.Entity<Tag>().HasKey(tag => tag.Id);
             modelBuilder.Entity<Tag>()

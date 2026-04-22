@@ -23,7 +23,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _configuration = configuration;
         }
 
-        public async Task<RefreshToken> GenerateRefreshToken(int userId)
+        public async Task<RefreshToken> GenerateRefreshToken(int userId, Guid familyId)
         {
             RefreshToken refreshToken = new RefreshToken
             {
@@ -32,6 +32,8 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 ExpiresAt = DateTime.UtcNow.AddDays(30),
                 Revoked = false,
                 RevokedAt = null,
+                ReplacedByTokenId = null,
+                FamilyId = familyId,
                 UserId = userId
             };
             return await _tokenRepository.AddRefreshTokenAsync(refreshToken);
@@ -60,17 +62,28 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return handler.WriteToken(token);
         }
 
-        public async Task RevokeRefreshToken(string token)
+        public async Task RevokeRefreshToken(string token, int? replacedId)
         {
-            await _tokenRepository.RevokeRefreshTokenAsync(token);
+            await _tokenRepository.RevokeRefreshTokenAsync(token, replacedId);
         }
 
         public async Task<RefreshToken> ValidateRefreshToken(string token)
         {
-            var refreshToken = await _tokenRepository.GetRefreshTokenAsync(token);
-            if (refreshToken == null) { throw new NotFoundException("Refresh token not found"); }
-            if (refreshToken.Revoked == true) { throw new UnauthorizedException("Refresh token is revoked"); }
-            if (refreshToken.ExpiresAt < DateTime.UtcNow) { throw new UnauthorizedException("Refresh token is expired"); }
+            var refreshToken = await _tokenRepository.GetRefreshTokenForUpdateAsync(token);
+            if (refreshToken == null)
+            {
+                throw new NotFoundException("Refresh token not found");
+            }
+            if (refreshToken.Revoked)
+            {
+                await _tokenRepository.RevokeAllRefreshTokensAsync(refreshToken.FamilyId, null);
+                throw new UnauthorizedException("Refresh token is revoked");
+            }
+            if (refreshToken.ExpiresAt < DateTime.UtcNow)
+            {
+                await _tokenRepository.RevokeRefreshTokenAsync(token, null);
+                throw new UnauthorizedException("Refresh token is expired");
+            }
             return refreshToken;
         }
 

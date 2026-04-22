@@ -17,6 +17,7 @@ builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializ
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<IResourceRepository, ResourceRepository>();

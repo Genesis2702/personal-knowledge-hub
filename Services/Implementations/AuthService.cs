@@ -13,12 +13,15 @@ namespace PersonalKnowledgeHub.Services.Implementations
         private readonly IUserRepository _authRepository;
         private readonly ITokenRepository _tokenRepository;
         private readonly ITokenService _tokenService;
+        private readonly IUnitOfWorkRepository _unitOfWorkRepository;
 
-        public AuthService(IUserRepository authRepository, ITokenRepository tokenRepository, ITokenService tokenService)
+        public AuthService(IUserRepository authRepository, ITokenRepository tokenRepository, 
+            ITokenService tokenService, IUnitOfWorkRepository unitOfWorkRepository)
         {
             _authRepository = authRepository;
             _tokenRepository = tokenRepository;
             _tokenService = tokenService;
+            _unitOfWorkRepository = unitOfWorkRepository;
         }
 
         public bool IsEmailValid(string email)
@@ -55,7 +58,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             user.CreatedAt = DateTime.UtcNow;
             User registeredUser = await _authRepository.AddUserAsync(user);
-            RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id);
+            RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id, Guid.NewGuid());
             string accessToken = await _tokenService.GenerateAccessToken(registeredUser.Id);
             return AuthMapper.ToAuthResponseDto(refreshToken.Token, accessToken);
         }
@@ -73,7 +76,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new UnauthorizedException("Password is incorrect");
             }
-            RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(loggedInUser.Id);
+            RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(loggedInUser.Id, Guid.NewGuid());
             string accessToken = await _tokenService.GenerateAccessToken(loggedInUser.Id);
             await _tokenRepository.CleanUpRefreshTokenAsync();
             return AuthMapper.ToAuthResponseDto(refreshToken.Token, accessToken);
@@ -81,11 +84,21 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<AuthResponseDto> RefreshUser(RefreshRequestDto refreshRequest)
         {
-            RefreshToken refreshToken = await _tokenService.ValidateRefreshToken(refreshRequest.RefreshToken);
-            await _tokenService.RevokeRefreshToken(refreshToken.Token);
-            RefreshToken newRefreshToken = await _tokenService.GenerateRefreshToken(refreshToken.UserId);
-            string accessToken = await _tokenService.GenerateAccessToken(refreshToken.UserId);
-            return AuthMapper.ToAuthResponseDto(newRefreshToken.Token, accessToken);
+            await using var transaction = await _unitOfWorkRepository.BeginTransactionAsync();
+            try
+            {
+                RefreshToken refreshToken = await _tokenService.ValidateRefreshToken(refreshRequest.RefreshToken);
+                RefreshToken newRefreshToken = await _tokenService.GenerateRefreshToken(refreshToken.UserId, refreshToken.FamilyId);
+                await _tokenService.RevokeRefreshToken(refreshToken.Token, newRefreshToken.Id);
+                string accessToken = await _tokenService.GenerateAccessToken(refreshToken.UserId);
+                await transaction.CommitAsync();
+                return AuthMapper.ToAuthResponseDto(newRefreshToken.Token, accessToken);
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task LogoutUser(LogoutRequestDto logoutRequest, int userId)
@@ -95,7 +108,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("Refresh token belongs to another user");
             }
-            await _tokenService.RevokeRefreshToken(logoutRequest.RefreshToken);
+            await _tokenService.RevokeRefreshToken(logoutRequest.RefreshToken, null);
         }
     }
 }

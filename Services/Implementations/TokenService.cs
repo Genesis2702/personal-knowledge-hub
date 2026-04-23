@@ -77,7 +77,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             if (refreshToken.Revoked)
             {
                 await _tokenRepository.RevokeAllRefreshTokensAsync(refreshToken.FamilyId, null);
-                throw new UnauthorizedException("Refresh token is revoked");
+                throw new UnauthorizedException("Refresh token reused detected");
             }
             if (refreshToken.ExpiresAt < DateTime.UtcNow)
             {

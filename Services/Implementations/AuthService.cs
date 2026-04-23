@@ -88,11 +88,22 @@ namespace PersonalKnowledgeHub.Services.Implementations
             try
             {
                 RefreshToken refreshToken = await _tokenService.ValidateRefreshToken(refreshRequest.RefreshToken);
-                RefreshToken newRefreshToken = await _tokenService.GenerateRefreshToken(refreshToken.UserId, refreshToken.FamilyId);
+                RefreshToken newRefreshToken =
+                    await _tokenService.GenerateRefreshToken(refreshToken.UserId, refreshToken.FamilyId);
                 await _tokenService.RevokeRefreshToken(refreshToken.Token, newRefreshToken.Id);
                 string accessToken = await _tokenService.GenerateAccessToken(refreshToken.UserId);
                 await transaction.CommitAsync();
                 return AuthMapper.ToAuthResponseDto(newRefreshToken.Token, accessToken);
+            }
+            catch (NotFoundException ex)
+            {
+                await transaction.RollbackAsync();
+                throw new NotFoundException(ex.Message);
+            }
+            catch (UnauthorizedException ex)
+            {
+                await transaction.CommitAsync();
+                throw new UnauthorizedException(ex.Message);
             }
             catch
             {

@@ -57,6 +57,8 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             user.CreatedAt = DateTime.UtcNow;
+            user.IsBanned = false;
+            user.BannedAt = null;
             User registeredUser = await _authRepository.AddUserAsync(user);
             RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id, Guid.NewGuid());
             string accessToken = await _tokenService.GenerateAccessToken(registeredUser.Id);
@@ -120,6 +122,37 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ForbiddenException("Refresh token belongs to another user");
             }
             await _tokenService.RevokeRefreshToken(logoutRequest.RefreshToken, null);
+        }
+
+        public async Task BanUser(int userId)
+        {
+            User? user = await _authRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new NotFoundException("User not found");
+            }
+            await _authRepository.BanUserAsync(user);
+        }
+
+        public async Task UnbanUser(int userId)
+        {
+            User? user = await _authRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new NotFoundException("User not found");
+            }
+            await _authRepository.UnbanUserAsync(user);
+        }
+
+        public async Task ResetPassword(ResetPasswordRequestDto resetPasswordRequest)
+        {
+            User? user = await _authRepository.GetUserByEmailAsync(resetPasswordRequest.Email);
+            if (user == null)
+            {
+                throw new UnauthorizedException("Email is incorrect");
+            }
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(resetPasswordRequest.NewPassword);
+            await _authRepository.ResetPasswordAsync(user, hashedPassword);
         }
     }
 }

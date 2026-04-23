@@ -8,5 +8,8 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces
         public Task<User> AddUserAsync(User user);
         public Task<User?> GetUserByIdAsync(int userId);
         public Task<User?> GetUserByEmailAsync(string email);
+        public Task BanUserAsync(User user);
+        public Task UnbanUserAsync(User user);
+        public Task ResetPasswordAsync(User user, string newHashedPassword);
     }
 }

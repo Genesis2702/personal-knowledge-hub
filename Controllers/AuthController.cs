@@ -41,8 +41,7 @@ namespace PersonalKnowledgeHub.Controllers
             AuthResponseDto authResponse = await _authService.RefreshUser(refreshRequest);
             return Ok(authResponse);
         }
-
-        [Authorize]
+        
         [HttpPost("logout")]
         [Authorize]
         public async Task<IActionResult> Logout(LogoutRequestDto logoutRequest)
@@ -50,6 +49,30 @@ namespace PersonalKnowledgeHub.Controllers
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             await _authService.LogoutUser(logoutRequest, userId);
             return Ok();
+        }
+
+        [HttpDelete("ban-user/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Ban(int id)
+        {
+            await _authService.BanUser(id);
+            return Ok();
+        }
+
+        [HttpPost("unban-user/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Unban(int id)
+        {
+            await _authService.UnbanUser(id);
+            return Ok();
+        }
+        
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto resetPasswordRequest)
+        {
+            await _authService.ResetPassword(resetPasswordRequest);
+            return Ok("Password reset successfully");
         }
     }
 }

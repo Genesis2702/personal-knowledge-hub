@@ -35,5 +35,25 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
         {
             return await _dbContext.Users.SingleOrDefaultAsync(user => user.Email == email);
         }
+
+        public async Task BanUserAsync(User user)
+        {
+            user.IsBanned = true;
+            user.BannedAt = DateTime.UtcNow;
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task UnbanUserAsync(User user)
+        {
+            user.IsBanned = false;
+            user.BannedAt = null;
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task ResetPasswordAsync(User user, string newHashedPassword)
+        {
+            user.PasswordHash = newHashedPassword;
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }

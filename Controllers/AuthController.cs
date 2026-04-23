@@ -19,6 +19,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<ActionResult<AuthResponseDto>> Register(RegisterRequestDto registerRequest)
         {
             AuthResponseDto authResponse = await _authService.RegisterUser(registerRequest);
@@ -26,6 +27,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<ActionResult<AuthResponseDto>> Login(LoginRequestDto loginRequest)
         {
             AuthResponseDto authResponse = await _authService.AuthenticateUser(loginRequest);
@@ -33,6 +35,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost("refresh")]
+        [Authorize]
         public async Task<ActionResult<AuthResponseDto>> Refresh(RefreshRequestDto refreshRequest)
         {
             AuthResponseDto authResponse = await _authService.RefreshUser(refreshRequest);
@@ -41,6 +44,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [Authorize]
         [HttpPost("logout")]
+        [Authorize]
         public async Task<IActionResult> Logout(LogoutRequestDto logoutRequest)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

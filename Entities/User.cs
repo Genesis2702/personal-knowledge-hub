@@ -10,5 +10,6 @@
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
         public ICollection<Resource> Resources { get; set; } = new List<Resource>();
         public ICollection<Tag> Tags { get; set; } = new List<Tag>();
+        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     }
 }

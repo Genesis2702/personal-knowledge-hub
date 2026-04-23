@@ -11,6 +11,10 @@ namespace PersonalKnowledgeHub.Data
         public DbSet<Resource> Resources { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<ResourceTag> ResourceTags { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<Permission> Permissions { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -58,6 +62,36 @@ namespace PersonalKnowledgeHub.Data
                 .HasOne(resourceTag => resourceTag.Resource)
                 .WithMany(resource => resource.ResourceTags)
                 .HasForeignKey(resourceTag => resourceTag.ResourceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Role>().HasKey(role => role.Id);
+            modelBuilder.Entity<Role>().HasIndex(role => role.Name).IsUnique();
+            
+            modelBuilder.Entity<Permission>().HasKey(permission => permission.Id);
+            modelBuilder.Entity<Permission>().HasIndex(permission => permission.Name).IsUnique();
+            
+            modelBuilder.Entity<UserRole>().HasKey(userRole => new { userRole.UserId, userRole.RoleId });
+            modelBuilder.Entity<UserRole>()
+                .HasOne(userRole => userRole.User)
+                .WithMany(user => user.UserRoles)
+                .HasForeignKey(userRole => userRole.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<UserRole>()
+                .HasOne(userRole => userRole.Role)
+                .WithMany(role => role.UserRoles)
+                .HasForeignKey(userRole => userRole.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            modelBuilder.Entity<RolePermission>().HasKey(rolePermission => new { rolePermission.RoleId, rolePermission.PermissionId });
+            modelBuilder.Entity<RolePermission>()
+                .HasOne(rolePermission => rolePermission.Role)
+                .WithMany(role => role.RolePermissions)
+                .HasForeignKey(rolePermission => rolePermission.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<RolePermission>()
+                .HasOne(rolePermission => rolePermission.Permission)
+                .WithMany(permission => permission.RolePermissions)
+                .HasForeignKey(rolePermission => rolePermission.PermissionId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

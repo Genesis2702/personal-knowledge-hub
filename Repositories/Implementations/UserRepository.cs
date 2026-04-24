@@ -26,12 +26,12 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return user;
         }
 
-        public async Task<(List<User>, int)> GetUsersAsync(int pageIndex, int pageSize, bool? isBanned)
+        public async Task<(List<User>, int)> GetUsersAsync(int pageIndex, int pageSize, UserStatus? status)
         {
             IQueryable<User> query = _dbContext.Users.AsNoTracking();
-            if (isBanned.HasValue)
+            if (status.HasValue)
             {
-                query = query.Where(user => user.IsBanned == isBanned.Value);
+                query = query.Where(user => user.Status == status.Value);
             }
             int usersCount = await query.CountAsync();
             List<User> users = await query
@@ -54,14 +54,14 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
 
         public async Task BanUserAsync(User user)
         {
-            user.IsBanned = true;
+            user.Status = UserStatus.Banned;
             user.BannedAt = DateTime.UtcNow;
             await _dbContext.SaveChangesAsync();
         }
 
         public async Task UnbanUserAsync(User user)
         {
-            user.IsBanned = false;
+            user.Status = UserStatus.Active;
             user.BannedAt = null;
             await _dbContext.SaveChangesAsync();
         }

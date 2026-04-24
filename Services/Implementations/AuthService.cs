@@ -57,7 +57,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             user.CreatedAt = DateTime.UtcNow;
-            user.IsBanned = false;
+            user.Status = UserStatus.Pending;
             user.BannedAt = null;
             User registeredUser = await _userRepository.AddUserAsync(user);
             RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id, Guid.NewGuid());

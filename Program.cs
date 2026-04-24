@@ -57,6 +57,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("ActiveAccount",
+        policy => policy.RequireClaim("status", "Active"));
+    options.AddPolicy("PendingAccount",
+        policy => policy.RequireClaim("status", "Pending"));
+    options.AddPolicy("BannedAccount",
+        policy => policy.RequireClaim("status", "Banned"));
+    options.AddPolicy("InactiveAccount",
+        policy => policy.RequireClaim("status", "Inactive"));
 });
 
 var app = builder.Build();

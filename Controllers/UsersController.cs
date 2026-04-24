@@ -12,6 +12,7 @@ namespace PersonalKnowledgeHub.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize(Policy = "ActiveAccount")]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -28,7 +29,7 @@ namespace PersonalKnowledgeHub.Controllers
             PageResult<User> usersPageResult = await _userService.GetUsers(
                 userQueryRequest.PageIndex, 
                 userQueryRequest.PageSize,
-                userQueryRequest.IsBanned
+                userQueryRequest.Status
             );
             return Ok(usersPageResult);
         }
@@ -51,7 +52,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(userResponse);
         }
 
-        [HttpPost("ban-user/{id}")]
+        [HttpPost("{id}/ban")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> BanUser(int id)
         {
@@ -59,7 +60,7 @@ namespace PersonalKnowledgeHub.Controllers
             return NoContent();
         }
 
-        [HttpPost("unban-user/{id}")]
+        [HttpPost("{id}/unban")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UnbanUser(int id)
         {

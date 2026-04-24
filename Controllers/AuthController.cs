@@ -35,7 +35,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost("refresh")]
-        [Authorize]
+        [Authorize(Policy = "ActiveAccount")]
         public async Task<ActionResult<AuthResponseDto>> Refresh(RefreshRequestDto refreshRequest)
         {
             AuthResponseDto authResponse = await _authService.RefreshUser(refreshRequest);
@@ -43,7 +43,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
         
         [HttpPost("logout")]
-        [Authorize]
+        [Authorize(Policy = "ActiveAccount")]
         public async Task<IActionResult> Logout(LogoutRequestDto logoutRequest)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -52,7 +52,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost("forgot-password")]
-        [Authorize]
+        [Authorize(Policy = "ActiveAccount")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequest)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

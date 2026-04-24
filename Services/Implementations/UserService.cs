@@ -16,9 +16,9 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public async Task<PageResult<User>> GetUsers(int pageIndex, int pageSize, bool? isBanned)
+    public async Task<PageResult<User>> GetUsers(int pageIndex, int pageSize, UserStatus? status)
     {
-        (List<User> users, int usersCount) = await _userRepository.GetUsersAsync(pageIndex, pageSize, isBanned);
+        (List<User> users, int usersCount) = await _userRepository.GetUsersAsync(pageIndex, pageSize, status);
         PageResult<User> usersPageResult = UserMapper.ToUsersPageResult(users, usersCount, pageIndex, pageSize);
         return usersPageResult;
     }
@@ -29,10 +29,6 @@ public class UserService : IUserService
         if (user == null)
         {
             throw new NotFoundException("User not found");
-        }
-        if (user.IsBanned)
-        {
-            throw new ForbiddenException("User is banned");
         }
         return user;
     }

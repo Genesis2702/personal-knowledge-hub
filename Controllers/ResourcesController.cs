@@ -14,7 +14,7 @@ namespace PersonalKnowledgeHub.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize]
+    [Authorize(Policy = "ActiveAccount")]
     public class ResourcesController : ControllerBase
     {
         private readonly IResourceService _resourceService;

@@ -11,7 +11,7 @@ namespace PersonalKnowledgeHub.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize]
+    [Authorize(Policy = "ActiveAccount")]
     public class TagsController : ControllerBase
     {
         private readonly ITagService _tagService;

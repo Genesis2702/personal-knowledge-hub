@@ -33,7 +33,7 @@ public class UserMapper
             UserName = user.UserName ?? user.Email,
             Email = user.Email,
             CreatedAt = user.CreatedAt,
-            IsBanned = user.IsBanned,
+            Status = user.Status,
             BannedAt = user.BannedAt,
             Resources = user.Resources.Select(resource => resource.Title).ToList()
         };

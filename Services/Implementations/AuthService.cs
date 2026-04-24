@@ -10,15 +10,15 @@ namespace PersonalKnowledgeHub.Services.Implementations
 {
     public class AuthService : IAuthService
     {
-        private readonly IUserRepository _authRepository;
+        private readonly IUserRepository _userRepository;
         private readonly ITokenRepository _tokenRepository;
         private readonly ITokenService _tokenService;
         private readonly IUnitOfWorkRepository _unitOfWorkRepository;
 
-        public AuthService(IUserRepository authRepository, ITokenRepository tokenRepository, 
+        public AuthService(IUserRepository userRepository, ITokenRepository tokenRepository, 
             ITokenService tokenService, IUnitOfWorkRepository unitOfWorkRepository)
         {
-            _authRepository = authRepository;
+            _userRepository = userRepository;
             _tokenRepository = tokenRepository;
             _tokenService = tokenService;
             _unitOfWorkRepository = unitOfWorkRepository;
@@ -50,7 +50,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ValidationException("Email is invalid");
             }
-            bool exist = await _authRepository.IsEmailExistAsync(user.Email);
+            bool exist = await _userRepository.IsEmailExistAsync(user.Email);
             if (exist)
             {
                 throw new ConflictException("Email already existed");
@@ -59,7 +59,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             user.CreatedAt = DateTime.UtcNow;
             user.IsBanned = false;
             user.BannedAt = null;
-            User registeredUser = await _authRepository.AddUserAsync(user);
+            User registeredUser = await _userRepository.AddUserAsync(user);
             RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id, Guid.NewGuid());
             string accessToken = await _tokenService.GenerateAccessToken(registeredUser.Id);
             return AuthMapper.ToAuthResponseDto(refreshToken.Token, accessToken);
@@ -69,7 +69,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
         {
             User user = UserMapper.ToUser(loginRequest);
             user.Email = user.Email.Trim().ToLower();
-            User? loggedInUser = await _authRepository.GetUserByEmailAsync(user.Email);
+            User? loggedInUser = await _userRepository.GetUserByEmailAsync(user.Email);
             if (loggedInUser == null)
             {
                 throw new UnauthorizedException("Email is incorrect");
@@ -124,35 +124,26 @@ namespace PersonalKnowledgeHub.Services.Implementations
             await _tokenService.RevokeRefreshToken(logoutRequest.RefreshToken, null);
         }
 
-        public async Task BanUser(int userId)
+        public async Task ForgotPassword(int userId, string newPassword)
         {
-            User? user = await _authRepository.GetUserByIdAsync(userId);
+            User? user = await _userRepository.GetUserByEmailAsync(newPassword);
             if (user == null)
             {
-                throw new NotFoundException("User not found");
+                throw new UnauthorizedException("Email is incorrect");
             }
-            await _authRepository.BanUserAsync(user);
-        }
-
-        public async Task UnbanUser(int userId)
-        {
-            User? user = await _authRepository.GetUserByIdAsync(userId);
-            if (user == null)
-            {
-                throw new NotFoundException("User not found");
-            }
-            await _authRepository.UnbanUserAsync(user);
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            await _userRepository.ResetPasswordAsync(user, hashedPassword);
         }
 
         public async Task ResetPassword(ResetPasswordRequestDto resetPasswordRequest)
         {
-            User? user = await _authRepository.GetUserByEmailAsync(resetPasswordRequest.Email);
+            User? user = await _userRepository.GetUserByEmailAsync(resetPasswordRequest.Email);
             if (user == null)
             {
                 throw new UnauthorizedException("Email is incorrect");
             }
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(resetPasswordRequest.NewPassword);
-            await _authRepository.ResetPasswordAsync(user, hashedPassword);
+            await _userRepository.ResetPasswordAsync(user, hashedPassword);
         }
     }
 }

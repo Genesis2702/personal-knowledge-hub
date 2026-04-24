@@ -26,6 +26,22 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return user;
         }
 
+        public async Task<(List<User>, int)> GetUsersAsync(int pageIndex, int pageSize, bool? isBanned)
+        {
+            IQueryable<User> query = _dbContext.Users.AsNoTracking();
+            if (isBanned.HasValue)
+            {
+                query = query.Where(user => user.IsBanned == isBanned.Value);
+            }
+            int usersCount = await query.CountAsync();
+            List<User> users = await query
+                .OrderBy(user => user.Id)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            return (users, usersCount);
+        }
+
         public async Task<User?> GetUserByIdAsync(int userId)
         {
             return await _dbContext.Users.SingleOrDefaultAsync(user => user.Id == userId);

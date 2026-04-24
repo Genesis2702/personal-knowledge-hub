@@ -51,20 +51,13 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok();
         }
 
-        [HttpDelete("ban-user/{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Ban(int id)
+        [HttpPost("forgot-password")]
+        [Authorize]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequest)
         {
-            await _authService.BanUser(id);
-            return Ok();
-        }
-
-        [HttpPost("unban-user/{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Unban(int id)
-        {
-            await _authService.UnbanUser(id);
-            return Ok();
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _authService.ForgotPassword(userId, forgotPasswordRequest.NewPassword);
+            return Ok("Password changed successfully");
         }
         
         [HttpPost("reset-password")]

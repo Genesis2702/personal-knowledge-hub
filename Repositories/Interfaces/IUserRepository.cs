@@ -6,6 +6,7 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces
     {
         public Task<bool> IsEmailExistAsync(string email);
         public Task<User> AddUserAsync(User user);
+        public Task<(List<User>, int)> GetUsersAsync(int pageIndex, int pageSize, bool? isBanned);
         public Task<User?> GetUserByIdAsync(int userId);
         public Task<User?> GetUserByEmailAsync(string email);
         public Task BanUserAsync(User user);

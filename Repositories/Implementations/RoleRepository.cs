@@ -47,4 +47,17 @@ public class RoleRepository : IRoleRepository
     {
         return await _dbContext.Roles.AnyAsync(role => role.Name == name);
     }
+
+    public async Task<Role> AddPermissionToRoleAsync(RolePermission rolePermission)
+    {
+        await _dbContext.RolePermissions.AddAsync(rolePermission);
+        await _dbContext.SaveChangesAsync();
+        return rolePermission.Role;
+    }
+
+    public async Task RemovePermissionFromRoleAsync(RolePermission rolePermission)
+    {
+        _dbContext.RolePermissions.Remove(rolePermission);
+        await _dbContext.SaveChangesAsync();
+    }
 }

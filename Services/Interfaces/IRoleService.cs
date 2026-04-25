@@ -9,4 +9,6 @@ public interface IRoleService
     public Task<Role> AddRole(string name);
     public Task UpdateRoleById(int id, string newName);
     public Task DeleteRoleById(int id);
+    public Task<Role> AddPermissionToRole(int roleId, int permissionId);
+    public Task RemovePermissionFromRole(int roleId, int permissionId);
 }

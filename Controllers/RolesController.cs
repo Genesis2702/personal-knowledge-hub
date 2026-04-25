@@ -60,10 +60,24 @@ namespace PersonalKnowledgeHub.Controllers
         }
         
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteRoleById(int id)
+        public async Task<IActionResult> DeleteRoleById(int id)
         {
            await _roleService.DeleteRoleById(id);
            return NoContent();
+        }
+
+        [HttpPost("{roleId}/permissions/{permissionId}")]
+        public async Task<ActionResult<Role>> AddPermissionToRole(int roleId, int permissionId)
+        {
+            Role role = await _roleService.AddPermissionToRole(roleId, permissionId);
+            return CreatedAtAction(nameof(GetRoleById), new { id = role.Id }, role);
+        }
+        
+        [HttpDelete("{roleId}/permissions/{permissionId}")]
+        public async Task<IActionResult> RemovePermissionFromRole(int roleId, int permissionId)
+        {
+            await _roleService.RemovePermissionFromRole(roleId, permissionId);
+            return NoContent();
         }
     }
 }

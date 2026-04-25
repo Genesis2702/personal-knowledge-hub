@@ -8,10 +8,12 @@ namespace PersonalKnowledgeHub.Services.Implementations;
 public class RoleService : IRoleService
 {
     private readonly IRoleRepository _roleRepository;
+    private readonly IPermissionRepository _permissionRepository;
 
-    public RoleService(IRoleRepository roleRepository)
+    public RoleService(IRoleRepository roleRepository, IPermissionRepository permissionRepository)
     {
         _roleRepository = roleRepository;
+        _permissionRepository = permissionRepository;
     }
 
     public async Task<List<Role>> GetRoles()
@@ -69,5 +71,49 @@ public class RoleService : IRoleService
             throw new ConflictException("Admin role cannot be deleted");
         }
         await _roleRepository.DeleteRoleAsync(role);
+    }
+
+    public async Task<Role> AddPermissionToRole(int roleId, int permissionId)
+    {
+        Role? role = await _roleRepository.GetRoleByIdAsync(roleId);
+        if (role == null)
+        {
+            throw new NotFoundException("Role not found");
+        }
+        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(permissionId);
+        if (permission == null)
+        {
+            throw new NotFoundException("Permission not found");
+        }
+        RolePermission rolePermission = new RolePermission
+        {
+            Role = role,
+            Permission = permission,
+            RoleId = roleId,
+            PermissionId = permissionId
+        };
+        return await _roleRepository.AddPermissionToRoleAsync(rolePermission);
+    }
+
+    public async Task RemovePermissionFromRole(int roleId, int permissionId)
+    {
+        Role? role = await _roleRepository.GetRoleByIdAsync(roleId);
+        if (role == null)
+        {
+            throw new NotFoundException("Role not found");
+        }
+        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(permissionId);
+        if (permission == null)
+        {
+            throw new NotFoundException("Permission not found");
+        }
+        RolePermission rolePermission = new RolePermission
+        {
+            Role = role,
+            Permission = permission,
+            RoleId = roleId,
+            PermissionId = permissionId
+        };
+        await _roleRepository.RemovePermissionFromRoleAsync(rolePermission);
     }
 }

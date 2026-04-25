@@ -19,9 +19,9 @@ public class PermissionService : IPermissionService
         return await _permissionRepository.GetPermissionsAsync();
     }
 
-    public async Task<Permission> GetPermissionByName(string name)
+    public async Task<Permission> GetPermissionById(int id)
     {
-        Permission? permission = await _permissionRepository.GetPermissionByNameAsync(name);
+        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(id);
         if (permission == null)
         {
             throw new NotFoundException("Permission not found");
@@ -38,9 +38,9 @@ public class PermissionService : IPermissionService
         return await _permissionRepository.AddPermissionAsync(permission);
     }
 
-    public async Task UpdatePermission(string currentName, string newName)
+    public async Task UpdatePermissionById(int id, string newName)
     {
-        Permission? permission = await _permissionRepository.GetPermissionByNameAsync(currentName);
+        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(id);
         if (permission == null)
         {
             throw new NotFoundException("Permission not found");
@@ -48,9 +48,9 @@ public class PermissionService : IPermissionService
         await _permissionRepository.UpdatePermissionAsync(permission, newName);
     }
 
-    public async Task DeletePermission(string name)
+    public async Task DeletePermissionById(int id)
     {
-        Permission? permission = await _permissionRepository.GetPermissionByNameAsync(name);
+        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(id);
         if (permission == null)
         {
             throw new NotFoundException("Permission not found");

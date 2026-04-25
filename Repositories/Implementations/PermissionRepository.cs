@@ -19,9 +19,9 @@ public class PermissionRepository : IPermissionRepository
         return await _dbContext.Permissions.AsNoTracking().ToListAsync();
     }
 
-    public async Task<Permission?> GetPermissionByNameAsync(string name)
+    public async Task<Permission?> GetPermissionByIdAsync(int id)
     {
-        return await _dbContext.Permissions.SingleOrDefaultAsync(permission => permission.Name == name);
+        return await _dbContext.Permissions.SingleOrDefaultAsync(permission => permission.Id == id);
     }
 
     public async Task<Permission> AddPermissionAsync(Permission permission)

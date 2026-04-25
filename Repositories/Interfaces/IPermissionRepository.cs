@@ -9,4 +9,5 @@ public interface IPermissionRepository
     public Task<Permission> AddPermissionAsync(Permission permission);
     public Task UpdatePermissionAsync(Permission permission, string name);
     public Task DeletePermissionAsync(Permission permission);
+    public Task<bool> IsPermissionExistAsync(string name);
 }

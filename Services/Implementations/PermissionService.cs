@@ -31,9 +31,13 @@ public class PermissionService : IPermissionService
 
     public async Task<Permission> AddPermission(string name)
     {
+        if (await _permissionRepository.IsPermissionExistAsync(name))
+        {
+            throw new ConflictException("Permission already existed");
+        }
         Permission permission = new Permission
         {
-            Name = name
+            Name = name.Trim().ToLower()
         };
         return await _permissionRepository.AddPermissionAsync(permission);
     }

@@ -42,4 +42,9 @@ public class PermissionRepository : IPermissionRepository
         _dbContext.Remove(permission);
         await _dbContext.SaveChangesAsync();
     }
+
+    public async Task<bool> IsPermissionExistAsync(string name)
+    {
+        return await _dbContext.Permissions.AnyAsync(permission => permission.Name == name);
+    }
 }

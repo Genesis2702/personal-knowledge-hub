@@ -71,5 +71,18 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             user.PasswordHash = newHashedPassword;
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<User> AddRoleToUserAsync(UserRole userRole)
+        {
+            await _dbContext.UserRoles.AddAsync(userRole);
+            await _dbContext.SaveChangesAsync();
+            return userRole.User;
+        }
+
+        public async Task RemoveRoleFromUserAsync(UserRole userRole)
+        {
+            _dbContext.UserRoles.Remove(userRole);
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }

@@ -67,5 +67,21 @@ namespace PersonalKnowledgeHub.Controllers
             await _userService.UnbanUser(id);
             return NoContent();
         }
+
+        [HttpPost("{userId}/roles/{roleId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<User>> AddRoleToUser(int userId, int roleId)
+        {
+            User user = await _userService.AddRoleToUser(userId, roleId);
+            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
+        }
+
+        [HttpDelete("{userId}/roles/{roleId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RemoveRoleFromUser(int userId, int roleId)
+        {
+            await _userService.RemoveRoleFromUser(userId, roleId);
+            return NoContent();
+        }
     }
 }

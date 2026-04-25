@@ -10,10 +10,12 @@ namespace PersonalKnowledgeHub.Services.Implementations;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IRoleRepository _roleRepository;
 
-    public UserService(IUserRepository userRepository)
+    public UserService(IUserRepository userRepository, IRoleRepository roleRepository)
     {
         _userRepository = userRepository;
+        _roleRepository = roleRepository;
     }
 
     public async Task<PageResult<User>> GetUsers(int pageIndex, int pageSize, UserStatus? status)
@@ -51,5 +53,49 @@ public class UserService : IUserService
             throw new NotFoundException("User not found");
         }
         await _userRepository.UnbanUserAsync(user);
+    }
+
+    public async Task<User> AddRoleToUser(int userId, int roleId)
+    {
+        User? user = await _userRepository.GetUserByIdAsync(userId);
+        if (user == null)
+        {
+            throw new NotFoundException("User not found");
+        }
+        Role? role = await _roleRepository.GetRoleByIdAsync(roleId);
+        if (role == null)
+        {
+            throw new NotFoundException("Role not found");
+        }
+        UserRole userRole = new UserRole
+        {
+            User = user,
+            Role = role,
+            UserId = userId,
+            RoleId = roleId
+        };
+        return await _userRepository.AddRoleToUserAsync(userRole);
+    }
+
+    public async Task RemoveRoleFromUser(int userId, int roleId)
+    {
+        User? user = await _userRepository.GetUserByIdAsync(userId);
+        if (user == null)
+        {
+            throw new NotFoundException("User not found");
+        }
+        Role? role = await _roleRepository.GetRoleByIdAsync(roleId);
+        if (role == null)
+        {
+            throw new NotFoundException("Role not found");
+        }
+        UserRole userRole = new UserRole
+        {
+            User = user,
+            Role = role,
+            UserId = userId,
+            RoleId = roleId
+        };
+        await _userRepository.RemoveRoleFromUserAsync(userRole);
     }
 }

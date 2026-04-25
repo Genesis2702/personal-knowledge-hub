@@ -9,4 +9,6 @@ public interface IUserService
     public Task<User> GetUserById(int id);
     public Task BanUser(int userId);
     public Task UnbanUser(int userId);
+    public Task<User> AddRoleToUser(int userId, int roleId);
+    public Task RemoveRoleFromUser(int userId, int roleId);
 }

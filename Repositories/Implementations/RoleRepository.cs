@@ -42,4 +42,9 @@ public class RoleRepository : IRoleRepository
         _dbContext.Remove(role);
         await _dbContext.SaveChangesAsync();
     }
+
+    public async Task<bool> IsRoleExistAsync(string name)
+    {
+        return await _dbContext.Roles.AnyAsync(role => role.Name == name);
+    }
 }

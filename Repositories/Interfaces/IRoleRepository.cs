@@ -9,4 +9,5 @@ public interface IRoleRepository
     public Task<Role> AddRoleAsync(Role role);
     public Task UpdateRoleAsync(Role role, string name);
     public Task DeleteRoleAsync(Role role);
+    public Task<bool> IsRoleExistAsync(string name);
 }

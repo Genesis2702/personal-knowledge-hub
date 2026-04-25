@@ -32,9 +32,13 @@ public class RoleService : IRoleService
 
     public async Task<Role> AddRole(string name)
     {
+        if (await _roleRepository.IsRoleExistAsync(name))
+        {
+            throw new ConflictException("Role already existed");
+        }
         Role role = new Role
         {
-            Name = name
+            Name = name.Trim().ToLower()
         };
         return await _roleRepository.AddRoleAsync(role);
     }
@@ -46,6 +50,10 @@ public class RoleService : IRoleService
         {
             throw new NotFoundException("Role not found");
         }
+        if (role.Name == newName)
+        {
+            throw new ConflictException("Role name already existed");
+        }
         await _roleRepository.UpdateRoleAsync(role, newName);
     }
 
@@ -55,6 +63,10 @@ public class RoleService : IRoleService
         if (role == null)
         {
             throw new NotFoundException("Role not found");
+        }
+        if (role.Name == "admin")
+        {
+            throw new ConflictException("Admin role cannot be deleted");
         }
         await _roleRepository.DeleteRoleAsync(role);
     }

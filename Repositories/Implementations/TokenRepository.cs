@@ -48,7 +48,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task RevokeAllRefreshTokensAsync(Guid familyId, int? replacedId)
+        public async Task RevokeRefreshTokensByFamilyAsync(Guid familyId, int? replacedId)
         {
             List<RefreshToken> refreshTokens = await _dbContext.RefreshTokens.Where(rt => rt.FamilyId == familyId).ToListAsync();
             foreach (RefreshToken refreshToken in refreshTokens)
@@ -59,6 +59,17 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                 {
                     refreshToken.ReplacedByTokenId = replacedId;
                 }
+            }
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task RevokeRefreshTokensByUserAsync(int userId)
+        {
+            List<RefreshToken> refreshTokens = await _dbContext.RefreshTokens.Where(rt => rt.UserId == userId).ToListAsync();
+            foreach (RefreshToken refreshToken in refreshTokens)
+            {
+                refreshToken.Revoked = true;
+                refreshToken.RevokedAt = DateTime.UtcNow;
             }
             await _dbContext.SaveChangesAsync();
         }

@@ -11,11 +11,13 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
+    private readonly ITokenRepository _tokenRepository;
 
-    public UserService(IUserRepository userRepository, IRoleRepository roleRepository)
+    public UserService(IUserRepository userRepository, IRoleRepository roleRepository, ITokenRepository tokenRepository)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
+        _tokenRepository = tokenRepository;
     }
 
     public async Task<PageResult<User>> GetUsers(int pageIndex, int pageSize, UserStatus? status)
@@ -43,6 +45,7 @@ public class UserService : IUserService
             throw new NotFoundException("User not found");
         }
         await _userRepository.BanUserAsync(user);
+        await _tokenRepository.RevokeRefreshTokensByUserAsync(user.Id);
     }
 
     public async Task UnbanUser(int userId)

@@ -8,7 +8,8 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces
         public Task<RefreshToken?> GetRefreshTokenForUpdateAsync(string token);
         public Task<RefreshToken> AddRefreshTokenAsync(RefreshToken refreshToken);
         public Task RevokeRefreshTokenAsync(string token, int? replacedId);
-        public Task RevokeAllRefreshTokensAsync(Guid familyId, int? replacedId);
+        public Task RevokeRefreshTokensByFamilyAsync(Guid familyId, int? replacedId);
+        public Task RevokeRefreshTokensByUserAsync(int userId);
         public Task CleanUpRefreshTokenAsync();
     }
 }

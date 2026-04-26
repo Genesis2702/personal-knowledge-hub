@@ -75,7 +75,21 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("Tag found doesn't belong to current user");
             }
-            await _tagRepository.DeleteTagAsync(tag);
+            await _tagRepository.DeleteTagAsync(tag, userId);
+        }
+
+        public async Task<Tag> RestoreTagById(int tagId, int userId)
+        {
+            Tag? tag = await _tagRepository.GetTagByIdForRestoreAsync(tagId);
+            if (tag == null)
+            {
+                throw new NotFoundException("Tag not found");
+            }
+            if (tag.UserId != userId)
+            {
+                throw new ForbiddenException("Tag found doesn't belong to current user");
+            }
+            return await _tagRepository.RestoreTagAsync(tag);
         }
     }
 }

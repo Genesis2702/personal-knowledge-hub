@@ -10,5 +10,6 @@ namespace PersonalKnowledgeHub.Services.Interfaces
         public Task<Tag> GetTagById(int tagId, int userId);
         public Task UpdateTagById(TagRequestDto tagRequest, int tagId, int userId);
         public Task DeleteTagById(int tagId, int userId);
+        public Task<Tag> RestoreTagById(int tagId, int userId);
     }
 }

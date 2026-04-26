@@ -6,6 +6,10 @@
         public required string Name { get; set; }
         public required int UserId { get; set; }
         public User? User { get; set; }
+        public DateTime LastModified { get; set; }
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
+        public int? DeletedBy { get; set; }
         public ICollection<ResourceTag> ResourceTags { get; set; } = new List<ResourceTag>();
     }
 }

@@ -51,24 +51,21 @@ namespace PersonalKnowledgeHub.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTagById(TagRequestDto tagRequest, int id)
         {
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            await _tagService.UpdateTagById(tagRequest, id, userId);
+            await _tagService.UpdateTagById(User, tagRequest, id);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTagById(int id)
         {
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            await _tagService.DeleteTagById(id, userId);
+            await _tagService.DeleteTagById(User, id);
             return NoContent();
         }
 
         [HttpPost("{id}/restore")]
         public async Task<ActionResult<TagResponseDto>> RestoreTagById(int id)
         {
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            Tag tag = await _tagService.RestoreTagById(id, userId);
+            Tag tag = await _tagService.RestoreTagById(User, id);
             TagResponseDto tagResponse = TagMapper.ToTagResponseDto(tag);
             return Ok(tagResponse);
         }

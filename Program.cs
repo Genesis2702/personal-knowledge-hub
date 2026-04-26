@@ -71,7 +71,7 @@ builder.Services.AddAuthorization(options =>
         policy => policy.RequireClaim("status", "Banned"));
     options.AddPolicy("InactiveAccount",
         policy => policy.RequireClaim("status", "Inactive"));
-    options.AddPolicy("OwnerOrAdmin", policy => policy.AddRequirements(new OwnerOrAdminRequirement()));
+    options.AddPolicy("OwnerOrAdmin", policy => policy.AddRequirements(new ResourceOwnerOrAdminRequirement()));
 });
 
 var app = builder.Build();

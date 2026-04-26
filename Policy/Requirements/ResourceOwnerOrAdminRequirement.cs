@@ -2,7 +2,7 @@
 
 namespace PersonalKnowledgeHub.Policy.Requirements;
 
-public class OwnerOrAdminRequirement : IAuthorizationRequirement
+public class ResourceOwnerOrAdminRequirement : IAuthorizationRequirement
 {
     
 }

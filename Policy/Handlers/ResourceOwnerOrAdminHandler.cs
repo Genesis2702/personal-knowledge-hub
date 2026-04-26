@@ -5,9 +5,9 @@ using PersonalKnowledgeHub.Policy.Requirements;
 
 namespace PersonalKnowledgeHub.Policy.Handlers;
 
-public class OwnerOrAdminHandler : AuthorizationHandler<OwnerOrAdminRequirement, Resource>
+public class ResourceOwnerOrAdminHandler : AuthorizationHandler<ResourceOwnerOrAdminRequirement, Resource>
 {
-    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, OwnerOrAdminRequirement requirement,
+    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ResourceOwnerOrAdminRequirement requirement,
         Resource resource)
     {
         var claim = context.User.FindFirstValue(ClaimTypes.NameIdentifier);

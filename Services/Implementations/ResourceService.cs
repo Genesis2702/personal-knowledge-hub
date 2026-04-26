@@ -80,7 +80,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new NotFoundException("Resource not found");
             }
-            var result = await _authorizationService.AuthorizeAsync(user, resource, "OwnerOrAdmin");
+            var result = await _authorizationService.AuthorizeAsync(user, resource, "ResourceOwnerOrAdmin");
             if (!result.Succeeded)
             {
                 throw new ForbiddenException("You are not authorized to update this resource");
@@ -96,7 +96,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new NotFoundException("Resource not found");
             }
-            var result = await _authorizationService.AuthorizeAsync(user, resource, "OwnerOrAdmin");
+            var result = await _authorizationService.AuthorizeAsync(user, resource, "ResourceOwnerOrAdmin");
             if (!result.Succeeded)
             {
                 throw new ForbiddenException("You are not authorized to delete this resource");
@@ -112,7 +112,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new NotFoundException("Resource not found");
             }
-            var result = await _authorizationService.AuthorizeAsync(user, resource, "OwnerOrAdmin");
+            var result = await _authorizationService.AuthorizeAsync(user, resource, "ResourceOwnerOrAdmin");
             if (!result.Succeeded)
             {
                 throw new ForbiddenException("You are not authorized to restore this resource");

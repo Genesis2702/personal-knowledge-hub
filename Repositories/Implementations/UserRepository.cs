@@ -44,7 +44,10 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
 
         public async Task<User?> GetUserByIdAsync(int userId)
         {
-            return await _dbContext.Users.SingleOrDefaultAsync(user => user.Id == userId);
+            return await _dbContext.Users
+                .Include(user => user.UserRoles)
+                .ThenInclude(userRole => userRole.Role)
+                .SingleOrDefaultAsync(user => user.Id == userId);
         }
 
         public async Task<User?> GetUserByEmailAsync(string email)

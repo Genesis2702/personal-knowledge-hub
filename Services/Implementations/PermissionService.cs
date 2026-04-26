@@ -37,7 +37,7 @@ public class PermissionService : IPermissionService
         }
         Permission permission = new Permission
         {
-            Name = name.Trim().ToLower()
+            Name = name.Trim().ToUpper()
         };
         return await _permissionRepository.AddPermissionAsync(permission);
     }

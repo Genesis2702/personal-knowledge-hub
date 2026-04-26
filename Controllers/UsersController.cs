@@ -23,7 +23,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
         
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<PageResult<User>>> GetUsers([FromQuery] UserQueryRequestDto userQueryRequest)
         {
             PageResult<User> usersPageResult = await _userService.GetUsers(
@@ -35,7 +35,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<User>> GetUserById(int id)
         {
             User user = await _userService.GetUserById(id);
@@ -53,7 +53,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost("{id}/ban")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> BanUser(int id)
         {
             await _userService.BanUser(id);
@@ -61,7 +61,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost("{id}/unban")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> UnbanUser(int id)
         {
             await _userService.UnbanUser(id);
@@ -69,7 +69,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost("{userId}/roles/{roleId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<User>> AddRoleToUser(int userId, int roleId)
         {
             User user = await _userService.AddRoleToUser(userId, roleId);
@@ -77,7 +77,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpDelete("{userId}/roles/{roleId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> RemoveRoleFromUser(int userId, int roleId)
         {
             await _userService.RemoveRoleFromUser(userId, roleId);

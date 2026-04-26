@@ -28,6 +28,7 @@ builder.Services.AddScoped<IResourceTagRepository, ResourceTagRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IResourceService, ResourceService>();
 builder.Services.AddScoped<ITagService, TagService>();
@@ -62,7 +63,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("ADMIN", policy => policy.RequireRole("ADMIN"));
     options.AddPolicy("ActiveAccount",
         policy => policy.RequireClaim("status", "Active"));
     options.AddPolicy("PendingAccount",

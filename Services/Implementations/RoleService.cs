@@ -40,7 +40,7 @@ public class RoleService : IRoleService
         }
         Role role = new Role
         {
-            Name = name.Trim().ToLower()
+            Name = name.Trim().ToUpper()
         };
         return await _roleRepository.AddRoleAsync(role);
     }

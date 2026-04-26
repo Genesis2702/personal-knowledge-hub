@@ -1,4 +1,6 @@
-﻿using PersonalKnowledgeHub.Common;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using PersonalKnowledgeHub.Common;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
@@ -12,11 +14,13 @@ namespace PersonalKnowledgeHub.Services.Implementations
     {
         private readonly IResourceRepository _resourceRepository;
         private readonly ITagRepository _tagRepository;
+        private readonly IAuthorizationService _authorizationService;
 
-        public ResourceService(IResourceRepository resourceRepository, ITagRepository tagRepository)
+        public ResourceService(IResourceRepository resourceRepository, ITagRepository tagRepository, IAuthorizationService authorizationService)
         {
             _resourceRepository = resourceRepository;
             _tagRepository = tagRepository;
+            _authorizationService = authorizationService;
         }
 
         public async Task<PageResult<Resource>> GetResources(int userId, ResourceQueryRequestDto resourceQueryRequest)
@@ -69,30 +73,33 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return await _resourceRepository.AddResourceAsync(resource);
         }
 
-        public async Task DeleteResourceById(int resourceId, int userId)
+        public async Task DeleteResourceById(ClaimsPrincipal user, int resourceId)
         {
             Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId);
             if (resource == null)
             {
                 throw new NotFoundException("Resource not found");
             }
-            if (resource.UserId != userId)
+            var result = await _authorizationService.AuthorizeAsync(user, resource, "OwnerOrAdmin");
+            if (!result.Succeeded)
             {
-                throw new ForbiddenException("Resource found doesn't belong to current user");
+                throw new ForbiddenException("You are not authorized to delete this resource");
             }
+            int userId = int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
             await _resourceRepository.DeleteResourceAsync(resource, userId);
         }
 
-        public async Task<Resource> RestoreResourceById(int resourceId, int userId)
+        public async Task<Resource> RestoreResourceById(ClaimsPrincipal user, int resourceId)
         {
             Resource? resource = await _resourceRepository.RestoreResourceByIdAsync(resourceId);
             if (resource == null)
             {
                 throw new NotFoundException("Resource not found");
             }
-            if (resource.UserId != userId)
+            var result = await _authorizationService.AuthorizeAsync(user, resource, "OwnerOrAdmin");
+            if (!result.Succeeded)
             {
-                throw new ForbiddenException("Resource found doesn't belong to current user");
+                throw new ForbiddenException("You are not authorized to restore this resource");
             }
             return await _resourceRepository.RestoreResourceAsync(resource);
         }

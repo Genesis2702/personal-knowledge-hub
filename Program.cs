@@ -8,6 +8,8 @@ using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Implementations;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
+using PersonalKnowledgeHub.Policy.Requirements;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,6 +71,7 @@ builder.Services.AddAuthorization(options =>
         policy => policy.RequireClaim("status", "Banned"));
     options.AddPolicy("InactiveAccount",
         policy => policy.RequireClaim("status", "Inactive"));
+    options.AddPolicy("OwnerOrAdmin", policy => policy.AddRequirements(new OwnerOrAdminRequirement()));
 });
 
 var app = builder.Build();

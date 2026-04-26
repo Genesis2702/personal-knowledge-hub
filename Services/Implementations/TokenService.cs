@@ -44,14 +44,17 @@ namespace PersonalKnowledgeHub.Services.Implementations
             User user = (await _userRepository.GetUserByIdAsync(userId))!;
             var handler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("status", user.Status.ToString())
+            };
+            claims.AddRange(
+                user.UserRoles.Select(userRole => new Claim(ClaimTypes.Role, userRole.Role.Name)));
             var descriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim("status", user.Status.ToString())
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMinutes(15),
                 Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"],

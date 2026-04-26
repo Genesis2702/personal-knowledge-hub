@@ -90,7 +90,7 @@ namespace PersonalKnowledgeHub.Controllers
         public async Task<IActionResult> DeleteResourceById(int id)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            await _resourceService.DeleteResourceById(id, userId);
+            await _resourceService.DeleteResourceById(User, id);
             string cacheKey = $"resource:{userId}:{id}";
             await _distributedCache.RemoveAsync(cacheKey);
             return NoContent();
@@ -100,7 +100,7 @@ namespace PersonalKnowledgeHub.Controllers
         public async Task<ActionResult<ResourceResponseDto>> RestoreResourceById(int id)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            Resource resource = await _resourceService.RestoreResourceById(id, userId);
+            Resource resource = await _resourceService.RestoreResourceById(User, id);
             ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
             return Ok(resourceResponse);
         }

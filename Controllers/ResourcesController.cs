@@ -86,6 +86,13 @@ namespace PersonalKnowledgeHub.Controllers
             return CreatedAtAction(nameof(GetResourceById), new { id = resource.Id }, resourceResponse);
         }
 
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateResourceById(ResourceUpdateRequestDto resourceUpdateRequest, int id)
+        {
+            await _resourceService.UpdateResourceById(User, id, resourceUpdateRequest);
+            return NoContent();
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteResourceById(int id)
         {
@@ -99,7 +106,6 @@ namespace PersonalKnowledgeHub.Controllers
         [HttpPost("{id}/restore")]
         public async Task<ActionResult<ResourceResponseDto>> RestoreResourceById(int id)
         {
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             Resource resource = await _resourceService.RestoreResourceById(User, id);
             ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
             return Ok(resourceResponse);

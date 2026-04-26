@@ -10,6 +10,7 @@
         public required int UserId { get; set; }
         public User? User { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime LastModified { get; set; }
         public bool IsDeleted { get; set; }
         public DateTime? DeletedAt { get; set; }
         public int? DeletedBy { get; set; }

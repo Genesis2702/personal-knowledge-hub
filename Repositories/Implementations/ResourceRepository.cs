@@ -48,7 +48,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                 .SingleOrDefaultAsync(resource => resource.Id == resourceId);
         }
 
-        public async Task<Resource?> RestoreResourceByIdAsync(int resourceId)
+        public async Task<Resource?> GetResourceByIdForRestoreAsync(int resourceId)
         {
             return await _dbContext.Resources.IgnoreQueryFilters()
                 .SingleOrDefaultAsync(resource => resource.Id == resourceId);
@@ -59,6 +59,24 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             await _dbContext.Resources.AddAsync(resource);
             await _dbContext.SaveChangesAsync();
             return resource;
+        }
+
+        public async Task UpdateResourceAsync(Resource resource, string? title, string? url, string? description)
+        {
+            if (title != null)
+            {
+                resource.Title = title;
+            }
+            if (url != null)
+            {
+                resource.Url = url;
+            }
+            if (description != null)
+            {
+                resource.Description = description;
+            }
+            resource.LastModified = DateTime.UtcNow;
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task DeleteResourceAsync(Resource resource, int userId)

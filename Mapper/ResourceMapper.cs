@@ -17,7 +17,10 @@ public class ResourceMapper
             ResourceType = resourceRequest.ResourceType,
             UserId = userId,
             CreatedAt = DateTime.UtcNow,
-            IsDeleted = false
+            LastModified = DateTime.UtcNow,
+            IsDeleted = false,
+            DeletedAt = null,
+            DeletedBy = null
         };
     }
 
@@ -30,6 +33,7 @@ public class ResourceMapper
             Description = resource.Description,
             ResourceType = resource.ResourceType,
             CreatedAt = resource.CreatedAt,
+            LastModified = resource.LastModified,
             Tags = resource.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
         };
     }
@@ -56,6 +60,7 @@ public class ResourceMapper
                 Description = item.Description,
                 ResourceType = item.ResourceType,
                 CreatedAt = item.CreatedAt,
+                LastModified = item.LastModified,
                 Tags = item.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
             }).ToList(),
             PageIndex = resourcesPageResult.PageIndex,

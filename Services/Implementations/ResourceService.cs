@@ -73,6 +73,22 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return await _resourceRepository.AddResourceAsync(resource);
         }
 
+        public async Task UpdateResourceById(ClaimsPrincipal user, int resourceId, ResourceUpdateRequestDto resourceUpdateRequest)
+        {
+            Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId);
+            if (resource == null)
+            {
+                throw new NotFoundException("Resource not found");
+            }
+            var result = await _authorizationService.AuthorizeAsync(user, resource, "OwnerOrAdmin");
+            if (!result.Succeeded)
+            {
+                throw new ForbiddenException("You are not authorized to update this resource");
+            }
+            await _resourceRepository.UpdateResourceAsync(resource, resourceUpdateRequest.Title,
+                resourceUpdateRequest.Url, resourceUpdateRequest.Description);
+        }
+
         public async Task DeleteResourceById(ClaimsPrincipal user, int resourceId)
         {
             Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId);
@@ -91,7 +107,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<Resource> RestoreResourceById(ClaimsPrincipal user, int resourceId)
         {
-            Resource? resource = await _resourceRepository.RestoreResourceByIdAsync(resourceId);
+            Resource? resource = await _resourceRepository.GetResourceByIdForRestoreAsync(resourceId);
             if (resource == null)
             {
                 throw new NotFoundException("Resource not found");

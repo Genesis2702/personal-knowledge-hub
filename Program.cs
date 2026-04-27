@@ -9,6 +9,7 @@ using PersonalKnowledgeHub.Services.Implementations;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using PersonalKnowledgeHub.Policy.Handlers;
 using PersonalKnowledgeHub.Policy.Requirements;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,7 @@ builder.Services.AddScoped<ITagRepository, TagRepository>();
 builder.Services.AddScoped<IResourceTagRepository, ResourceTagRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
+
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
@@ -35,6 +37,9 @@ builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IResourceTagService, ResourceTagService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
+
+builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerOrAdminHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, TagOwnerOrAdminHandler>();
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddStackExchangeRedisCache(options =>
@@ -73,7 +78,8 @@ builder.Services.AddAuthorization(options =>
         policy => policy.RequireClaim("status", "Banned"));
     options.AddPolicy("InactiveAccount",
         policy => policy.RequireClaim("status", "Inactive"));
-    options.AddPolicy("OwnerOrAdmin", policy => policy.AddRequirements(new ResourceOwnerOrAdminRequirement()));
+    options.AddPolicy("ResourceOwnerOrAdmin", policy => policy.AddRequirements(new ResourceOwnerOrAdminRequirement()));
+    options.AddPolicy("TagOwnerOrAdmin", policy => policy.AddRequirements(new TagOwnerOrAdminRequirement()));
 });
 
 var app = builder.Build();

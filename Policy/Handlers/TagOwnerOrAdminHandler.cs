@@ -15,7 +15,7 @@ public class TagOwnerOrAdminHandler : AuthorizationHandler<TagOwnerOrAdminRequir
         {
             return Task.CompletedTask;
         }
-        if (context.User.IsInRole("Admin") || tag.UserId == userId)
+        if (context.User.IsInRole("ADMIN") || tag.UserId == userId)
         {
             context.Succeed(requirement);
         }

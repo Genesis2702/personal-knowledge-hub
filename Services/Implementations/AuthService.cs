@@ -123,7 +123,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task ForgotPassword(int userId, string newPassword)
         {
-            User? user = await _userRepository.GetUserByEmailAsync(newPassword);
+            User? user = await _userRepository.GetUserByIdAsync(userId);
             if (user == null)
             {
                 throw new UnauthorizedException("Email is incorrect");

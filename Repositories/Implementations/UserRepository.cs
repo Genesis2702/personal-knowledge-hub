@@ -77,6 +77,11 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             await _dbContext.SaveChangesAsync();
         }
 
+        public async Task<UserRole?> GetUserRoleAsync(int userId, int roleId)
+        {
+            return await _dbContext.UserRoles.SingleOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == roleId);
+        }
+
         public async Task<User> AddRoleToUserAsync(UserRole userRole)
         {
             await _dbContext.UserRoles.AddAsync(userRole);

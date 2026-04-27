@@ -92,13 +92,11 @@ public class UserService : IUserService
         {
             throw new NotFoundException("Role not found");
         }
-        UserRole userRole = new UserRole
+        UserRole? userRole = await _userRepository.GetUserRoleAsync(userId, roleId);
+        if (userRole == null)
         {
-            User = user,
-            Role = role,
-            UserId = userId,
-            RoleId = roleId
-        };
+            throw new NotFoundException("User role not found");
+        }
         await _userRepository.RemoveRoleFromUserAsync(userRole);
     }
 }

@@ -12,6 +12,7 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces
         public Task BanUserAsync(User user);
         public Task UnbanUserAsync(User user);
         public Task ResetPasswordAsync(User user, string newHashedPassword);
+        public Task<UserRole?> GetUserRoleAsync(int userId, int roleId);
         public Task<User> AddRoleToUserAsync(UserRole userRole);
         public Task RemoveRoleFromUserAsync(UserRole userRole);
     }

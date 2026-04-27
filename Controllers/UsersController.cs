@@ -24,7 +24,7 @@ namespace PersonalKnowledgeHub.Controllers
         
         [HttpGet]
         [Authorize(Roles = "ADMIN")]
-        public async Task<ActionResult<PageResult<User>>> GetUsers([FromQuery] UserQueryRequestDto userQueryRequest)
+        public async Task<ActionResult<PageResult<UserResponseDto>>> GetUsers([FromQuery] UserQueryRequestDto userQueryRequest)
         {
             PageResult<User> usersPageResult = await _userService.GetUsers(
                 userQueryRequest.PageIndex, 
@@ -37,7 +37,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [HttpGet("{id}")]
         [Authorize(Roles = "ADMIN")]
-        public async Task<ActionResult<User>> GetUserById(int id)
+        public async Task<ActionResult<UserResponseDto>> GetUserById(int id)
         {
             User user = await _userService.GetUserById(id);
             UserResponseDto userResponse = UserMapper.ToUserResponseDto(user);
@@ -72,10 +72,11 @@ namespace PersonalKnowledgeHub.Controllers
 
         [HttpPost("{userId}/roles/{roleId}")]
         [Authorize(Roles = "ADMIN")]
-        public async Task<ActionResult<User>> AddRoleToUser(int userId, int roleId)
+        public async Task<ActionResult<UserResponseDto>> AddRoleToUser(int userId, int roleId)
         {
             User user = await _userService.AddRoleToUser(userId, roleId);
-            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
+            UserResponseDto userResponse = UserMapper.ToUserResponseDto(user);
+            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, userResponse);
         }
 
         [HttpDelete("{userId}/roles/{roleId}")]

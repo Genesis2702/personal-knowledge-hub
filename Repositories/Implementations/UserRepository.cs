@@ -38,6 +38,8 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                 .OrderBy(user => user.Id)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
+                .Include(user => user.UserRoles)
+                .ThenInclude(userRole => userRole.Role)
                 .ToListAsync();
             return (users, usersCount);
         }

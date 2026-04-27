@@ -10,4 +10,6 @@ public class UserResponseDto
     public UserStatus Status { get; set; }
     public DateTime? BannedAt { get; set; }
     public ICollection<string> Resources { get; set; } = new List<string>();
+    public ICollection<string> Tags { get; set; } = new List<string>();
+    public ICollection<string> Roles { get; set; } = new List<string>();
 }

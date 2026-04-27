@@ -31,7 +31,8 @@ namespace PersonalKnowledgeHub.Controllers
                 userQueryRequest.PageSize,
                 userQueryRequest.Status
             );
-            return Ok(usersPageResult);
+            PageResult<UserResponseDto> userResponsesPageResult = UserMapper.ToUserResponsesPageResult(usersPageResult);
+            return Ok(userResponsesPageResult);
         }
 
         [HttpGet("{id}")]
@@ -39,7 +40,8 @@ namespace PersonalKnowledgeHub.Controllers
         public async Task<ActionResult<User>> GetUserById(int id)
         {
             User user = await _userService.GetUserById(id);
-            return Ok(user);
+            UserResponseDto userResponse = UserMapper.ToUserResponseDto(user);
+            return Ok(userResponse);
         }
 
         [HttpGet("profile")]

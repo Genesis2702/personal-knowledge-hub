@@ -43,22 +43,19 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<AuthResponseDto> RegisterUser(RegisterRequestDto registerRequest)
         {
-            User user = UserMapper.ToUser(registerRequest);
-            user.Email = user.Email.Trim().ToLower();
-            bool valid = IsEmailValid(user.Email);
+            string email = registerRequest.Email.Trim().ToLower();
+            bool valid = IsEmailValid(email);
             if (!valid)
             {
                 throw new ValidationException("Email is invalid");
             }
-            bool exist = await _userRepository.IsEmailExistAsync(user.Email);
+            bool exist = await _userRepository.IsEmailExistAsync(email);
             if (exist)
             {
                 throw new ConflictException("Email already existed");
             }
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
-            user.CreatedAt = DateTime.UtcNow;
-            user.Status = UserStatus.Pending;
-            user.BannedAt = null;
+
+            User user = UserMapper.ToUser(registerRequest);
             User registeredUser = await _userRepository.AddUserAsync(user);
             RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id, Guid.NewGuid());
             string accessToken = await _tokenService.GenerateAccessToken(registeredUser.Id);

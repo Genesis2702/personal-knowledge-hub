@@ -11,9 +11,12 @@ public class UserMapper
     {
         return new User
         {
-            UserName = registerRequest.UserName ?? registerRequest.Email,
-            Email = registerRequest.Email,
-            PasswordHash = registerRequest.Password
+            UserName = registerRequest.UserName,
+            Email = registerRequest.Email.Trim().ToLower(),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerRequest.Password),
+            CreatedAt = DateTime.UtcNow,
+            Status = UserStatus.Pending,
+            BannedAt = null
         };
     }
     
@@ -35,7 +38,9 @@ public class UserMapper
             CreatedAt = user.CreatedAt,
             Status = user.Status,
             BannedAt = user.BannedAt,
-            Resources = user.Resources.Select(resource => resource.Title).ToList()
+            Resources = user.Resources.Select(resource => resource.Title).ToList(),
+            Tags = user.Tags.Select(tag => tag.Name).ToList(),
+            Roles = user.UserRoles.Select(userRole => userRole.Role.Name).ToList(),
         };
     }
     
@@ -47,6 +52,27 @@ public class UserMapper
             PageIndex = pageIndex,
             PageSize = pageSize,
             PageCount = (int)Math.Ceiling((decimal)usersCount / pageSize)
+        };
+    }
+    
+    public static PageResult<UserResponseDto> ToUserResponsesPageResult(PageResult<User> usersPageResult)
+    {
+        return new PageResult<UserResponseDto>
+        {
+            Items = usersPageResult.Items.Select(user => new UserResponseDto
+            {
+                UserName = user.UserName ?? user.Email,
+                Email = user.Email,
+                CreatedAt = user.CreatedAt,
+                Status = user.Status,
+                BannedAt = user.BannedAt,
+                Resources = user.Resources.Select(resource => resource.Title).ToList(),
+                Tags = user.Tags.Select(tag => tag.Name).ToList(),
+                Roles = user.UserRoles.Select(userRole => userRole.Role.Name).ToList(),
+            }).ToList(),
+            PageIndex = usersPageResult.PageIndex,
+            PageSize = usersPageResult.PageSize,
+            PageCount = usersPageResult.PageCount
         };
     }
 }

@@ -64,6 +64,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("ADMIN", policy => policy.RequireRole("ADMIN"));
+    options.AddPolicy("USER", policy => policy.RequireRole("USER"));
     options.AddPolicy("ActiveAccount",
         policy => policy.RequireClaim("status", "Active"));
     options.AddPolicy("PendingAccount",

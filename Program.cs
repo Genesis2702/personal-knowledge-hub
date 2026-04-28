@@ -9,6 +9,7 @@ using PersonalKnowledgeHub.Services.Implementations;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using PersonalKnowledgeHub.Configuration;
 using PersonalKnowledgeHub.Policy.Handlers;
 using PersonalKnowledgeHub.Policy.Requirements;
 
@@ -37,6 +38,7 @@ builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IResourceTagService, ResourceTagService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddTransient<IMailService, MailService>();
 
 builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerOrAdminHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TagOwnerOrAdminHandler>();
@@ -81,6 +83,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("ResourceOwnerOrAdmin", policy => policy.AddRequirements(new ResourceOwnerOrAdminRequirement()));
     options.AddPolicy("TagOwnerOrAdmin", policy => policy.AddRequirements(new TagOwnerOrAdminRequirement()));
 });
+
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
 var app = builder.Build();
 

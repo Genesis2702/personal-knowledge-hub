@@ -1,4 +1,5 @@
-﻿using PersonalKnowledgeHub.Entities;
+﻿using System.ComponentModel.DataAnnotations;
+using PersonalKnowledgeHub.Entities;
 
 namespace PersonalKnowledgeHub.DTOs.Requests
 {
@@ -8,6 +9,7 @@ namespace PersonalKnowledgeHub.DTOs.Requests
         public int PageSize { get; set; } = 10;
         public int? TagId { get; set; }
         public ResourceType? ResourceType { get; set; }
+        [MaxLength(255)]
         public string? Search { get; set; }
     }
 }

@@ -67,10 +67,14 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost("{roleId}/permissions/{permissionId}")]
-        public async Task<ActionResult<Role>> AddPermissionToRole(int roleId, int permissionId)
+        public async Task<ActionResult<RoleResponseDto>> AddPermissionToRole(int roleId, int permissionId)
         {
             Role role = await _roleService.AddPermissionToRole(roleId, permissionId);
-            return CreatedAtAction(nameof(GetRoleById), new { id = role.Id }, role);
+            RoleResponseDto roleResponse = new RoleResponseDto
+            {
+                Name = role.Name
+            };
+            return CreatedAtAction(nameof(GetRoleById), new { id = role.Id }, roleResponse);
         }
         
         [HttpDelete("{roleId}/permissions/{permissionId}")]

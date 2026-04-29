@@ -39,6 +39,7 @@ builder.Services.AddScoped<IResourceTagService, ResourceTagService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddTransient<IMailService, MailService>();
+builder.Services.AddScoped<IMailFactoryService, MailFactoryService>();
 
 builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerOrAdminHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TagOwnerOrAdminHandler>();

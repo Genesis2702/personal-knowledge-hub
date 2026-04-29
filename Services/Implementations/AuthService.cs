@@ -54,7 +54,6 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ConflictException("Email already existed");
             }
-
             User user = UserMapper.ToUser(registerRequest);
             User registeredUser = await _userRepository.AddUserAsync(user);
             RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id, Guid.NewGuid());

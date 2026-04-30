@@ -5,27 +5,37 @@ namespace PersonalKnowledgeHub.Services.Implementations;
 
 public class MailFactoryService : IMailFactoryService
 {
-    public MailData CreateVerificationMail(string emailToId, string emailToName)
+    public MailData CreateVerificationMail(string emailToId, string emailToName, string verificationToken)
     {
-        string verificationLink = "frontend link";
+        string verificationLink = $"http://localhost:5165/auth/mail-verification?token={verificationToken}";
         return new MailData
         {
             EmailToId = emailToId,
             EmailToName = emailToName,
             EmailSubject = "Email Verification",
-            EmailBody = $"Email Verification: {verificationLink}"
+            EmailBody = $@"
+                <h2>Verify Email</h2>
+                <a href='{verificationLink}'
+                style='padding:12px 18px;background:#2563eb;color:white;text-decoration:none;border-radius:6px;'>
+                Verify Account
+                </a>"
         };  
     }
 
     public MailData CreateResetPasswordMail(string emailToId, string emailToName)
     {
-        string resetLink = "frontend link";
+        string resetLink = "http://localhost:5165/auth/reset-password";
         return new MailData
         {
             EmailToId = emailToId,
             EmailToName = emailToName,
             EmailSubject = "Password Reset",
-            EmailBody = $"Password Reset: {resetLink}"
+            EmailBody = $@"
+                <h2>Verify Email</h2>
+                <a href='{resetLink}'
+                style='padding:12px 18px;background:#2563eb;color:white;text-decoration:none;border-radius:6px;'>
+                Verify Account
+                </a>"
         };
     }
 }

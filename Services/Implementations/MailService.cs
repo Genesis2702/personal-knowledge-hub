@@ -30,7 +30,7 @@ public class MailService : IMailService
             emailBodyBuilder.HtmlBody = mailData.EmailBody;
             emailMessage.Body = emailBodyBuilder.ToMessageBody();
             
-            SmtpClient mailClient = new SmtpClient();
+            using SmtpClient mailClient = new SmtpClient();
             await mailClient.ConnectAsync(_mailSettings.Host, _mailSettings.Port, _mailSettings.UseSsl);
             await mailClient.AuthenticateAsync(_mailSettings.EmailId, _mailSettings.Password);
             await mailClient.SendAsync(emailMessage);

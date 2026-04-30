@@ -14,21 +14,26 @@ namespace PersonalKnowledgeHub.Services.Implementations
         private readonly ITokenRepository _tokenRepository;
         private readonly ITokenService _tokenService;
         private readonly IUnitOfWorkRepository _unitOfWorkRepository;
+        private readonly IMailService _mailService;
+        private readonly IMailFactoryService _mailFactoryService;
 
         public AuthService(IUserRepository userRepository, ITokenRepository tokenRepository, 
-            ITokenService tokenService, IUnitOfWorkRepository unitOfWorkRepository)
+            ITokenService tokenService, IUnitOfWorkRepository unitOfWorkRepository, 
+            IMailFactoryService mailFactoryService, IMailService mailService)
         {
             _userRepository = userRepository;
             _tokenRepository = tokenRepository;
             _tokenService = tokenService;
             _unitOfWorkRepository = unitOfWorkRepository;
+            _mailFactoryService = mailFactoryService;
+            _mailService = mailService;
         }
 
         public bool IsEmailValid(string email)
         {
             if (!email.Contains("@")) return false;
             List<char> specialChar = new List<char>() { '.', '_', '%', '+', '-' };
-            string local = email.Substring(0, email.IndexOf("@"));
+            string local = email.Substring(0, email.IndexOf('@'));
             for (int i = 0; i < local.Length; i++)
             {
                 if (!(local[i] >= 'a' && local[i] <= 'z') && !(local[i] >= '0' && local[i] <= '9') && !(specialChar.Contains(local[i])))
@@ -36,7 +41,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                     return false;
                 }
             }
-            string domain = email.Substring(email.IndexOf("@") + 1);
+            string domain = email.Substring(email.IndexOf('@') + 1);
             if (domain != "gmail.com") return false;
             return true;
         }
@@ -58,6 +63,14 @@ namespace PersonalKnowledgeHub.Services.Implementations
             User registeredUser = await _userRepository.AddUserAsync(user);
             RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id, Guid.NewGuid());
             string accessToken = await _tokenService.GenerateAccessToken(registeredUser.Id);
+            MailData verificationMail = _mailFactoryService.CreateVerificationMail(registeredUser.Email, 
+                registeredUser.UserName ?? registeredUser.Email, 
+                "abc");
+            bool mailResult = await _mailService.SendMail(verificationMail);
+            if (!mailResult)
+            {
+                throw new Exception("Mail sending failed");
+            }
             return AuthMapper.ToAuthResponseDto(refreshToken.Token, accessToken);
         }
 
@@ -140,6 +153,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(resetPasswordRequest.NewPassword);
             await _userRepository.ResetPasswordAsync(user, hashedPassword);
+            MailData resetPasswordMail = _mailFactoryService.CreateResetPasswordMail(user.Email, user.UserName ?? user.Email);
+            bool mailResult = await _mailService.SendMail(resetPasswordMail);
+            if (!mailResult)
+            {
+                throw new Exception("Mail sending failed");
+            }
         }
     }
 }

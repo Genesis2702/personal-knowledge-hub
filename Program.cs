@@ -29,6 +29,7 @@ builder.Services.AddScoped<ITagRepository, TagRepository>();
 builder.Services.AddScoped<IResourceTagRepository, ResourceTagRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
+builder.Services.AddScoped<IVerificationTokenRepository, VerificationTokenRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -40,6 +41,7 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddTransient<IMailService, MailService>();
 builder.Services.AddScoped<IMailFactoryService, MailFactoryService>();
+builder.Services.AddScoped<IVerificationTokenService, VerificationTokenService>();
 
 builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerOrAdminHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TagOwnerOrAdminHandler>();

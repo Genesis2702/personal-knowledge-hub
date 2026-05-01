@@ -26,10 +26,11 @@ public class VerificationTokenRepository : IVerificationTokenRepository
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task ValidateVerificationTokenAsync(VerificationToken verificationToken)
+    public async Task ValidateVerificationTokenAsync(VerificationToken verificationToken, User user)
     {
         verificationToken.ExpiresAt = DateTime.UtcNow;
         verificationToken.VerifiedAt = DateTime.UtcNow;
+        user.Status = UserStatus.Active;
         await _dbContext.SaveChangesAsync();
     }
 

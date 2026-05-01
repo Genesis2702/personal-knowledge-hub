@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.WebUtilities;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Repositories.Interfaces;
@@ -10,6 +11,7 @@ namespace PersonalKnowledgeHub.Services.Implementations;
 public class VerificationTokenService : IVerificationTokenService
 {
     private readonly IVerificationTokenRepository _verificationTokenRepository;
+    private readonly IUserRepository _userRepository;
 
     public VerificationTokenService(IVerificationTokenRepository verificationTokenRepository)
     {
@@ -18,7 +20,7 @@ public class VerificationTokenService : IVerificationTokenService
 
     public async Task<string> GenerateVerificationToken(int userId)
     {
-        string rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+        string rawToken = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
         byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
         byte[] hashedToken = SHA256.HashData(binaryToken);
         VerificationToken verificationToken = new VerificationToken
@@ -55,6 +57,11 @@ public class VerificationTokenService : IVerificationTokenService
         {
             throw new ConflictException("Verification token already used");
         }
-        await _verificationTokenRepository.ValidateVerificationTokenAsync(verificationToken);
+        User? user = await _userRepository.GetUserByIdAsync(userId);
+        if (user == null)
+        {
+            throw new NotFoundException("User not found");
+        }
+        await _verificationTokenRepository.ValidateVerificationTokenAsync(verificationToken, user);
     }
 }

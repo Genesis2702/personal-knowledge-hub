@@ -19,11 +19,10 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == token);
         }
 
-        public async Task<RefreshToken> AddRefreshTokenAsync(RefreshToken refreshToken)
+        public async Task AddRefreshTokenAsync(RefreshToken refreshToken)
         {
             await _dbContext.RefreshTokens.AddAsync(refreshToken);
             await _dbContext.SaveChangesAsync();
-            return refreshToken;
         }
 
         public async Task<RefreshToken?> GetRefreshTokenForUpdateAsync(string token)

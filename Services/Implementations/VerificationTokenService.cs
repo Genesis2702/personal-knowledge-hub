@@ -25,7 +25,7 @@ public class VerificationTokenService : IVerificationTokenService
         byte[] hashedToken = SHA256.HashData(binaryToken);
         VerificationToken verificationToken = new VerificationToken
         {
-            TokenHash = Convert.ToHexString(hashedToken),
+            Token = Convert.ToHexString(hashedToken),
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddHours(24),
             VerifiedAt = null,

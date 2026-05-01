@@ -14,10 +14,10 @@ public class VerificationTokenRepository : IVerificationTokenRepository
         _dbContext = dbContext;  
     }
 
-    public async Task<VerificationToken?> GetVerificationTokenAsync(string hashedToken)
+    public async Task<VerificationToken?> GetVerificationTokenAsync(string token)
     {
         return await _dbContext.VerificationTokens.SingleOrDefaultAsync(verificationToken =>
-            verificationToken.TokenHash == hashedToken);
+            verificationToken.Token == token);
     }
 
     public async Task AddVerificationTokenAsync(VerificationToken verificationToken)

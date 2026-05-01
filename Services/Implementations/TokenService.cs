@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace PersonalKnowledgeHub.Services.Implementations
 {
@@ -23,11 +24,14 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _configuration = configuration;
         }
 
-        public async Task<RefreshToken> GenerateRefreshToken(int userId, Guid familyId)
+        public async Task<string> GenerateRefreshToken(int userId, Guid familyId)
         {
+            string rawToken = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
+            byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
+            byte[] hashedToken = SHA256.HashData(binaryToken);
             RefreshToken refreshToken = new RefreshToken
             {
-                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
+                Token = Convert.ToHexString(hashedToken),
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow.AddDays(30),
                 Revoked = false,
@@ -36,7 +40,8 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 FamilyId = familyId,
                 UserId = userId
             };
-            return await _tokenRepository.AddRefreshTokenAsync(refreshToken);
+            await _tokenRepository.AddRefreshTokenAsync(refreshToken);
+            return rawToken;
         }
 
         public async Task<string> GenerateAccessToken(int userId)
@@ -91,8 +96,11 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return refreshToken;
         }
 
-        public async Task<RefreshToken> GetRefreshToken(string token)
+        public async Task<RefreshToken> GetRefreshToken(string rawToken)
         {
+            byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
+            byte[] hashedToken = SHA256.HashData(binaryToken);
+            string token = Convert.ToHexString(hashedToken);
             RefreshToken? refreshToken = await _tokenRepository.GetRefreshTokenAsync(token);
             if (refreshToken == null) { throw new NotFoundException("Refresh token not found"); }
             return refreshToken;

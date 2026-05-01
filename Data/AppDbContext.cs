@@ -36,7 +36,7 @@ namespace PersonalKnowledgeHub.Data
                 .HasForeignKey(verificationToken => verificationToken.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<VerificationToken>()
-                .HasIndex(verificationToken => verificationToken.TokenHash)
+                .HasIndex(verificationToken => verificationToken.Token)
                 .IsUnique();
 
             modelBuilder.Entity<Resource>().HasKey(resource => resource.Id);

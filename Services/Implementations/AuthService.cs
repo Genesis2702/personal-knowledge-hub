@@ -64,18 +64,18 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             User user = UserMapper.ToUser(registerRequest);
             User registeredUser = await _userRepository.AddUserAsync(user);
-            RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id, Guid.NewGuid());
+            string refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id, Guid.NewGuid());
             string accessToken = await _tokenService.GenerateAccessToken(registeredUser.Id);
             string verificationToken = await _verificationTokenService.GenerateVerificationToken(registeredUser.Id);
             MailData verificationMail = _mailFactoryService.CreateVerificationMail(registeredUser.Email, 
                 registeredUser.UserName ?? registeredUser.Email, 
-                verificationToken);
+                verificationToken, registeredUser.UserName ?? registeredUser.Email);
             bool mailResult = await _mailService.SendMail(verificationMail);
             if (!mailResult)
             {
                 throw new Exception("Mail sending failed");
             }
-            return AuthMapper.ToAuthResponseDto(refreshToken.Token, accessToken);
+            return AuthMapper.ToAuthResponseDto(refreshToken, accessToken);
         }
 
         public async Task<AuthResponseDto> AuthenticateUser(LoginRequestDto loginRequest)
@@ -91,10 +91,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new UnauthorizedException("Password is incorrect");
             }
-            RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(loggedInUser.Id, Guid.NewGuid());
+            string refreshToken = await _tokenService.GenerateRefreshToken(loggedInUser.Id, Guid.NewGuid());
             string accessToken = await _tokenService.GenerateAccessToken(loggedInUser.Id);
             await _tokenRepository.CleanUpRefreshTokenAsync();
-            return AuthMapper.ToAuthResponseDto(refreshToken.Token, accessToken);
+            return AuthMapper.ToAuthResponseDto(refreshToken, accessToken);
         }
 
         public async Task<AuthResponseDto> RefreshUser(RefreshRequestDto refreshRequest)
@@ -103,12 +103,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
             try
             {
                 RefreshToken refreshToken = await _tokenService.ValidateRefreshToken(refreshRequest.RefreshToken);
-                RefreshToken newRefreshToken =
-                    await _tokenService.GenerateRefreshToken(refreshToken.UserId, refreshToken.FamilyId);
+                string newRefreshTokenString = await _tokenService.GenerateRefreshToken(refreshToken.UserId, refreshToken.FamilyId);
+                RefreshToken newRefreshToken = await _tokenService.GetRefreshToken(newRefreshTokenString);
                 await _tokenService.RevokeRefreshToken(refreshToken.Token, newRefreshToken.Id);
                 string accessToken = await _tokenService.GenerateAccessToken(refreshToken.UserId);
                 await transaction.CommitAsync();
-                return AuthMapper.ToAuthResponseDto(newRefreshToken.Token, accessToken);
+                return AuthMapper.ToAuthResponseDto(newRefreshTokenString, accessToken);
             }
             catch (NotFoundException ex)
             {
@@ -157,7 +157,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(resetPasswordRequest.NewPassword);
             await _userRepository.ResetPasswordAsync(user, hashedPassword);
-            MailData resetPasswordMail = _mailFactoryService.CreateResetPasswordMail(user.Email, user.UserName ?? user.Email);
+            MailData resetPasswordMail = _mailFactoryService.CreateResetPasswordMail(user.Email, user.UserName ?? user.Email, user.UserName ?? user.Email);
             bool mailResult = await _mailService.SendMail(resetPasswordMail);
             if (!mailResult)
             {

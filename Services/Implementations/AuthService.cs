@@ -134,7 +134,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("Refresh token belongs to another user");
             }
-            await _tokenService.RevokeRefreshToken(logoutRequest.RefreshToken, null);
+            await _tokenService.RevokeRefreshToken(refreshToken.Token, null);
         }
 
         public async Task ForgotPassword(int userId, string newPassword)

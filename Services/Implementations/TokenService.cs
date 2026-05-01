@@ -76,9 +76,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
             await _tokenRepository.RevokeRefreshTokenAsync(token, replacedId);
         }
 
-        public async Task<RefreshToken> ValidateRefreshToken(string token)
+        public async Task<RefreshToken> ValidateRefreshToken(string rawToken)
         {
-            var refreshToken = await _tokenRepository.GetRefreshTokenForUpdateAsync(token);
+            byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
+            byte[] hashedToken = SHA256.HashData(binaryToken);
+            string token = Convert.ToHexString(hashedToken);
+            RefreshToken? refreshToken = await _tokenRepository.GetRefreshTokenForUpdateAsync(token);
             if (refreshToken == null)
             {
                 throw new NotFoundException("Refresh token not found");

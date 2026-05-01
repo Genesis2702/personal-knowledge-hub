@@ -108,17 +108,139 @@ public class MailFactoryService : IMailFactoryService
                 </table>
 
                 </body>
-                </html>"
+                </html>
+            "
         };  
     }
 
-    public MailData CreateResetPasswordMail(string emailToId, string emailToName, string userName)
+    public MailData CreatePasswordResetMail(string emailToId, string emailToName, string passwordResetToken, string userName)
     {
+        string resetPasswordLink = $"http://localhost:5165/auth/reset-password?token={passwordResetToken}";
         return new MailData
         {
             EmailToId = emailToId,
             EmailToName = emailToName,
             EmailSubject = "Password Reset",
+            EmailBody = $@"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <title>Password Reset Request</title>
+                </head>
+
+                <body style='margin:0;padding:0;background-color:#0f0f13;font-family:Arial,Helvetica,sans-serif;'>
+
+                <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='padding:40px 0;'>
+                <tr>
+                <td align='center'>
+
+                <table role='presentation' width='600' cellspacing='0' cellpadding='0'
+                style='background-color:#18181b;
+                border:1px solid #2a2a31;
+                border-radius:14px;
+                padding:42px;
+                box-shadow:0 12px 28px rgba(0,0,0,0.45);'>
+
+                <tr>
+                <td align='center'>
+
+                <h1 style='margin:0;
+                color:#c084fc;
+                font-size:30px;
+                font-weight:700;'>
+
+                Password Reset
+
+                </h1>
+
+                </td>
+                </tr>
+
+                <tr>
+                <td style='padding-top:28px;
+                color:#e4e4e7;
+                font-size:16px;
+                line-height:1.8;
+                text-align:left;'>
+
+                Hello <strong style='color:#ffffff;'>{userName}</strong>,<br><br>
+
+                We received a request to reset the password for your
+                <strong style='color:#ffffff;'>Knowledge Hub</strong> account.<br><br>
+
+                If you requested this change, please use the button below to continue resetting your password.<br><br>
+
+                If you did not request a password reset, you may safely ignore this email.
+
+                </td>
+                </tr>
+
+                <tr>
+                <td align='center' style='padding-top:32px;'>
+
+                <a href='{resetPasswordLink}'
+                style='background-color:#a855f7;
+                color:#ffffff;
+                text-decoration:none;
+                padding:14px 34px;
+                border-radius:10px;
+                font-size:16px;
+                font-weight:700;
+                display:inline-block;
+                box-shadow:0 6px 18px rgba(168,85,247,0.35);'>
+
+                Reset Password
+
+                </a>
+
+                </td>
+                </tr>
+
+                <tr>
+                <td style='padding-top:28px;
+                color:#a1a1aa;
+                font-size:16px;
+                line-height:1.8;
+                text-align:left;'>
+
+                For your security, do not share or expose this reset link with anyone.
+
+                </td>
+                </tr>
+
+                <tr>
+                <td align='center'
+                style='padding-top:26px;
+                color:#71717a;
+                font-size:13px;
+                line-height:1.6;'>
+
+                This is an automated security notification.
+
+                </td>
+                </tr>
+
+                </table>
+
+                </td>
+                </tr>
+                </table>
+
+                </body>
+                </html>
+            "
+        };
+    }
+
+    public MailData CreatePasswordChangedMail(string emailToId, string emailToName, string userName)
+    {
+        return new MailData
+        {
+            EmailToId = emailToId,
+            EmailToName = emailToName,
+            EmailSubject = "Password Changed",
             EmailBody = $@"
                 <!DOCTYPE html>
                 <html>
@@ -194,7 +316,8 @@ public class MailFactoryService : IMailFactoryService
                 </table>
 
                 </body>
-                </html>"
+                </html>
+            "
         };
     }
 }

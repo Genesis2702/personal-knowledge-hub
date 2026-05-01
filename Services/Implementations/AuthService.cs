@@ -137,28 +137,38 @@ namespace PersonalKnowledgeHub.Services.Implementations
             await _tokenService.RevokeRefreshToken(refreshToken.Token, null);
         }
 
-        public async Task ForgotPassword(int userId, string newPassword)
+        public async Task ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequest)
+        {
+            User? user = await _userRepository.GetUserByEmailAsync(forgotPasswordRequest.Email);
+            if (user == null)
+            {
+                throw new UnauthorizedException("Email is incorrect");
+            }
+            string passwordResetToken = await _verificationTokenService.GenerateVerificationToken(user.Id);
+            MailData resetPasswordMail = _mailFactoryService.CreatePasswordResetMail(user.Email, 
+                user.UserName ?? user.Email, passwordResetToken, user.UserName ?? user.Email);
+            bool mailResult = await _mailService.SendMail(resetPasswordMail);
+            if (!mailResult)
+            {
+                throw new Exception("Mail sending failed");
+            }
+        }
+
+        public async Task ResetPassword(ResetPasswordRequestDto resetPasswordRequest, int userId)
         {
             User? user = await _userRepository.GetUserByIdAsync(userId);
             if (user == null)
             {
-                throw new UnauthorizedException("Email is incorrect");
+                throw new NotFoundException("User not found");
             }
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword);
-            await _userRepository.ResetPasswordAsync(user, hashedPassword);
-        }
-
-        public async Task ResetPassword(ResetPasswordRequestDto resetPasswordRequest)
-        {
-            User? user = await _userRepository.GetUserByEmailAsync(resetPasswordRequest.Email);
-            if (user == null)
+            if (resetPasswordRequest.NewPassword != resetPasswordRequest.ConfirmationPassword)
             {
-                throw new UnauthorizedException("Email is incorrect");
+                throw new ConflictException("Passwords do not match");
             }
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(resetPasswordRequest.NewPassword);
             await _userRepository.ResetPasswordAsync(user, hashedPassword);
-            MailData resetPasswordMail = _mailFactoryService.CreateResetPasswordMail(user.Email, user.UserName ?? user.Email, user.UserName ?? user.Email);
-            bool mailResult = await _mailService.SendMail(resetPasswordMail);
+            MailData passwordChangedMail = _mailFactoryService.CreatePasswordChangedMail(user.Email, user.UserName ?? user.Email, user.UserName ?? user.Email);
+            bool mailResult = await _mailService.SendMail(passwordChangedMail);
             if (!mailResult)
             {
                 throw new Exception("Mail sending failed");
@@ -174,6 +184,15 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new NotFoundException("User not found");
             }
             await _userRepository.ChangeUserStatusAsync(user, UserStatus.Active);
+        }
+
+        public async Task<int> VerifyPasswordChange(string token, ResetPasswordRequestDto resetPasswordRequest)
+        {
+            if (resetPasswordRequest.NewPassword != resetPasswordRequest.ConfirmationPassword)
+            {
+                throw new ConflictException("Passwords do not match");
+            }
+            return await _verificationTokenService.ValidatePasswordResetToken(token);
         }
     }
 }

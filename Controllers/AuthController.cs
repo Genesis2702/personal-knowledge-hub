@@ -52,19 +52,28 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost("forgot-password")]
-        [Authorize(Policy = "ActiveAccount")]
+        [AllowAnonymous]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequest)
         {
+            await _authService.ForgotPassword(forgotPasswordRequest);
+            return Ok("Password reset mail sent");
+        }
+
+        [HttpPost("change-password")]
+        [Authorize(Policy = "ActiveAccount")]
+        public async Task<IActionResult> ChangePassword(ResetPasswordRequestDto resetPasswordRequest)
+        {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            await _authService.ForgotPassword(userId, forgotPasswordRequest.NewPassword);
+            await _authService.ResetPassword(resetPasswordRequest, userId);
             return Ok("Password changed successfully");
         }
         
         [HttpPost("reset-password")]
         [AllowAnonymous]
-        public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto resetPasswordRequest)
+        public async Task<IActionResult> ResetPassword([FromQuery] string token, ResetPasswordRequestDto resetPasswordRequest)
         {
-            await _authService.ResetPassword(resetPasswordRequest);
+            int userId = await _authService.VerifyPasswordChange(token, resetPasswordRequest);
+            await _authService.ResetPassword(resetPasswordRequest, userId);
             return Ok("Password reset successfully");
         }
 

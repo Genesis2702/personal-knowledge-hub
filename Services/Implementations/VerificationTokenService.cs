@@ -59,4 +59,26 @@ public class VerificationTokenService : IVerificationTokenService
         }
         await _verificationTokenRepository.ValidateVerificationTokenAsync(verificationToken);
     }
+
+    public async Task<int> ValidatePasswordResetToken(string rawToken)
+    {
+        byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
+        byte[] hashedToken = SHA256.HashData(binaryToken);
+        string token = Convert.ToHexString(hashedToken);
+        VerificationToken? verificationToken = await _verificationTokenRepository.GetVerificationTokenAsync(token);
+        if (verificationToken == null)
+        {
+            throw new NotFoundException("Verification token not found");
+        }
+        if (verificationToken.ExpiresAt < DateTime.UtcNow)
+        {
+            throw new UnauthorizedException("Verification token expired");
+        }
+        if (verificationToken.VerifiedAt != null)
+        {
+            throw new ConflictException("Verification token already used");
+        }
+        await _verificationTokenRepository.ValidateVerificationTokenAsync(verificationToken);
+        return verificationToken.UserId;
+    }
 }

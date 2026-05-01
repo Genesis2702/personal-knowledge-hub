@@ -67,5 +67,14 @@ namespace PersonalKnowledgeHub.Controllers
             await _authService.ResetPassword(resetPasswordRequest);
             return Ok("Password reset successfully");
         }
+
+        [HttpPost("mail-verification")]
+        [Authorize(Policy = "PendingAccount")]
+        public async Task<IActionResult> Verify([FromQuery] string token)
+        {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _authService.VerifyPendingUser(token, userId);
+            return Ok("Email verified successfully");
+        }
     }
 }

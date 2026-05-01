@@ -16,10 +16,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
         private readonly IUnitOfWorkRepository _unitOfWorkRepository;
         private readonly IMailService _mailService;
         private readonly IMailFactoryService _mailFactoryService;
+        private readonly IVerificationTokenService _verificationTokenService;
 
         public AuthService(IUserRepository userRepository, ITokenRepository tokenRepository, 
             ITokenService tokenService, IUnitOfWorkRepository unitOfWorkRepository, 
-            IMailFactoryService mailFactoryService, IMailService mailService)
+            IMailFactoryService mailFactoryService, IMailService mailService,
+            IVerificationTokenService verificationTokenService)
         {
             _userRepository = userRepository;
             _tokenRepository = tokenRepository;
@@ -27,6 +29,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _unitOfWorkRepository = unitOfWorkRepository;
             _mailFactoryService = mailFactoryService;
             _mailService = mailService;
+            _verificationTokenService = verificationTokenService;
         }
 
         public bool IsEmailValid(string email)
@@ -63,9 +66,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
             User registeredUser = await _userRepository.AddUserAsync(user);
             RefreshToken refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id, Guid.NewGuid());
             string accessToken = await _tokenService.GenerateAccessToken(registeredUser.Id);
+            string verificationToken = await _verificationTokenService.GenerateVerificationToken(registeredUser.Id);
             MailData verificationMail = _mailFactoryService.CreateVerificationMail(registeredUser.Email, 
                 registeredUser.UserName ?? registeredUser.Email, 
-                "abc");
+                verificationToken);
             bool mailResult = await _mailService.SendMail(verificationMail);
             if (!mailResult)
             {
@@ -159,6 +163,11 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new Exception("Mail sending failed");
             }
+        }
+
+        public async Task VerifyPendingUser(string token, int userId)
+        {
+            await _verificationTokenService.ValidateVerificationToken(token, userId);
         }
     }
 }

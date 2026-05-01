@@ -13,6 +13,7 @@
         public ICollection<Resource> Resources { get; set; } = new List<Resource>();
         public ICollection<Tag> Tags { get; set; } = new List<Tag>();
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public ICollection<VerificationToken> VerificationTokens { get; set; } = new List<VerificationToken>();
     }
 
     public enum UserStatus

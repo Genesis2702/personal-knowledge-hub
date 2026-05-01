@@ -8,6 +8,7 @@ namespace PersonalKnowledgeHub.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         public DbSet<User> Users { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<VerificationToken> VerificationTokens { get; set; }
         public DbSet<Resource> Resources { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<ResourceTag> ResourceTags { get; set; }
@@ -26,6 +27,16 @@ namespace PersonalKnowledgeHub.Data
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<RefreshToken>()
                 .HasIndex(refreshToken => refreshToken.Token)
+                .IsUnique();
+
+            modelBuilder.Entity<VerificationToken>().HasKey(verificationToken => verificationToken.Id);
+            modelBuilder.Entity<VerificationToken>()
+                .HasOne(verificationToken => verificationToken.User)
+                .WithMany(user => user.VerificationTokens)
+                .HasForeignKey(verificationToken => verificationToken.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<VerificationToken>()
+                .HasIndex(verificationToken => verificationToken.TokenHash)
                 .IsUnique();
 
             modelBuilder.Entity<Resource>().HasKey(resource => resource.Id);

@@ -168,6 +168,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
         public async Task VerifyPendingUser(string token, int userId)
         {
             await _verificationTokenService.ValidateVerificationToken(token, userId);
+            User? user = await _userRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new NotFoundException("User not found");
+            }
+            await _userRepository.ChangeUserStatusAsync(user, UserStatus.Active);
         }
     }
 }

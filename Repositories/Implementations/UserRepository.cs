@@ -94,5 +94,11 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             _dbContext.UserRoles.Remove(userRole);
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task ChangeUserStatusAsync(User user, UserStatus status)
+        {
+            user.Status = status;
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }

@@ -57,11 +57,6 @@ public class VerificationTokenService : IVerificationTokenService
         {
             throw new ConflictException("Verification token already used");
         }
-        User? user = await _userRepository.GetUserByIdAsync(userId);
-        if (user == null)
-        {
-            throw new NotFoundException("User not found");
-        }
-        await _verificationTokenRepository.ValidateVerificationTokenAsync(verificationToken, user);
+        await _verificationTokenRepository.ValidateVerificationTokenAsync(verificationToken);
     }
 }

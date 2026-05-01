@@ -15,5 +15,6 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces
         public Task<UserRole?> GetUserRoleAsync(int userId, int roleId);
         public Task<User> AddRoleToUserAsync(UserRole userRole);
         public Task RemoveRoleFromUserAsync(UserRole userRole);
+        public Task ChangeUserStatusAsync(User user, UserStatus status);
     }
 }

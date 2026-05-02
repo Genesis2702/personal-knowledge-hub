@@ -85,15 +85,20 @@ namespace PersonalKnowledgeHub.Services.Implementations
             User? loggedInUser = await _userRepository.GetUserByEmailAsync(user.Email);
             if (loggedInUser == null)
             {
-                throw new UnauthorizedException("Email is incorrect");
+                throw new UnauthorizedException("User not found");
+            }
+            if (loggedInUser.LockedUntil != null && loggedInUser.LockedUntil > DateTime.UtcNow)
+            {
+                throw new UnauthorizedException("User is locked");
             }
             if (!BCrypt.Net.BCrypt.Verify(user.PasswordHash, loggedInUser.PasswordHash))
             {
+                await _userRepository.UpdateFailedLoginAttemptsAsync(loggedInUser.Id, 5, 2);
                 throw new UnauthorizedException("Password is incorrect");
             }
+            await _userRepository.ResetFailedLoginAttemptsAsync(loggedInUser.Id);
             string refreshToken = await _tokenService.GenerateRefreshToken(loggedInUser.Id, Guid.NewGuid());
             string accessToken = await _tokenService.GenerateAccessToken(loggedInUser.Id);
-            await _tokenRepository.CleanUpRefreshTokenAsync();
             return AuthMapper.ToAuthResponseDto(refreshToken, accessToken);
         }
 

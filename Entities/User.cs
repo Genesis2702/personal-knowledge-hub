@@ -9,6 +9,8 @@
         public DateTime CreatedAt { get; set; }
         public UserStatus Status { get; set; }
         public DateTime? BannedAt { get; set; }
+        public int FailedLoginAttempts { get; set; }
+        public DateTime? LockedUntil { get; set; }
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
         public ICollection<Resource> Resources { get; set; } = new List<Resource>();
         public ICollection<Tag> Tags { get; set; } = new List<Tag>();

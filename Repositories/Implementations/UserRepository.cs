@@ -100,5 +100,24 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             user.Status = status;
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<int> UpdateFailedLoginAttemptsAsync(int userId, int failedLoginLimit, int lockedMinutes)
+        {
+            return await _dbContext.Users
+                .Where(user => user.Id == userId && (user.LockedUntil == null || user.LockedUntil < DateTime.UtcNow))
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(user => user.FailedLoginAttempts, user => user.FailedLoginAttempts + 1)
+                    .SetProperty(user => user.LockedUntil, user => user.FailedLoginAttempts + 1 >= failedLoginLimit ? 
+                        DateTime.UtcNow.AddMinutes(lockedMinutes) : user.LockedUntil));
+        }
+
+        public async Task<int> ResetFailedLoginAttemptsAsync(int userId)
+        {
+            return await _dbContext.Users
+                .Where(user => user.Id == userId)
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(user => user.FailedLoginAttempts, 0)
+                    .SetProperty(user => user.LockedUntil, (DateTime?)null));
+        }
     }
 }

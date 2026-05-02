@@ -46,6 +46,48 @@ builder.Services.AddScoped<IVerificationTokenService, VerificationTokenService>(
 builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerOrAdminHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TagOwnerOrAdminHandler>();
 
+builder.Services.AddSecurityHeaderPolicies(policies =>
+{
+    policies.AddPolicy("Development", policy =>
+    {
+        policy.AddDefaultSecurityHeaders()
+            .AddContentSecurityPolicy(bd =>
+            {
+                bd.AddDefaultSrc().Self();
+                bd.AddScriptSrc()
+                    .Self()
+                    .UnsafeInline()
+                    .UnsafeEval()
+                    .From("http://localhost:3000");
+                bd.AddStyleSrc()
+                    .Self()
+                    .UnsafeInline();
+                bd.AddImgSrc().Self().Data();
+            });
+    });
+    policies.AddPolicy("Production", policy =>
+    {
+        policy.AddDefaultSecurityHeaders()
+            .AddStrictTransportSecurityMaxAgeIncludeSubDomains(maxAgeInSeconds: 31536000)
+            .AddContentSecurityPolicy(bd =>
+            {
+                bd.AddDefaultSrc().Self();
+                bd.AddScriptSrc().Self();
+                bd.AddStyleSrc().Self();
+                bd.AddImgSrc().Self().Data();
+                bd.AddObjectSrc().None();
+                bd.AddFrameAncestors().None();
+            })
+            .AddReferrerPolicyNoReferrer()
+            .AddPermissionsPolicy(bd =>
+            {
+                bd.AddCamera().None();
+                bd.AddMicrophone().None();
+                bd.AddGeolocation().None();
+            });
+    });
+});
+
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -98,6 +140,15 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSecurityHeaders("Development");
+}
+else
+{
+    app.UseSecurityHeaders("Production");   
+}
 
 app.UseMiddleware<MiddlewareException>();
 

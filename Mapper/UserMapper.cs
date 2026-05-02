@@ -16,7 +16,9 @@ public class UserMapper
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerRequest.Password),
             CreatedAt = DateTime.UtcNow,
             Status = UserStatus.Pending,
-            BannedAt = null
+            BannedAt = null,
+            FailedLoginAttempts = 0,
+            LockedUntil = null
         };
     }
     

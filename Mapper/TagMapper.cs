@@ -11,7 +11,11 @@ public class TagMapper
         return new Tag
         {
             Name = tagRequest.Name.Trim().ToLower(),
-            UserId = userId
+            UserId = userId,
+            LastModified = DateTime.UtcNow,
+            IsDeleted = false,
+            DeletedAt = null,
+            DeletedBy = null
         };
     }
 
@@ -19,7 +23,8 @@ public class TagMapper
     {
         return new TagResponseDto
         {
-            Name = tag.Name
+            Name = tag.Name,
+            LastModified = tag.LastModified
         };
     }
     
@@ -27,7 +32,8 @@ public class TagMapper
     {
         return tags.Select(tag => new TagResponseDto
         {
-            Name = tag.Name
+            Name = tag.Name,
+            LastModified = tag.LastModified
         }).ToList();
     }
 }

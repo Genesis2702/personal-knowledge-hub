@@ -19,18 +19,57 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == token);
         }
 
-        public async Task<RefreshToken> AddRefreshTokenAsync(RefreshToken refreshToken)
+        public async Task AddRefreshTokenAsync(RefreshToken refreshToken)
         {
             await _dbContext.RefreshTokens.AddAsync(refreshToken);
             await _dbContext.SaveChangesAsync();
-            return refreshToken;
         }
 
-        public async Task RevokeRefreshTokenAsync(string token)
+        public async Task<RefreshToken?> GetRefreshTokenForUpdateAsync(string token)
+        {
+            return await _dbContext.RefreshTokens.FromSqlInterpolated($@"
+                SELECT * 
+                FROM ""RefreshTokens""
+                WHERE ""Token"" = {token}
+                FOR UPDATE
+            ").SingleOrDefaultAsync();
+        }
+
+        public async Task RevokeRefreshTokenAsync(string token, int? replacedId)
         {
             RefreshToken refreshToken = (await _dbContext.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == token))!;
             refreshToken.Revoked = true;
             refreshToken.RevokedAt = DateTime.UtcNow;
+            if (replacedId != null)
+            {
+                refreshToken.ReplacedByTokenId = replacedId;
+            }
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task RevokeRefreshTokensByFamilyAsync(Guid familyId, int? replacedId)
+        {
+            List<RefreshToken> refreshTokens = await _dbContext.RefreshTokens.Where(rt => rt.FamilyId == familyId).ToListAsync();
+            foreach (RefreshToken refreshToken in refreshTokens)
+            {
+                refreshToken.Revoked = true;
+                refreshToken.RevokedAt = DateTime.UtcNow;
+                if (replacedId != null)
+                {
+                    refreshToken.ReplacedByTokenId = replacedId;
+                }
+            }
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task RevokeRefreshTokensByUserAsync(int userId)
+        {
+            List<RefreshToken> refreshTokens = await _dbContext.RefreshTokens.Where(rt => rt.UserId == userId).ToListAsync();
+            foreach (RefreshToken refreshToken in refreshTokens)
+            {
+                refreshToken.Revoked = true;
+                refreshToken.RevokedAt = DateTime.UtcNow;
+            }
             await _dbContext.SaveChangesAsync();
         }
 

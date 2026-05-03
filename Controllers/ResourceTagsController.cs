@@ -11,7 +11,7 @@ namespace PersonalKnowledgeHub.Controllers
 {
     [ApiController]
     [Route("resources/{resourceId}/tags")]
-    [Authorize]
+    [Authorize(Policy = "ActiveAccount")]
     public class ResourceTagsController : ControllerBase
     {
         private readonly IResourceTagService _resourceTagService;

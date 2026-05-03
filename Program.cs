@@ -8,6 +8,10 @@ using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Implementations;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
+using PersonalKnowledgeHub.Configuration;
+using PersonalKnowledgeHub.Policy.Handlers;
+using PersonalKnowledgeHub.Policy.Requirements;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,16 +21,72 @@ builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializ
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<IResourceRepository, ResourceRepository>();
 builder.Services.AddScoped<ITagRepository, TagRepository>();
 builder.Services.AddScoped<IResourceTagRepository, ResourceTagRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
+builder.Services.AddScoped<IVerificationTokenRepository, VerificationTokenRepository>();
+
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IResourceService, ResourceService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IResourceTagService, ResourceTagService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddTransient<IMailService, MailService>();
+builder.Services.AddScoped<IMailFactoryService, MailFactoryService>();
+builder.Services.AddScoped<IVerificationTokenService, VerificationTokenService>();
+
+builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerOrAdminHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, TagOwnerOrAdminHandler>();
+
+builder.Services.AddSecurityHeaderPolicies(policies =>
+{
+    policies.AddPolicy("Development", policy =>
+    {
+        policy.AddDefaultSecurityHeaders()
+            .AddContentSecurityPolicy(bd =>
+            {
+                bd.AddDefaultSrc().Self();
+                bd.AddScriptSrc()
+                    .Self()
+                    .UnsafeInline()
+                    .UnsafeEval()
+                    .From("http://localhost:3000");
+                bd.AddStyleSrc()
+                    .Self()
+                    .UnsafeInline();
+                bd.AddImgSrc().Self().Data();
+            });
+    });
+    policies.AddPolicy("Production", policy =>
+    {
+        policy.AddDefaultSecurityHeaders()
+            .AddStrictTransportSecurityMaxAgeIncludeSubDomains(maxAgeInSeconds: 31536000)
+            .AddContentSecurityPolicy(bd =>
+            {
+                bd.AddDefaultSrc().Self();
+                bd.AddScriptSrc().Self();
+                bd.AddStyleSrc().Self();
+                bd.AddImgSrc().Self().Data();
+                bd.AddObjectSrc().None();
+                bd.AddFrameAncestors().None();
+            })
+            .AddReferrerPolicyNoReferrer()
+            .AddPermissionsPolicy(bd =>
+            {
+                bd.AddCamera().None();
+                bd.AddMicrophone().None();
+                bd.AddGeolocation().None();
+            });
+    });
+});
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddStackExchangeRedisCache(options =>
@@ -53,6 +113,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     }
     );
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ADMIN", policy => policy.RequireRole("ADMIN"));
+    options.AddPolicy("USER", policy => policy.RequireRole("USER"));
+    options.AddPolicy("ActiveAccount",
+        policy => policy.RequireClaim("status", "Active"));
+    options.AddPolicy("PendingAccount",
+        policy => policy.RequireClaim("status", "Pending"));
+    options.AddPolicy("BannedAccount",
+        policy => policy.RequireClaim("status", "Banned"));
+    options.AddPolicy("InactiveAccount",
+        policy => policy.RequireClaim("status", "Inactive"));
+    options.AddPolicy("ResourceOwnerOrAdmin", policy => policy.AddRequirements(new ResourceOwnerOrAdminRequirement()));
+    options.AddPolicy("TagOwnerOrAdmin", policy => policy.AddRequirements(new TagOwnerOrAdminRequirement()));
+});
+
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -62,6 +140,15 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSecurityHeaders("Development");
+}
+else
+{
+    app.UseSecurityHeaders("Production");   
+}
 
 app.UseMiddleware<MiddlewareException>();
 

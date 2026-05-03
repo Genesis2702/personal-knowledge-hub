@@ -8,7 +8,7 @@ namespace PersonalKnowledgeHub.DTOs.Requests
         [EmailAddress]
         public required string Email { get; set; }
         [Required]
-        [MinLength(8)]
+        [StringLength(64, MinimumLength = 8)]
         public required string Password { get; set; }
     }
 }

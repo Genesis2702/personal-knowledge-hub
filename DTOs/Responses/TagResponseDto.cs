@@ -6,5 +6,6 @@ namespace PersonalKnowledgeHub.DTOs.Responses
     {
         [Required]
         public required string Name { get; set; }
+        public DateTime LastModified { get; set; }
     }
 }

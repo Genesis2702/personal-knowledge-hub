@@ -22,6 +22,26 @@ namespace PersonalKnowledgeHub.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("PersonalKnowledgeHub.Entities.Permission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Permissions");
+                });
+
             modelBuilder.Entity("PersonalKnowledgeHub.Entities.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
@@ -35,6 +55,12 @@ namespace PersonalKnowledgeHub.Migrations
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FamilyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("ReplacedByTokenId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("Revoked")
                         .HasColumnType("boolean");
@@ -82,6 +108,9 @@ namespace PersonalKnowledgeHub.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("ResourceType")
                         .IsRequired()
                         .HasColumnType("text");
@@ -119,6 +148,41 @@ namespace PersonalKnowledgeHub.Migrations
                     b.ToTable("ResourceTags");
                 });
 
+            modelBuilder.Entity("PersonalKnowledgeHub.Entities.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("PersonalKnowledgeHub.Entities.RolePermission", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("RolePermissions");
+                });
+
             modelBuilder.Entity("PersonalKnowledgeHub.Entities.Tag", b =>
                 {
                     b.Property<int>("Id")
@@ -126,6 +190,18 @@ namespace PersonalKnowledgeHub.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("LastModified")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -150,6 +226,9 @@ namespace PersonalKnowledgeHub.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("BannedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -157,9 +236,18 @@ namespace PersonalKnowledgeHub.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("FailedLoginAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<string>("UserName")
                         .HasColumnType("text");
@@ -167,6 +255,55 @@ namespace PersonalKnowledgeHub.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("PersonalKnowledgeHub.Entities.UserRole", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("UserRoles");
+                });
+
+            modelBuilder.Entity("PersonalKnowledgeHub.Entities.VerificationToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("VerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("VerificationTokens");
                 });
 
             modelBuilder.Entity("PersonalKnowledgeHub.Entities.RefreshToken", b =>
@@ -210,6 +347,25 @@ namespace PersonalKnowledgeHub.Migrations
                     b.Navigation("Tag");
                 });
 
+            modelBuilder.Entity("PersonalKnowledgeHub.Entities.RolePermission", b =>
+                {
+                    b.HasOne("PersonalKnowledgeHub.Entities.Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PersonalKnowledgeHub.Entities.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("PersonalKnowledgeHub.Entities.Tag", b =>
                 {
                     b.HasOne("PersonalKnowledgeHub.Entities.User", "User")
@@ -221,9 +377,51 @@ namespace PersonalKnowledgeHub.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PersonalKnowledgeHub.Entities.UserRole", b =>
+                {
+                    b.HasOne("PersonalKnowledgeHub.Entities.Role", "Role")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PersonalKnowledgeHub.Entities.User", "User")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PersonalKnowledgeHub.Entities.VerificationToken", b =>
+                {
+                    b.HasOne("PersonalKnowledgeHub.Entities.User", "User")
+                        .WithMany("VerificationTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PersonalKnowledgeHub.Entities.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
             modelBuilder.Entity("PersonalKnowledgeHub.Entities.Resource", b =>
                 {
                     b.Navigation("ResourceTags");
+                });
+
+            modelBuilder.Entity("PersonalKnowledgeHub.Entities.Role", b =>
+                {
+                    b.Navigation("RolePermissions");
+
+                    b.Navigation("UserRoles");
                 });
 
             modelBuilder.Entity("PersonalKnowledgeHub.Entities.Tag", b =>
@@ -238,6 +436,10 @@ namespace PersonalKnowledgeHub.Migrations
                     b.Navigation("Resources");
 
                     b.Navigation("Tags");
+
+                    b.Navigation("UserRoles");
+
+                    b.Navigation("VerificationTokens");
                 });
 #pragma warning restore 612, 618
         }

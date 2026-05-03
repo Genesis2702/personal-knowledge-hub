@@ -1,0 +1,24 @@
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using PersonalKnowledgeHub.Entities;
+using PersonalKnowledgeHub.Policy.Requirements;
+
+namespace PersonalKnowledgeHub.Policy.Handlers;
+
+public class ResourceOwnerOrAdminHandler : AuthorizationHandler<ResourceOwnerOrAdminRequirement, Resource>
+{
+    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ResourceOwnerOrAdminRequirement requirement,
+        Resource resource)
+    {
+        var claim = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(claim, out int userId))
+        {
+            return Task.CompletedTask;
+        }
+        if (context.User.IsInRole("ADMIN") || resource.UserId == userId)
+        {
+            context.Succeed(requirement);
+        }
+        return Task.CompletedTask;
+    }
+}

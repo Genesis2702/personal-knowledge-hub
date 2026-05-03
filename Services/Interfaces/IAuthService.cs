@@ -10,5 +10,10 @@ namespace PersonalKnowledgeHub.Services.Interfaces
         public Task<AuthResponseDto> AuthenticateUser(LoginRequestDto loginRequest);
         public Task<AuthResponseDto> RefreshUser(RefreshRequestDto refreshRequest);
         public Task LogoutUser(LogoutRequestDto logoutRequest, int userId);
+        public Task ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequest);
+        public Task ResetPassword(ResetPasswordRequestDto resetPasswordRequest, int userId);
+        public Task VerifyPendingUser(string token, int userId);
+        public Task ResendVerificationMail(int userId);
+        public Task<int> VerifyPasswordChange(string token, ResetPasswordRequestDto resetPasswordRequest);
     }
 }

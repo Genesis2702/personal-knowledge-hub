@@ -12,6 +12,7 @@ namespace PersonalKnowledgeHub.DTOs.Responses
         [Required]
         public required ResourceType ResourceType { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime LastModified { get; set; }
         public ICollection<string> Tags { get; set; } = new List<string>();
     }
 }

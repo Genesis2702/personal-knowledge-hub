@@ -31,16 +31,33 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.Tags.SingleOrDefaultAsync(tag => tag.Id == tagId);
         }
 
+        public async Task<Tag?> GetTagByIdForRestoreAsync(int tagId)
+        {
+            return await _dbContext.Tags.IgnoreQueryFilters().SingleOrDefaultAsync(tag => tag.Id == tagId);
+        }
+
         public async Task UpdateTagAsync(string tagName, Tag tag)
         {
             tag.Name = tagName;
+            tag.LastModified = DateTime.UtcNow;
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteTagAsync(Tag tag)
+        public async Task DeleteTagAsync(Tag tag, int userId)
         {
-            _dbContext.Tags.Remove(tag);
+            tag.IsDeleted = true;
+            tag.DeletedAt = DateTime.UtcNow;
+            tag.DeletedBy = userId;
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<Tag> RestoreTagAsync(Tag tag)
+        {
+            tag.IsDeleted = false;
+            tag.DeletedAt = null;
+            tag.DeletedBy = null;
+            await _dbContext.SaveChangesAsync();
+            return tag;
         }
 
         public async Task<bool> IsTagExistAsync(string tagName, int userId)

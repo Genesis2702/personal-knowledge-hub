@@ -35,7 +35,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost("refresh")]
-        [Authorize(Policy = "ActiveAccount")]
+        [AllowAnonymous]
         public async Task<ActionResult<AuthResponseDto>> Refresh(RefreshRequestDto refreshRequest)
         {
             AuthResponseDto authResponse = await _authService.RefreshUser(refreshRequest);
@@ -43,7 +43,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
         
         [HttpPost("logout")]
-        [Authorize(Policy = "ActiveAccount")]
+        [Authorize(Policy = "ActiveAccount,PendingAccount")]
         public async Task<IActionResult> Logout(LogoutRequestDto logoutRequest)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -79,11 +79,20 @@ namespace PersonalKnowledgeHub.Controllers
 
         [HttpPost("mail-verification")]
         [Authorize(Policy = "PendingAccount")]
-        public async Task<IActionResult> Verify([FromQuery] string token)
+        public async Task<IActionResult> VerifyMail([FromQuery] string token)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             await _authService.VerifyPendingUser(token, userId);
             return Ok("Email verified successfully");
+        }
+
+        [HttpPost("resend-verification")]
+        [Authorize(Policy = "PendingAccount")]
+        public async Task<IActionResult> ResendMail()
+        {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _authService.ResendVerificationMail(userId);
+            return Ok("Verification mail resent");
         }
     }
 }

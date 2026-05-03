@@ -45,7 +45,6 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpGet("profile")]
-        [Authorize]
         public async Task<ActionResult<UserResponseDto>> GetUserProfile()
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

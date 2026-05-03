@@ -191,6 +191,24 @@ namespace PersonalKnowledgeHub.Services.Implementations
             await _userRepository.ChangeUserStatusAsync(user, UserStatus.Active);
         }
 
+        public async Task ResendVerificationMail(int userId)
+        {
+            User? user = await _userRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new NotFoundException("User not found");
+            }
+            string verificationToken = await _verificationTokenService.GenerateVerificationToken(user.Id);
+            MailData verificationMail = _mailFactoryService.CreateVerificationMail(user.Email, 
+                user.UserName ?? user.Email, 
+                verificationToken, user.UserName ?? user.Email);
+            bool mailResult = await _mailService.SendMail(verificationMail);
+            if (!mailResult)
+            {
+                throw new Exception("Mail sending failed");
+            }
+        }
+
         public async Task<int> VerifyPasswordChange(string token, ResetPasswordRequestDto resetPasswordRequest)
         {
             if (resetPasswordRequest.NewPassword != resetPasswordRequest.ConfirmationPassword)

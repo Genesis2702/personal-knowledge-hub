@@ -13,6 +13,7 @@ namespace PersonalKnowledgeHub.Services.Interfaces
         public Task ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequest);
         public Task ResetPassword(ResetPasswordRequestDto resetPasswordRequest, int userId);
         public Task VerifyPendingUser(string token, int userId);
+        public Task ResendVerificationMail(int userId);
         public Task<int> VerifyPasswordChange(string token, ResetPasswordRequestDto resetPasswordRequest);
     }
 }

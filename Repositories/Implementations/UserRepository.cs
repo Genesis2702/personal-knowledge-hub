@@ -57,6 +57,16 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.Users.SingleOrDefaultAsync(user => user.Email == email);
         }
 
+        public async Task<int> UpdateUserNameAsync(int userId, long version, string userName)
+        {
+            return await _dbContext.Users
+                .Where(user => user.Id == userId && user.Version == version)
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(user => user.UserName, userName)
+                    .SetProperty(user => user.Version, user => user.Version + 1)
+                );
+        }
+
         public async Task BanUserAsync(User user)
         {
             user.Status = UserStatus.Banned;
@@ -71,10 +81,13 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task ResetPasswordAsync(User user, string newHashedPassword)
+        public async Task<int> ResetPasswordAsync(int userId, string newHashedPassword)
         {
-            user.PasswordHash = newHashedPassword;
-            await _dbContext.SaveChangesAsync();
+            return await _dbContext.Users
+                .Where(user => user.Id == userId)
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(user => user.PasswordHash, newHashedPassword)
+                );
         }
 
         public async Task<UserRole?> GetUserRoleAsync(int userId, int roleId)

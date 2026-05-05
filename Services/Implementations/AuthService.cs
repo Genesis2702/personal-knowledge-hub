@@ -171,7 +171,11 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ConflictException("Passwords do not match");
             }
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(resetPasswordRequest.NewPassword);
-            await _userRepository.ResetPasswordAsync(user, hashedPassword);
+            int updateRows = await _userRepository.ResetPasswordAsync(userId, hashedPassword);
+            if (updateRows == 0)
+            {
+                throw new ConflictException("User has been updated by another user");
+            }
             MailData passwordChangedMail = _mailFactoryService.CreatePasswordChangedMail(user.Email, user.UserName ?? user.Email, user.UserName ?? user.Email);
             bool mailResult = await _mailService.SendMail(passwordChangedMail);
             if (!mailResult)

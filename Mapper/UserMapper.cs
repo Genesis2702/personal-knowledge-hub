@@ -18,7 +18,8 @@ public class UserMapper
             Status = UserStatus.Pending,
             BannedAt = null,
             FailedLoginAttempts = 0,
-            LockedUntil = null
+            LockedUntil = null,
+            Version = 0
         };
     }
     

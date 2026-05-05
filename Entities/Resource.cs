@@ -14,6 +14,7 @@
         public bool IsDeleted { get; set; }
         public DateTime? DeletedAt { get; set; }
         public int? DeletedBy { get; set; }
+        public long Version { get; set; }
         public ICollection<ResourceTag> ResourceTags { get; set; } = new List<ResourceTag>();
     }
 

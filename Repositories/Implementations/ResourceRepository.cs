@@ -61,22 +61,19 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return resource;
         }
 
-        public async Task UpdateResourceAsync(Resource resource, string? title, string? url, string? description)
+        public async Task<int> UpdateResourceAsync(int resourceId, long version, string? title, string? url, string? description)
         {
-            if (title != null)
-            {
-                resource.Title = title;
-            }
-            if (url != null)
-            {
-                resource.Url = url;
-            }
-            if (description != null)
-            {
-                resource.Description = description;
-            }
-            resource.LastModified = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync();
+            return await _dbContext.Resources
+                .Where(resource => resource.Id == resourceId && resource.Version == version)
+                .ExecuteUpdateAsync(update =>
+                    update
+                        .SetProperty(resource => resource.Title, resource => title != null ? title : resource.Title)
+                        .SetProperty(resource => resource.Url, resource => url != null ? url : resource.Url)
+                        .SetProperty(resource => resource.Description,
+                            resource => description != null ? description : resource.Description)
+                        .SetProperty(resource => resource.LastModified, resource => DateTime.UtcNow)
+                        .SetProperty(resource => resource.Version, resource => resource.Version + 1)
+                );
         }
 
         public async Task DeleteResourceAsync(Resource resource, int userId)

@@ -20,7 +20,8 @@ public class ResourceMapper
             LastModified = DateTime.UtcNow,
             IsDeleted = false,
             DeletedAt = null,
-            DeletedBy = null
+            DeletedBy = null,
+            Version = 0
         };
     }
 

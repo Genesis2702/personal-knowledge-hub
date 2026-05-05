@@ -17,123 +17,82 @@ public class MailFactoryService : IMailFactoryService
                 <!DOCTYPE html>
                 <html>
                 <head>
-                  <meta charset=""UTF-8"">
-                  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-                  <title>Email Verification</title>
+                  <meta charset=""UTF-8"" />
+                  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"" />
+                  <title>Verify Your Email</title>
                 </head>
 
-                <body style=""margin:0;padding:0;background-color:#10076B;font-family:Arial,Helvetica,sans-serif;"">
+                <body style=""margin:0;padding:0;background-color:#f4f8fb;font-family:Arial,Helvetica,sans-serif;color:#384959;"">
 
-                  <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0"" style=""padding:32px 12px;"">
+                  <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0"" style=""padding:40px 16px;"">
                     <tr>
                       <td align=""center"">
 
                         <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0""
-                          style=""
-                            max-width:640px;
-                            background-color:#0B0638;
-                            border:1px solid #241B86;
-                            border-radius:16px;
-                            overflow:hidden;
-                          "">
+                          style=""max-width:600px;background-color:#ffffff;border:1px solid #BDDDFC;border-radius:16px;padding:42px;box-shadow:0 10px 28px rgba(56,73,89,0.08);"">
 
                           <tr>
-                            <td style=""padding:38px 32px 42px 32px;text-align:center;"">
-
-                              <div style=""
-                                color:#8ACBD0;
-                                font-size:20px;
-                                font-weight:700;
-                                margin-bottom:26px;
-                                letter-spacing:0.2px;
-                              "">
+                            <td align=""center"" style=""padding-bottom:28px;"">
+                              <h2 style=""margin:0;color:#88BDF2;font-size:24px;font-weight:700;letter-spacing:0.2px;"">
                                 Knowledge Hub
-                              </div>
+                              </h2>
+                            </td>
+                          </tr>
 
-                              <h1 style=""
-                                margin:0;
-                                color:#EFE3CA;
-                                font-size:40px;
-                                line-height:1.25;
-                                font-weight:500;
-                              "">
+                          <tr>
+                            <td align=""center"" style=""padding-bottom:10px;"">
+                              <h1 style=""margin:0;color:#88BDF2;font-size:28px;font-weight:700;"">
                                 Verify your email
                               </h1>
+                            </td>
+                          </tr>
 
-                              <div style=""margin-top:20px;"">
-                                <span style=""
-                                  display:inline-block;
-                                  padding:10px 16px;
-                                  border:1px solid #241B86;
-                                  border-radius:999px;
-                                  color:#D7D9E8;
-                                  font-size:15px;
-                                  line-height:1.4;
-                                  background-color:#12085E;
-                                "">
-                                  {emailToId}
-                                </span>
-                              </div>
+                          <tr>
+                            <td align=""center"" style=""padding-bottom:28px;"">
+                              <p style=""margin:0;color:#6A89A7;font-size:14px;line-height:1.6;"">
+                                {emailToId}
+                              </p>
+                            </td>
+                          </tr>
 
-                              <div style=""
-                                height:1px;
-                                background-color:#241B86;
-                                margin:30px 0 30px 0;
-                              ""></div>
+                          <tr>
+                            <td>
+                              <p style=""margin:0 0 16px;color:#384959;font-size:16px;line-height:1.7;"">
+                                Hello {userName},
+                              </p>
 
-                              <div style=""
-                                color:#D7D9E8;
-                                font-size:16px;
-                                line-height:1.75;
-                                text-align:left;
-                              "">
-                                Hello <strong style=""color:#EFE3CA;"">{userName}</strong>,<br><br>
+                              <p style=""margin:0 0 24px;color:#384959;font-size:16px;line-height:1.7;"">
+                                Welcome to Knowledge Hub. Please verify your email address to activate your account and start managing, sharing, and discovering learning resources.
+                              </p>
 
-                                Welcome to <strong style=""color:#EFE3CA;"">Knowledge Hub</strong>.<br><br>
+                              <p style=""margin:0 0 30px;color:#6A89A7;font-size:15px;line-height:1.7;"">
+                                This helps us keep your account secure and make sure important account updates reach the right email address.
+                              </p>
+                            </td>
+                          </tr>
 
-                                Please verify your email address to activate your account and start using the platform.
-                              </div>
+                          <tr>
+                            <td align=""center"" style=""padding-bottom:30px;"">
+                              <a href=""{verificationLink}""
+                                style=""display:inline-block;background-color:#384959;color:#BDDDFC;text-decoration:none;font-size:15px;font-weight:700;padding:14px 28px;border-radius:10px;"">
+                                Verify Email
+                              </a>
+                            </td>
+                          </tr>
 
-                              <div style=""margin-top:34px;"">
-                                <a href=""{verificationLink}""
-                                  style=""
-                                    display:inline-block;
-                                    background-color:#56B6C6;
-                                    color:#0B0638;
-                                    text-decoration:none;
-                                    padding:15px 34px;
-                                    border-radius:999px;
-                                    font-size:16px;
-                                    font-weight:700;
-                                  "">
-                                  Verify email
-                                </a>
-                              </div>
-
-                              <div style=""
-                                margin-top:28px;
-                                color:#D7D9E8;
-                                font-size:15px;
-                                line-height:1.7;
-                                text-align:center;
-                              "">
-                                This verification link will expire in <strong style=""color:#EFE3CA;"">24 hours</strong>.
-                              </div>
-
-                              <div style=""
-                                margin-top:26px;
-                                color:#9CA3AF;
-                                font-size:14px;
-                                line-height:1.7;
-                                text-align:center;
-                              "">
-                                If you did not create this account, you can safely ignore this email.
-                              </div>
-
+                          <tr>
+                            <td>
+                              <p style=""margin:0;color:#6A89A7;font-size:13px;line-height:1.6;"">
+                                If you did not create a Knowledge Hub account, you can safely ignore this email.
+                              </p>
                             </td>
                           </tr>
 
                         </table>
+
+                        <p style=""margin:24px 0 0;color:#6A89A7;font-size:12px;line-height:1.6;"">
+                          © Knowledge Hub. Built for better learning and resource sharing.
+                        </p>
 
                       </td>
                     </tr>
@@ -157,129 +116,82 @@ public class MailFactoryService : IMailFactoryService
               <!DOCTYPE html>
               <html>
               <head>
-                <meta charset=""UTF-8"">
-                <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-                <title>Password Reset Request</title>
+                <meta charset=""UTF-8"" />
+                <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"" />
+                <title>Reset Your Password</title>
               </head>
 
-              <body style=""margin:0;padding:0;background-color:#0B1020;font-family:Arial,Helvetica,sans-serif;"">
+              <body style=""margin:0;padding:0;background-color:#f4f8fb;font-family:Arial,Helvetica,sans-serif;color:#384959;"">
 
-                <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0"" style=""padding:32px 12px;"">
+                <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0"" style=""padding:40px 16px;"">
                   <tr>
                     <td align=""center"">
 
                       <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0""
-                        style=""
-                          max-width:640px;
-                          background-color:#111827;
-                          border:1px solid #2A3446;
-                          border-radius:16px;
-                          overflow:hidden;
-                        "">
+                        style=""max-width:600px;background-color:#ffffff;border:1px solid #BDDDFC;border-radius:16px;padding:42px;box-shadow:0 10px 28px rgba(56,73,89,0.08);"">
 
                         <tr>
-                          <td style=""padding:36px 30px 40px 30px;text-align:center;"">
-
-                            <div style=""
-                              color:#56B6C6;
-                              font-size:20px;
-                              font-weight:700;
-                              margin-bottom:26px;
-                              letter-spacing:0.2px;
-                            "">
+                          <td align=""center"" style=""padding-bottom:28px;"">
+                            <h2 style=""margin:0;color:#88BDF2;font-size:24px;font-weight:700;letter-spacing:0.2px;"">
                               Knowledge Hub
-                            </div>
+                            </h2>
+                          </td>
+                        </tr>
 
-                            <h1 style=""
-                              margin:0;
-                              color:#F3F4F6;
-                              font-size:40px;
-                              line-height:1.25;
-                              font-weight:500;
-                            "">
+                        <tr>
+                          <td align=""center"" style=""padding-bottom:10px;"">
+                            <h1 style=""margin:0;color:#88BDF2;font-size:28px;font-weight:700;"">
                               Reset your password
                             </h1>
+                          </td>
+                        </tr>
 
-                            <div style=""margin-top:20px;"">
-                              <span style=""
-                                display:inline-block;
-                                padding:10px 16px;
-                                border:1px solid #2A3446;
-                                border-radius:999px;
-                                color:#D1D5DB;
-                                font-size:15px;
-                                line-height:1.4;
-                                background-color:#0F172A;
-                              "">
-                                {emailToId}
-                              </span>
-                            </div>
+                        <tr>
+                          <td align=""center"" style=""padding-bottom:28px;"">
+                            <p style=""margin:0;color:#6A89A7;font-size:14px;line-height:1.6;"">
+                              {emailToId}
+                            </p>
+                          </td>
+                        </tr>
 
-                            <div style=""
-                              height:1px;
-                              background-color:#2A3446;
-                              margin:28px 0 30px 0;
-                            ""></div>
+                        <tr>
+                          <td>
+                            <p style=""margin:0 0 16px;color:#384959;font-size:16px;line-height:1.7;"">
+                              Hello {userName},
+                            </p>
 
-                            <div style=""
-                              color:#D1D5DB;
-                              font-size:16px;
-                              line-height:1.75;
-                              text-align:left;
-                            "">
-                              Hello <strong style=""color:#FFFFFF;"">{userName}</strong>,<br><br>
+                            <p style=""margin:0 0 24px;color:#384959;font-size:16px;line-height:1.7;"">
+                              We received a request to reset the password for your Knowledge Hub account. You can create a new password by clicking the button below.
+                            </p>
 
-                              We received a request to reset the password for your <strong style=""color:#FFFFFF;"">Knowledge Hub</strong> account.<br><br>
+                            <p style=""margin:0 0 30px;color:#6A89A7;font-size:15px;line-height:1.7;"">
+                              For your security, this password reset link should only be used by you. If you did not request this, no changes will be made to your account.
+                            </p>
+                          </td>
+                        </tr>
 
-                              To continue, use the button below. For your security, this link should only be used by you.
-                            </div>
+                        <tr>
+                          <td align=""center"" style=""padding-bottom:30px;"">
+                            <a href=""{resetPasswordLink}""
+                              style=""display:inline-block;background-color:#384959;color:#BDDDFC;text-decoration:none;font-size:15px;font-weight:700;padding:14px 28px;border-radius:10px;"">
+                              Reset Password
+                            </a>
+                          </td>
+                        </tr>
 
-                            <div style=""margin-top:34px;"">
-                              <a href=""{resetPasswordLink}""
-                                style=""
-                                  display:inline-block;
-                                  background-color:#56B6C6;
-                                  color:#0B1020;
-                                  text-decoration:none;
-                                  padding:15px 32px;
-                                  border-radius:999px;
-                                  font-size:16px;
-                                  font-weight:700;
-                                "">
-                                Reset password
-                              </a>
-                            </div>
-                            
-                            <div style=""margin-top:18px;color:#9CA3AF;font-size:14px;line-height:1.6;text-align:center;"">
-                This password reset link will expire shortly for your security.
-              </div>
-
-                            <div style=""
-                              margin-top:28px;
-                              color:#9CA3AF;
-                              font-size:15px;
-                              line-height:1.7;
-                              text-align:center;
-                            "">
-                              If you did not request this password reset, you can safely ignore this email.
-                            </div>
-
-                            <div style=""
-                              margin-top:26px;
-                              padding-top:24px;
-                              border-top:1px solid #2A3446;
-                              color:#9CA3AF;
-                              font-size:14px;
-                              line-height:1.7;
-                              text-align:center;
-                            "">
-                              This is an automated security notification from Knowledge Hub.
-                            </div>
-
+                        <tr>
+                          <td>
+                            <p style=""margin:0;color:#6A89A7;font-size:13px;line-height:1.6;"">
+                              If you did not request a password reset, you can safely ignore this email.
+                            </p>
                           </td>
                         </tr>
 
                       </table>
+
+                      <p style=""margin:24px 0 0;color:#6A89A7;font-size:12px;line-height:1.6;"">
+                        © Knowledge Hub. Built for better learning and resource sharing.
+                      </p>
 
                     </td>
                   </tr>
@@ -302,114 +214,80 @@ public class MailFactoryService : IMailFactoryService
               <!DOCTYPE html>
               <html>
               <head>
-                <meta charset=""UTF-8"">
-                <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-                <title>Password Changed</title>
+                <meta charset=""UTF-8"" />
+                <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"" />
+                <title>Password Updated</title>
               </head>
 
-              <body style=""margin:0;padding:0;background-color:#0B1020;font-family:Arial,Helvetica,sans-serif;"">
+              <body style=""margin:0;padding:0;background-color:#f4f8fb;font-family:Arial,Helvetica,sans-serif;color:#384959;"">
 
-                <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0"" style=""padding:32px 12px;"">
+                <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0"" style=""padding:40px 16px;"">
                   <tr>
                     <td align=""center"">
 
                       <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0""
-                        style=""
-                          max-width:640px;
-                          background-color:#111827;
-                          border:1px solid #2A3446;
-                          border-radius:16px;
-                          overflow:hidden;
-                        "">
+                        style=""max-width:600px;background-color:#ffffff;border:1px solid #BDDDFC;border-radius:16px;padding:42px;box-shadow:0 10px 28px rgba(56,73,89,0.08);"">
 
                         <tr>
-                          <td style=""padding:36px 30px 40px 30px;text-align:center;"">
-
-                            <div style=""
-                              color:#56B6C6;
-                              font-size:20px;
-                              font-weight:700;
-                              margin-bottom:26px;
-                              letter-spacing:0.2px;
-                            "">
+                          <td align=""center"" style=""padding-bottom:28px;"">
+                            <h2 style=""margin:0;color:#88BDF2;font-size:24px;font-weight:700;letter-spacing:0.2px;"">
                               Knowledge Hub
-                            </div>
+                            </h2>
+                          </td>
+                        </tr>
 
-                            <h1 style=""
-                              margin:0;
-                              color:#F3F4F6;
-                              font-size:40px;
-                              line-height:1.25;
-                              font-weight:500;
-                            "">
+                        <tr>
+                          <td align=""center"" style=""padding-bottom:10px;"">
+                            <h1 style=""margin:0;color:#88BDF2;font-size:28px;font-weight:700;"">
                               Password updated
                             </h1>
+                          </td>
+                        </tr>
 
-                            <div style=""margin-top:20px;"">
-                              <span style=""
-                                display:inline-block;
-                                padding:10px 16px;
-                                border:1px solid #2A3446;
-                                border-radius:999px;
-                                color:#D1D5DB;
-                                font-size:15px;
-                                line-height:1.4;
-                                background-color:#0F172A;
-                              "">
-                                {emailToId}
-                              </span>
-                            </div>
+                        <tr>
+                          <td align=""center"" style=""padding-bottom:28px;"">
+                            <p style=""margin:0;color:#6A89A7;font-size:14px;line-height:1.6;"">
+                              {emailToId}
+                            </p>
+                          </td>
+                        </tr>
 
-                            <div style=""
-                              height:1px;
-                              background-color:#2A3446;
-                              margin:28px 0 30px 0;
-                            ""></div>
+                        <tr>
+                          <td>
+                            <p style=""margin:0 0 16px;color:#384959;font-size:16px;line-height:1.7;"">
+                              Hello {userName},
+                            </p>
 
-                            <div style=""
-                              color:#D1D5DB;
-                              font-size:16px;
-                              line-height:1.75;
-                              text-align:left;
-                            "">
-                              Hello <strong style=""color:#FFFFFF;"">{userName}</strong>,<br><br>
+                            <p style=""margin:0 0 24px;color:#384959;font-size:16px;line-height:1.7;"">
+                              Your Knowledge Hub account password has been updated successfully.
+                            </p>
 
-                              The password for your <strong style=""color:#FFFFFF;"">Knowledge Hub</strong> account was changed successfully.<br><br>
+                            <p style=""margin:0 0 24px;color:#6A89A7;font-size:15px;line-height:1.7;"">
+                              This email is sent to confirm that the change was completed. You can continue using Knowledge Hub to organize, manage, and share your learning resources.
+                            </p>
 
-                              If you made this change, no further action is needed.
-                            </div>
+                            <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0""
+                              style=""background-color:#f4f8fb;border:1px solid #BDDDFC;border-radius:12px;padding:18px;margin:26px 0;"">
+                              <tr>
+                                <td>
+                                  <p style=""margin:0;color:#384959;font-size:14px;line-height:1.7;"">
+                                    If you did not update your password, please secure your account immediately or contact support.
+                                  </p>
+                                </td>
+                              </tr>
+                            </table>
 
-                            <div style=""
-                              margin-top:30px;
-                              background-color:#0F172A;
-                              border:1px solid #2A3446;
-                              border-radius:12px;
-                              padding:18px;
-                              color:#D1D5DB;
-                              font-size:15px;
-                              line-height:1.7;
-                              text-align:left;
-                            "">
-                              <strong style=""color:#F3F4F6;"">Didn’t change your password?</strong><br>
-                              Your account may be at risk. Please contact support immediately to request account recovery assistance.
-                            </div>
-
-                            <div style=""
-                              margin-top:26px;
-                              padding-top:24px;
-                              border-top:1px solid #2A3446;
-                              color:#9CA3AF;
-                              font-size:14px;
-                              line-height:1.7;
-                              text-align:center;
-                            "">
-                              This is an automated security notification from Knowledge Hub.
-                            </div>
-
+                            <p style=""margin:0;color:#6A89A7;font-size:13px;line-height:1.6;"">
+                              For your safety, we recommend using a strong password that you do not reuse on other websites.
+                            </p>
                           </td>
                         </tr>
 
                       </table>
+
+                      <p style=""margin:24px 0 0;color:#6A89A7;font-size:12px;line-height:1.6;"">
+                        © Knowledge Hub. Built for better learning and resource sharing.
+                      </p>
 
                     </td>
                   </tr>

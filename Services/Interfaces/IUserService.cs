@@ -7,6 +7,7 @@ public interface IUserService
 {
     public Task<PageResult<User>> GetUsers(int pageIndex, int pageSize, UserStatus? status);
     public Task<User> GetUserById(int id);
+    public Task UpdateUserName(int id, string newUserName);
     public Task BanUser(int userId);
     public Task UnbanUser(int userId);
     public Task<User> AddRoleToUser(int userId, int roleId);

@@ -67,7 +67,11 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ConflictException("Tag already existed");
             }
-            await _tagRepository.UpdateTagAsync(tagName, tag);
+            int updatedRows = await _tagRepository.UpdateTagAsync(tagId, tag.Version, tagName);
+            if (updatedRows == 0)
+            {
+                throw new ConflictException("Tag was updated by another user");
+            }
         }
 
         public async Task DeleteTagById(ClaimsPrincipal user, int tagId)

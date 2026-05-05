@@ -9,6 +9,7 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces
         public Task<(List<User>, int)> GetUsersAsync(int pageIndex, int pageSize, UserStatus? status);
         public Task<User?> GetUserByIdAsync(int userId);
         public Task<User?> GetUserByEmailAsync(string email);
+        public Task<int> UpdateUserNameAsync(int userId, long version, string userName);
         public Task BanUserAsync(User user);
         public Task UnbanUserAsync(User user);
         public Task ResetPasswordAsync(User user, string newHashedPassword);

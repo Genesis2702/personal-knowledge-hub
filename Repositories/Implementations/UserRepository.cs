@@ -57,6 +57,16 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.Users.SingleOrDefaultAsync(user => user.Email == email);
         }
 
+        public async Task<int> UpdateUserNameAsync(int userId, long version, string userName)
+        {
+            return await _dbContext.Users
+                .Where(user => user.Id == userId && user.Version == version)
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(user => user.UserName, userName)
+                    .SetProperty(user => user.Version, user => user.Version + 1)
+                );
+        }
+
         public async Task BanUserAsync(User user)
         {
             user.Status = UserStatus.Banned;

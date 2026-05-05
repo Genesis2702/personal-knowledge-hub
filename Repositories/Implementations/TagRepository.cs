@@ -36,11 +36,15 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.Tags.IgnoreQueryFilters().SingleOrDefaultAsync(tag => tag.Id == tagId);
         }
 
-        public async Task UpdateTagAsync(string tagName, Tag tag)
+        public async Task<int> UpdateTagAsync(int tagId, long version, string tagName)
         {
-            tag.Name = tagName;
-            tag.LastModified = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync();
+            return await _dbContext.Tags
+                .Where(tag => tag.Id == tagId && tag.Version == version)
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(tag => tag.Name, tagName)
+                    .SetProperty(tag => tag.LastModified, DateTime.UtcNow)
+                    .SetProperty(tag => tag.Version, tag => tag.Version + 1)
+                );
         }
 
         public async Task DeleteTagAsync(Tag tag, int userId)

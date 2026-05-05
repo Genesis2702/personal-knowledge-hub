@@ -85,8 +85,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("You are not authorized to update this resource");
             }
-            await _resourceRepository.UpdateResourceAsync(resource, resourceUpdateRequest.Title,
+            int updatedRows = await _resourceRepository.UpdateResourceAsync(resourceId, resource.Version, resourceUpdateRequest.Title,
                 resourceUpdateRequest.Url, resourceUpdateRequest.Description);
+            if (updatedRows == 0)
+            {
+                throw new ConflictException("Resource has been updated by another user");
+            }
         }
 
         public async Task DeleteResourceById(ClaimsPrincipal user, int resourceId)

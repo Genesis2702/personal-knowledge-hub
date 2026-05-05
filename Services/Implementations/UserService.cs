@@ -1,4 +1,5 @@
 ﻿using PersonalKnowledgeHub.Common;
+using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Mapper;
@@ -37,14 +38,14 @@ public class UserService : IUserService
         return user;
     }
 
-    public async Task UpdateUserName(int id, string newUserName)
+    public async Task UpdateUserName(int id, UserUpdateRequestDto userUpdateRequest)
     {
         User? user = await _userRepository.GetUserByIdAsync(id);
         if (user == null)
         {
             throw new NotFoundException("User not found");
         }
-        int updatedRows = await _userRepository.UpdateUserNameAsync(id, user.Version, newUserName);
+        int updatedRows = await _userRepository.UpdateUserNameAsync(id, user.Version, userUpdateRequest.UserName);
         if (updatedRows == 0)
         {
             throw new ConflictException("User was updated by another user");

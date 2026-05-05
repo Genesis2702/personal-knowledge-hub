@@ -53,6 +53,14 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(userResponse);
         }
 
+        [HttpPatch("profile")]
+        public async Task<IActionResult> UpdateUserProfile(UserUpdateRequestDto userUpdateRequest)
+        {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _userService.UpdateUserName(userId, userUpdateRequest);
+            return NoContent();
+        }
+
         [HttpPost("{id}/ban")]
         [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> BanUser(int id)

@@ -81,10 +81,13 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task ResetPasswordAsync(User user, string newHashedPassword)
+        public async Task<int> ResetPasswordAsync(int userId, string newHashedPassword)
         {
-            user.PasswordHash = newHashedPassword;
-            await _dbContext.SaveChangesAsync();
+            return await _dbContext.Users
+                .Where(user => user.Id == userId)
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(user => user.PasswordHash, newHashedPassword)
+                );
         }
 
         public async Task<UserRole?> GetUserRoleAsync(int userId, int roleId)

@@ -70,7 +70,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             int updatedRows = await _tagRepository.UpdateTagAsync(tagId, tag.Version, tagName);
             if (updatedRows == 0)
             {
-                throw new ConflictException("Tag was updated by another user");
+                throw new ConflictException("Tag has been updated by another user");
             }
         }
 

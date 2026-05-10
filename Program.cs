@@ -8,10 +8,13 @@ using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Implementations;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Text;
+using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Authorization;
 using PersonalKnowledgeHub.Configuration;
-using PersonalKnowledgeHub.Policy.Handlers;
-using PersonalKnowledgeHub.Policy.Requirements;
+using PersonalKnowledgeHub.Policy.Security.Handlers;
+using PersonalKnowledgeHub.Policy.Security.Requirements;
+using Polly;
+using Polly.Retry;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,6 +89,15 @@ builder.Services.AddSecurityHeaderPolicies(policies =>
                 bd.AddGeolocation().None();
             });
     });
+});
+
+builder.Services.AddResiliencePipeline("SendMail", static builder =>
+{
+    builder.AddRetry(new RetryStrategyOptions
+    {
+        ShouldHandle = new PredicateBuilder().Handle<SmtpCommandException>(ex => (int)ex.StatusCode >= 400 && (int)ex.StatusCode < 500)
+    });
+    builder.AddTimeout(TimeSpan.FromSeconds(10));
 });
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

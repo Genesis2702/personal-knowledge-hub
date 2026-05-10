@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-namespace PersonalKnowledgeHub.Policy.Requirements;
+namespace PersonalKnowledgeHub.Policy.Security.Requirements;
 
 public class ResourceOwnerOrAdminRequirement : IAuthorizationRequirement
 {

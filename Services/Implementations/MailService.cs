@@ -37,10 +37,10 @@ public class MailService : IMailService
                 emailMessage.Body = emailBodyBuilder.ToMessageBody();
             
                 using SmtpClient mailClient = new SmtpClient();
-                await mailClient.ConnectAsync(_mailSettings.Host, _mailSettings.Port, _mailSettings.UseSsl);
-                await mailClient.AuthenticateAsync(_mailSettings.EmailId, _mailSettings.Password);
-                await mailClient.SendAsync(emailMessage);
-                await mailClient.DisconnectAsync(true);
+                await mailClient.ConnectAsync(_mailSettings.Host, _mailSettings.Port, _mailSettings.UseSsl, cancellationToken);
+                await mailClient.AuthenticateAsync(_mailSettings.EmailId, _mailSettings.Password, cancellationToken);
+                await mailClient.SendAsync(emailMessage, cancellationToken);
+                await mailClient.DisconnectAsync(true, cancellationToken);
             });
             return true;
         }

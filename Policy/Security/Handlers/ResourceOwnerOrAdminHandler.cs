@@ -1,9 +1,9 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using PersonalKnowledgeHub.Entities;
-using PersonalKnowledgeHub.Policy.Requirements;
+using PersonalKnowledgeHub.Policy.Security.Requirements;
 
-namespace PersonalKnowledgeHub.Policy.Handlers;
+namespace PersonalKnowledgeHub.Policy.Security.Handlers;
 
 public class ResourceOwnerOrAdminHandler : AuthorizationHandler<ResourceOwnerOrAdminRequirement, Resource>
 {

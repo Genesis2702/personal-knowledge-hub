@@ -18,13 +18,13 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _tagRepository = tagRepository;
         }
 
-        public async Task<Resource> AddResourceTag(int tagId, int resourceId, int userId)
+        public async Task<Resource> AddResourceTag(int tagId, int resourceId, int userId, CancellationToken cancellationToken)
         {
-            if (await _resourceTagRepository.IsResourceTagExistAsync(tagId, resourceId))
+            if (await _resourceTagRepository.IsResourceTagExistAsync(tagId, resourceId, cancellationToken))
             {
                 throw new ConflictException("Resource tag already existed");
             }
-            Tag? tag = await _tagRepository.GetTagByIdAsync(tagId);
+            Tag? tag = await _tagRepository.GetTagByIdAsync(tagId, cancellationToken);
             if (tag == null)
             {
                 throw new NotFoundException("Tag not found");
@@ -33,7 +33,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("Tag found doesn't belong to current user");
             }
-            Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId);
+            Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId, cancellationToken);
             if (resource == null)
             {
                 throw new NotFoundException("Resource not found");
@@ -49,13 +49,13 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 Resource = resource,
                 ResourceId = resourceId
             };
-            await _resourceTagRepository.AddResourceTagAsync(resourceTag);
+            await _resourceTagRepository.AddResourceTagAsync(resourceTag, cancellationToken);
             return resource;
         }
 
-        public async Task DeleteResourceTag(int tagId, int resourceId, int userId)
+        public async Task DeleteResourceTag(int tagId, int resourceId, int userId, CancellationToken cancellationToken)
         {
-            ResourceTag? resourceTag = await _resourceTagRepository.GetResourceTagByIdAsync(tagId, resourceId);
+            ResourceTag? resourceTag = await _resourceTagRepository.GetResourceTagByIdAsync(tagId, resourceId, cancellationToken);
             if (resourceTag == null)
             {
                 throw new NotFoundException("Resource's tag not found");
@@ -64,7 +64,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("Resource's tag found doesn't belong to current user");
             }
-            await _resourceTagRepository.DeleteResourceTagAsync(resourceTag);
+            await _resourceTagRepository.DeleteResourceTagAsync(resourceTag, cancellationToken);
         }
     }
 }

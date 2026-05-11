@@ -4,12 +4,12 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces;
 
 public interface IRoleRepository
 {
-    public Task<List<Role>> GetRolesAsync();
-    public Task<Role?> GetRoleByIdAsync(int id);
-    public Task<Role> AddRoleAsync(Role role);
-    public Task UpdateRoleAsync(Role role, string name);
-    public Task DeleteRoleAsync(Role role);
-    public Task<bool> IsRoleExistAsync(string name);
-    public Task<Role> AddPermissionToRoleAsync(RolePermission rolePermission);
-    public Task RemovePermissionFromRoleAsync(RolePermission rolePermission);
+    public Task<List<Role>> GetRolesAsync(CancellationToken cancellationToken);
+    public Task<Role?> GetRoleByIdAsync(int id, CancellationToken cancellationToken);
+    public Task<Role> AddRoleAsync(Role role, CancellationToken cancellationToken);
+    public Task UpdateRoleAsync(Role role, string name, CancellationToken cancellationToken);
+    public Task DeleteRoleAsync(Role role, CancellationToken cancellationToken);
+    public Task<bool> IsRoleExistAsync(string name, CancellationToken cancellationToken);
+    public Task<Role> AddPermissionToRoleAsync(RolePermission rolePermission, CancellationToken cancellationToken);
+    public Task RemovePermissionFromRoleAsync(RolePermission rolePermission, CancellationToken cancellationToken);
 }

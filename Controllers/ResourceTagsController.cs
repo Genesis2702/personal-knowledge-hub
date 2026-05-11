@@ -22,19 +22,19 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ResourceResponseDto>> AddResourceTag(ResourceTagRequestDto resourceTagRequest, int resourceId)
+        public async Task<ActionResult<ResourceResponseDto>> AddResourceTag(ResourceTagRequestDto resourceTagRequest, int resourceId, CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            Resource resource = await _resourceTagService.AddResourceTag(resourceTagRequest.TagId, resourceId, userId);
+            Resource resource = await _resourceTagService.AddResourceTag(resourceTagRequest.TagId, resourceId, userId, cancellationToken);
             ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
             return CreatedAtAction(nameof(ResourcesController.GetResourceById), "Resources", new { id = resource.Id }, resourceResponse);
         }
 
         [HttpDelete("{tagId}")]
-        public async Task<IActionResult> DeleteResourceTag(int tagId, int resourceId)
+        public async Task<IActionResult> DeleteResourceTag(int tagId, int resourceId, CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            await _resourceTagService.DeleteResourceTag(tagId, resourceId, userId);
+            await _resourceTagService.DeleteResourceTag(tagId, resourceId, userId, cancellationToken);
             return NoContent();
         }
     }

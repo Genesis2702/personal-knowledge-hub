@@ -14,7 +14,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             _dbContext = dbContext;
         }
 
-        public async Task<(List<Resource>, int)> GetResourcesAsync(int userId, int pageIndex, int pageSize, int? tagId, ResourceType? resourceType, string? search)
+        public async Task<(List<Resource>, int)> GetResourcesAsync(int userId, int pageIndex, int pageSize, int? tagId, ResourceType? resourceType, string? search, CancellationToken cancellationToken)
         {
             IQueryable<Resource> query = _dbContext.Resources.AsNoTracking().Where(resource => resource.UserId == userId);
             if (tagId.HasValue)
@@ -30,38 +30,38 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                 query = query.Where(resource => EF.Functions.ILike(resource.Title, $"%{search}%")
                 || (resource.Description != null && EF.Functions.ILike(resource.Description, $"%{search}%")));
             }
-            int resourcesCount = await query.CountAsync();
+            int resourcesCount = await query.CountAsync(cancellationToken);
             List<Resource> resources = await query
                 .Include(resource => resource.ResourceTags)
                 .ThenInclude(resourceTag => resourceTag.Tag)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
             return (resources, resourcesCount);
         }
 
-        public async Task<Resource?> GetResourceByIdAsync(int resourceId)
+        public async Task<Resource?> GetResourceByIdAsync(int resourceId, CancellationToken cancellationToken)
         {
             return await _dbContext.Resources
                 .Include(resource => resource.ResourceTags)
                 .ThenInclude(resourceTag => resourceTag.Tag)
-                .SingleOrDefaultAsync(resource => resource.Id == resourceId);
+                .SingleOrDefaultAsync(resource => resource.Id == resourceId, cancellationToken);
         }
 
-        public async Task<Resource?> GetResourceByIdForRestoreAsync(int resourceId)
+        public async Task<Resource?> GetResourceByIdForRestoreAsync(int resourceId, CancellationToken cancellationToken)
         {
             return await _dbContext.Resources.IgnoreQueryFilters()
-                .SingleOrDefaultAsync(resource => resource.Id == resourceId);
+                .SingleOrDefaultAsync(resource => resource.Id == resourceId, cancellationToken);
         }
 
-        public async Task<Resource> AddResourceAsync(Resource resource)
+        public async Task<Resource> AddResourceAsync(Resource resource, CancellationToken cancellationToken)
         {
-            await _dbContext.Resources.AddAsync(resource);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.Resources.AddAsync(resource, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
             return resource;
         }
 
-        public async Task<int> UpdateResourceAsync(int resourceId, long version, string? title, string? url, string? description)
+        public async Task<int> UpdateResourceAsync(int resourceId, long version, string? title, string? url, string? description, CancellationToken cancellationToken)
         {
             return await _dbContext.Resources
                 .Where(resource => resource.Id == resourceId && resource.Version == version)
@@ -73,29 +73,29 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                             resource => description != null ? description : resource.Description)
                         .SetProperty(resource => resource.LastModified, resource => DateTime.UtcNow)
                         .SetProperty(resource => resource.Version, resource => resource.Version + 1)
-                );
+                , cancellationToken);
         }
 
-        public async Task DeleteResourceAsync(Resource resource, int userId)
+        public async Task DeleteResourceAsync(Resource resource, int userId, CancellationToken cancellationToken)
         {
             resource.IsDeleted = true;
             resource.DeletedAt = DateTime.UtcNow;
             resource.DeletedBy = userId;
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<Resource> RestoreResourceAsync(Resource resource)
+        public async Task<Resource> RestoreResourceAsync(Resource resource, CancellationToken cancellationToken)
         {
             resource.IsDeleted = false;
             resource.DeletedAt = null;
             resource.DeletedBy = null;
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken);
             return resource;
         }
 
-        public async Task<bool> IsTitleExistAsync(string resourceTitle, int userId)
+        public async Task<bool> IsTitleExistAsync(string resourceTitle, int userId, CancellationToken cancellationToken)
         {
-            return await _dbContext.Resources.AnyAsync(resource => resource.Title == resourceTitle && resource.UserId == userId);
+            return await _dbContext.Resources.AnyAsync(resource => resource.Title == resourceTitle && resource.UserId == userId, cancellationToken);
         }
     }
 }

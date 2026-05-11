@@ -13,8 +13,8 @@ public class UnitOfWorkRepository : IUnitOfWorkRepository
         _dbContext = dbContext;
     }
 
-    public async Task<IDbContextTransaction> BeginTransactionAsync()
+    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
     {
-        return await _dbContext.Database.BeginTransactionAsync();
+        return await _dbContext.Database.BeginTransactionAsync(cancellationToken);
     }
 }

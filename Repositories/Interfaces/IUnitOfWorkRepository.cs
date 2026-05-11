@@ -4,5 +4,5 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces;
 
 public interface IUnitOfWorkRepository
 {
-    public Task<IDbContextTransaction> BeginTransactionAsync();
+    public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken);
 }

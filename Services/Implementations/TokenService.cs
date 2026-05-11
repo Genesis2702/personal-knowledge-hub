@@ -24,7 +24,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _configuration = configuration;
         }
 
-        public async Task<string> GenerateRefreshToken(int userId, Guid familyId)
+        public async Task<string> GenerateRefreshToken(int userId, Guid familyId, CancellationToken cancellationToken)
         {
             string rawToken = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
             byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
@@ -40,13 +40,13 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 FamilyId = familyId,
                 UserId = userId
             };
-            await _tokenRepository.AddRefreshTokenAsync(refreshToken);
+            await _tokenRepository.AddRefreshTokenAsync(refreshToken, cancellationToken);
             return rawToken;
         }
 
-        public async Task<string> GenerateAccessToken(int userId)
+        public async Task<string> GenerateAccessToken(int userId, CancellationToken cancellationToken)
         {
-            User user = (await _userRepository.GetUserByIdAsync(userId))!;
+            User user = (await _userRepository.GetUserByIdAsync(userId, cancellationToken))!;
             var handler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!);
             var claims = new List<Claim>
@@ -71,40 +71,40 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return handler.WriteToken(token);
         }
 
-        public async Task RevokeRefreshToken(string token, int? replacedId)
+        public async Task RevokeRefreshToken(string token, int? replacedId, CancellationToken cancellationToken)
         {
-            await _tokenRepository.RevokeRefreshTokenAsync(token, replacedId);
+            await _tokenRepository.RevokeRefreshTokenAsync(token, replacedId, cancellationToken);
         }
 
-        public async Task<RefreshToken> ValidateRefreshToken(string rawToken)
+        public async Task<RefreshToken> ValidateRefreshToken(string rawToken, CancellationToken cancellationToken)
         {
             byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
             byte[] hashedToken = SHA256.HashData(binaryToken);
             string token = Convert.ToHexString(hashedToken);
-            RefreshToken? refreshToken = await _tokenRepository.GetRefreshTokenForUpdateAsync(token);
+            RefreshToken? refreshToken = await _tokenRepository.GetRefreshTokenForUpdateAsync(token, cancellationToken);
             if (refreshToken == null)
             {
                 throw new NotFoundException("Refresh token not found");
             }
             if (refreshToken.Revoked)
             {
-                await _tokenRepository.RevokeRefreshTokensByFamilyAsync(refreshToken.FamilyId, null);
+                await _tokenRepository.RevokeRefreshTokensByFamilyAsync(refreshToken.FamilyId, null, cancellationToken);
                 throw new UnauthorizedException("Refresh token reused detected");
             }
             if (refreshToken.ExpiresAt < DateTime.UtcNow)
             {
-                await _tokenRepository.RevokeRefreshTokenAsync(token, null);
+                await _tokenRepository.RevokeRefreshTokenAsync(token, null, cancellationToken);
                 throw new UnauthorizedException("Refresh token is expired");
             }
             return refreshToken;
         }
 
-        public async Task<RefreshToken> GetRefreshToken(string rawToken)
+        public async Task<RefreshToken> GetRefreshToken(string rawToken, CancellationToken cancellationToken)
         {
             byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
             byte[] hashedToken = SHA256.HashData(binaryToken);
             string token = Convert.ToHexString(hashedToken);
-            RefreshToken? refreshToken = await _tokenRepository.GetRefreshTokenAsync(token);
+            RefreshToken? refreshToken = await _tokenRepository.GetRefreshTokenAsync(token, cancellationToken);
             if (refreshToken == null) { throw new NotFoundException("Refresh token not found"); }
             return refreshToken;
         }

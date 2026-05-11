@@ -16,14 +16,14 @@ public class RoleService : IRoleService
         _permissionRepository = permissionRepository;
     }
 
-    public async Task<List<Role>> GetRoles()
+    public async Task<List<Role>> GetRoles(CancellationToken cancellationToken)
     {
-        return await _roleRepository.GetRolesAsync();
+        return await _roleRepository.GetRolesAsync(cancellationToken);
     }
 
-    public async Task<Role> GetRoleById(int id)
+    public async Task<Role> GetRoleById(int id, CancellationToken cancellationToken)
     {
-        Role? role = await _roleRepository.GetRoleByIdAsync(id);
+        Role? role = await _roleRepository.GetRoleByIdAsync(id, cancellationToken);
         if (role == null)
         {
             throw new NotFoundException("Role not found");
@@ -32,9 +32,9 @@ public class RoleService : IRoleService
         return role;
     }
 
-    public async Task<Role> AddRole(string name)
+    public async Task<Role> AddRole(string name, CancellationToken cancellationToken)
     {
-        if (await _roleRepository.IsRoleExistAsync(name))
+        if (await _roleRepository.IsRoleExistAsync(name, cancellationToken))
         {
             throw new ConflictException("Role already existed");
         }
@@ -42,12 +42,12 @@ public class RoleService : IRoleService
         {
             Name = name.Trim().ToUpper()
         };
-        return await _roleRepository.AddRoleAsync(role);
+        return await _roleRepository.AddRoleAsync(role, cancellationToken);
     }
 
-    public async Task UpdateRoleById(int id, string newName)
+    public async Task UpdateRoleById(int id, string newName, CancellationToken cancellationToken)
     {
-        Role? role = await _roleRepository.GetRoleByIdAsync(id);
+        Role? role = await _roleRepository.GetRoleByIdAsync(id, cancellationToken);
         if (role == null)
         {
             throw new NotFoundException("Role not found");
@@ -56,12 +56,12 @@ public class RoleService : IRoleService
         {
             throw new ConflictException("Role name already existed");
         }
-        await _roleRepository.UpdateRoleAsync(role, newName);
+        await _roleRepository.UpdateRoleAsync(role, newName, cancellationToken);
     }
 
-    public async Task DeleteRoleById(int id)
+    public async Task DeleteRoleById(int id, CancellationToken cancellationToken)
     {
-        Role? role = await _roleRepository.GetRoleByIdAsync(id);
+        Role? role = await _roleRepository.GetRoleByIdAsync(id, cancellationToken);
         if (role == null)
         {
             throw new NotFoundException("Role not found");
@@ -70,17 +70,17 @@ public class RoleService : IRoleService
         {
             throw new ConflictException("Admin role cannot be deleted");
         }
-        await _roleRepository.DeleteRoleAsync(role);
+        await _roleRepository.DeleteRoleAsync(role, cancellationToken);
     }
 
-    public async Task<Role> AddPermissionToRole(int roleId, int permissionId)
+    public async Task<Role> AddPermissionToRole(int roleId, int permissionId, CancellationToken cancellationToken)
     {
-        Role? role = await _roleRepository.GetRoleByIdAsync(roleId);
+        Role? role = await _roleRepository.GetRoleByIdAsync(roleId, cancellationToken);
         if (role == null)
         {
             throw new NotFoundException("Role not found");
         }
-        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(permissionId);
+        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(permissionId, cancellationToken);
         if (permission == null)
         {
             throw new NotFoundException("Permission not found");
@@ -92,17 +92,17 @@ public class RoleService : IRoleService
             RoleId = roleId,
             PermissionId = permissionId
         };
-        return await _roleRepository.AddPermissionToRoleAsync(rolePermission);
+        return await _roleRepository.AddPermissionToRoleAsync(rolePermission, cancellationToken);
     }
 
-    public async Task RemovePermissionFromRole(int roleId, int permissionId)
+    public async Task RemovePermissionFromRole(int roleId, int permissionId, CancellationToken cancellationToken)
     {
-        Role? role = await _roleRepository.GetRoleByIdAsync(roleId);
+        Role? role = await _roleRepository.GetRoleByIdAsync(roleId, cancellationToken);
         if (role == null)
         {
             throw new NotFoundException("Role not found");
         }
-        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(permissionId);
+        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(permissionId, cancellationToken);
         if (permission == null)
         {
             throw new NotFoundException("Permission not found");
@@ -114,6 +114,6 @@ public class RoleService : IRoleService
             RoleId = roleId,
             PermissionId = permissionId
         };
-        await _roleRepository.RemovePermissionFromRoleAsync(rolePermission);
+        await _roleRepository.RemovePermissionFromRoleAsync(rolePermission, cancellationToken);
     }
 }

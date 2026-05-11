@@ -23,11 +23,11 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _authorizationService = authorizationService;
         }
 
-        public async Task<PageResult<Resource>> GetResources(int userId, ResourceQueryRequestDto resourceQueryRequest)
+        public async Task<PageResult<Resource>> GetResources(int userId, ResourceQueryRequestDto resourceQueryRequest, CancellationToken cancellationToken)
         {
             if (resourceQueryRequest.TagId.HasValue)
             {
-                Tag? tag = await _tagRepository.GetTagByIdAsync(resourceQueryRequest.TagId.Value);
+                Tag? tag = await _tagRepository.GetTagByIdAsync(resourceQueryRequest.TagId.Value, cancellationToken);
                 if (tag == null)
                 {
                     throw new NotFoundException("Tag not found");
@@ -44,14 +44,15 @@ namespace PersonalKnowledgeHub.Services.Implementations
                     resourceQueryRequest.PageSize, 
                     resourceQueryRequest.TagId, 
                     resourceQueryRequest.ResourceType, 
-                    resourceQueryRequest.Search
+                    resourceQueryRequest.Search,
+                    cancellationToken
                 );
             return ResourceMapper.ToResourcesPageResult(resources, resourcesCount, resourceQueryRequest.PageIndex, resourceQueryRequest.PageSize);
         }
 
-        public async Task<Resource> GetResourceById(int resourceId, int userId)
+        public async Task<Resource> GetResourceById(int resourceId, int userId, CancellationToken cancellationToken)
         {
-            Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId);
+            Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId, cancellationToken);
             if (resource == null)
             {
                 throw new NotFoundException("Resource not found");
@@ -63,19 +64,19 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return resource;
         }
 
-        public async Task<Resource> AddResource(ResourceRequestDto resourceRequest, int userId)
+        public async Task<Resource> AddResource(ResourceRequestDto resourceRequest, int userId, CancellationToken cancellationToken)
         {
-            if (await _resourceRepository.IsTitleExistAsync(resourceRequest.Title, userId))
+            if (await _resourceRepository.IsTitleExistAsync(resourceRequest.Title, userId, cancellationToken))
             {
                 throw new ConflictException("Title already existed");
             }
             Resource resource = ResourceMapper.ToResource(resourceRequest, userId);
-            return await _resourceRepository.AddResourceAsync(resource);
+            return await _resourceRepository.AddResourceAsync(resource, cancellationToken);
         }
 
-        public async Task UpdateResourceById(ClaimsPrincipal user, int resourceId, ResourceUpdateRequestDto resourceUpdateRequest)
+        public async Task UpdateResourceById(ClaimsPrincipal user, int resourceId, ResourceUpdateRequestDto resourceUpdateRequest, CancellationToken cancellationToken)
         {
-            Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId);
+            Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId, cancellationToken);
             if (resource == null)
             {
                 throw new NotFoundException("Resource not found");
@@ -86,16 +87,16 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ForbiddenException("You are not authorized to update this resource");
             }
             int updatedRows = await _resourceRepository.UpdateResourceAsync(resourceId, resource.Version, resourceUpdateRequest.Title,
-                resourceUpdateRequest.Url, resourceUpdateRequest.Description);
+                resourceUpdateRequest.Url, resourceUpdateRequest.Description, cancellationToken);
             if (updatedRows == 0)
             {
                 throw new ConflictException("Resource has been updated by another user");
             }
         }
 
-        public async Task DeleteResourceById(ClaimsPrincipal user, int resourceId)
+        public async Task DeleteResourceById(ClaimsPrincipal user, int resourceId, CancellationToken cancellationToken)
         {
-            Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId);
+            Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId, cancellationToken);
             if (resource == null)
             {
                 throw new NotFoundException("Resource not found");
@@ -106,12 +107,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ForbiddenException("You are not authorized to delete this resource");
             }
             int userId = int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            await _resourceRepository.DeleteResourceAsync(resource, userId);
+            await _resourceRepository.DeleteResourceAsync(resource, userId, cancellationToken);
         }
 
-        public async Task<Resource> RestoreResourceById(ClaimsPrincipal user, int resourceId)
+        public async Task<Resource> RestoreResourceById(ClaimsPrincipal user, int resourceId, CancellationToken cancellationToken)
         {
-            Resource? resource = await _resourceRepository.GetResourceByIdForRestoreAsync(resourceId);
+            Resource? resource = await _resourceRepository.GetResourceByIdForRestoreAsync(resourceId, cancellationToken);
             if (resource == null)
             {
                 throw new NotFoundException("Resource not found");
@@ -121,7 +122,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("You are not authorized to restore this resource");
             }
-            return await _resourceRepository.RestoreResourceAsync(resource);
+            return await _resourceRepository.RestoreResourceAsync(resource, cancellationToken);
         }
     }
 }

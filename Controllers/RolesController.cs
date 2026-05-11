@@ -20,9 +20,9 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<RoleResponseDto>>> GetRoles()
+        public async Task<ActionResult<List<RoleResponseDto>>> GetRoles(CancellationToken cancellationToken)
         {
-            List<Role> roles = await _roleService.GetRoles();
+            List<Role> roles = await _roleService.GetRoles(cancellationToken);
             List<RoleResponseDto> roleResponses = roles.Select(role => new RoleResponseDto
             {
                 Name = role.Name
@@ -31,9 +31,9 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<RoleResponseDto>> GetRoleById(int id)
+        public async Task<ActionResult<RoleResponseDto>> GetRoleById(int id, CancellationToken cancellationToken)
         {
-            Role role = await _roleService.GetRoleById(id);
+            Role role = await _roleService.GetRoleById(id, cancellationToken);
             RoleResponseDto roleResponse = new RoleResponseDto
             {
                 Name = role.Name
@@ -42,9 +42,9 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<RoleResponseDto>> AddRole(RoleRequestDto roleRequest)
+        public async Task<ActionResult<RoleResponseDto>> AddRole(RoleRequestDto roleRequest, CancellationToken cancellationToken)
         {
-            Role role = await _roleService.AddRole(roleRequest.Name);
+            Role role = await _roleService.AddRole(roleRequest.Name, cancellationToken);
             RoleResponseDto roleResponse = new RoleResponseDto
             {
                 Name = role.Name
@@ -53,23 +53,23 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateRoleById(int id, RoleRequestDto roleRequest)
+        public async Task<IActionResult> UpdateRoleById(int id, RoleRequestDto roleRequest, CancellationToken cancellationToken)
         {
-            await _roleService.UpdateRoleById(id, roleRequest.Name);
+            await _roleService.UpdateRoleById(id, roleRequest.Name, cancellationToken);
             return NoContent();
         }
         
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRoleById(int id)
+        public async Task<IActionResult> DeleteRoleById(int id, CancellationToken cancellationToken)
         {
-           await _roleService.DeleteRoleById(id);
+           await _roleService.DeleteRoleById(id, cancellationToken);
            return NoContent();
         }
 
         [HttpPost("{roleId}/permissions/{permissionId}")]
-        public async Task<ActionResult<RoleResponseDto>> AddPermissionToRole(int roleId, int permissionId)
+        public async Task<ActionResult<RoleResponseDto>> AddPermissionToRole(int roleId, int permissionId, CancellationToken cancellationToken)
         {
-            Role role = await _roleService.AddPermissionToRole(roleId, permissionId);
+            Role role = await _roleService.AddPermissionToRole(roleId, permissionId, cancellationToken);
             RoleResponseDto roleResponse = new RoleResponseDto
             {
                 Name = role.Name
@@ -78,9 +78,9 @@ namespace PersonalKnowledgeHub.Controllers
         }
         
         [HttpDelete("{roleId}/permissions/{permissionId}")]
-        public async Task<IActionResult> RemovePermissionFromRole(int roleId, int permissionId)
+        public async Task<IActionResult> RemovePermissionFromRole(int roleId, int permissionId, CancellationToken cancellationToken)
         {
-            await _roleService.RemovePermissionFromRole(roleId, permissionId);
+            await _roleService.RemovePermissionFromRole(roleId, permissionId, cancellationToken);
             return NoContent();
         }
     }

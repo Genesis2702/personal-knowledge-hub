@@ -14,29 +14,29 @@ public class VerificationTokenRepository : IVerificationTokenRepository
         _dbContext = dbContext;  
     }
 
-    public async Task<VerificationToken?> GetVerificationTokenAsync(string token)
+    public async Task<VerificationToken?> GetVerificationTokenAsync(string token, CancellationToken cancellationToken)
     {
         return await _dbContext.VerificationTokens.SingleOrDefaultAsync(verificationToken =>
-            verificationToken.Token == token);
+            verificationToken.Token == token, cancellationToken);
     }
 
-    public async Task AddVerificationTokenAsync(VerificationToken verificationToken)
+    public async Task AddVerificationTokenAsync(VerificationToken verificationToken, CancellationToken cancellationToken)
     {
-        await _dbContext.VerificationTokens.AddAsync(verificationToken);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.VerificationTokens.AddAsync(verificationToken, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task ValidateVerificationTokenAsync(VerificationToken verificationToken)
+    public async Task ValidateVerificationTokenAsync(VerificationToken verificationToken, CancellationToken cancellationToken)
     {
         verificationToken.ExpiresAt = DateTime.UtcNow;
         verificationToken.VerifiedAt = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task CleanUpVerificationTokenAsync()
+    public async Task CleanUpVerificationTokenAsync(CancellationToken cancellationToken)
     {
         DateTime expiredTime = DateTime.UtcNow.AddHours(-24);
         await _dbContext.VerificationTokens.Where(verificationToken => verificationToken.ExpiresAt < expiredTime)
-            .ExecuteDeleteAsync();
+            .ExecuteDeleteAsync(cancellationToken);
     }
 }

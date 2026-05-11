@@ -14,50 +14,50 @@ public class RoleRepository : IRoleRepository
         _dbContext = dbContext;
     }
 
-    public async Task<List<Role>> GetRolesAsync()
+    public async Task<List<Role>> GetRolesAsync(CancellationToken cancellationToken)
     {
-        return await _dbContext.Roles.AsNoTracking().ToListAsync();
+        return await _dbContext.Roles.AsNoTracking().ToListAsync(cancellationToken);
     }
 
-    public Task<Role?> GetRoleByIdAsync(int id)
+    public Task<Role?> GetRoleByIdAsync(int id, CancellationToken cancellationToken)
     {
-        return _dbContext.Roles.SingleOrDefaultAsync(role => role.Id == id);
+        return _dbContext.Roles.SingleOrDefaultAsync(role => role.Id == id, cancellationToken);
     }
 
-    public async Task<Role> AddRoleAsync(Role role)
+    public async Task<Role> AddRoleAsync(Role role, CancellationToken cancellationToken)
     {
-        await _dbContext.Roles.AddAsync(role);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.Roles.AddAsync(role, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
         return role;
     }
 
-    public async Task UpdateRoleAsync(Role role, string name)
+    public async Task UpdateRoleAsync(Role role, string name, CancellationToken cancellationToken)
     {
         role.Name = name;
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task DeleteRoleAsync(Entities.Role role)
+    public async Task DeleteRoleAsync(Entities.Role role, CancellationToken cancellationToken)
     {
         _dbContext.Remove(role);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<bool> IsRoleExistAsync(string name)
+    public async Task<bool> IsRoleExistAsync(string name, CancellationToken cancellationToken)
     {
-        return await _dbContext.Roles.AnyAsync(role => role.Name == name);
+        return await _dbContext.Roles.AnyAsync(role => role.Name == name, cancellationToken);
     }
 
-    public async Task<Role> AddPermissionToRoleAsync(RolePermission rolePermission)
+    public async Task<Role> AddPermissionToRoleAsync(RolePermission rolePermission, CancellationToken cancellationToken)
     {
-        await _dbContext.RolePermissions.AddAsync(rolePermission);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.RolePermissions.AddAsync(rolePermission, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
         return rolePermission.Role;
     }
 
-    public async Task RemovePermissionFromRoleAsync(RolePermission rolePermission)
+    public async Task RemovePermissionFromRoleAsync(RolePermission rolePermission, CancellationToken cancellationToken)
     {
         _dbContext.RolePermissions.Remove(rolePermission);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

@@ -52,6 +52,11 @@ builder.Services.AddScoped<IVerificationTokenService, VerificationTokenService>(
 builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerOrAdminHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TagOwnerOrAdminHandler>();
 
+builder.Services.Configure<HostOptions>(option =>
+{
+    option.ShutdownTimeout = TimeSpan.FromMinutes(1);
+});
+
 builder.Services.AddSecurityHeaderPolicies(policies =>
 {
     policies.AddPolicy("Development", policy =>

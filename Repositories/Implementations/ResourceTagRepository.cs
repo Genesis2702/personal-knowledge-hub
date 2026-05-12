@@ -14,30 +14,30 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             _dbContext = dbContext;
         }
 
-        public async Task<ResourceTag> AddResourceTagAsync(ResourceTag resourceTag)
+        public async Task<ResourceTag> AddResourceTagAsync(ResourceTag resourceTag, CancellationToken cancellationToken)
         {
-            await _dbContext.ResourceTags.AddAsync(resourceTag);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.ResourceTags.AddAsync(resourceTag, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
             return resourceTag;
         }
 
-        public async Task<ResourceTag?> GetResourceTagByIdAsync(int tagId, int resourceId)
+        public async Task<ResourceTag?> GetResourceTagByIdAsync(int tagId, int resourceId, CancellationToken cancellationToken)
         {
             return await _dbContext.ResourceTags.
                 Include(resourceTag => resourceTag.Resource).
                 Include(resourceTag => resourceTag.Tag).
-                FirstOrDefaultAsync(resourceTag => resourceTag.TagId == tagId && resourceTag.ResourceId == resourceId);
+                FirstOrDefaultAsync(resourceTag => resourceTag.TagId == tagId && resourceTag.ResourceId == resourceId, cancellationToken);
         }
 
-        public async Task DeleteResourceTagAsync(ResourceTag resourceTag)
+        public async Task DeleteResourceTagAsync(ResourceTag resourceTag, CancellationToken cancellationToken)
         {
             _dbContext.ResourceTags.Remove(resourceTag);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<bool> IsResourceTagExistAsync(int tagId, int resourceId)
+        public async Task<bool> IsResourceTagExistAsync(int tagId, int resourceId, CancellationToken cancellationToken)
         {
-            return await _dbContext.ResourceTags.AnyAsync(resourceTag => resourceTag.TagId == tagId && resourceTag.ResourceId == resourceId);
+            return await _dbContext.ResourceTags.AnyAsync(resourceTag => resourceTag.TagId == tagId && resourceTag.ResourceId == resourceId, cancellationToken);
         }
     }
 }

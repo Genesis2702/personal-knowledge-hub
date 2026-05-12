@@ -6,11 +6,11 @@ namespace PersonalKnowledgeHub.Services.Interfaces;
 
 public interface IUserService
 {
-    public Task<PageResult<User>> GetUsers(int pageIndex, int pageSize, UserStatus? status);
-    public Task<User> GetUserById(int id);
-    public Task UpdateUserName(int id, UserUpdateRequestDto userUpdateRequest);
-    public Task BanUser(int userId);
-    public Task UnbanUser(int userId);
-    public Task<User> AddRoleToUser(int userId, int roleId);
-    public Task RemoveRoleFromUser(int userId, int roleId);
+    public Task<PageResult<User>> GetUsers(int pageIndex, int pageSize, UserStatus? status, CancellationToken cancellationToken);
+    public Task<User> GetUserById(int id, CancellationToken cancellationToken);
+    public Task UpdateUserName(int id, UserUpdateRequestDto userUpdateRequest, CancellationToken cancellationToken);
+    public Task BanUser(int userId, CancellationToken cancellationToken);
+    public Task UnbanUser(int userId, CancellationToken cancellationToken);
+    public Task<User> AddRoleToUser(int userId, int roleId, CancellationToken cancellationToken);
+    public Task RemoveRoleFromUser(int userId, int roleId, CancellationToken cancellationToken);
 }

@@ -14,14 +14,14 @@ public class PermissionService : IPermissionService
         _permissionRepository = permissionRepository;
     }
 
-    public async Task<List<Permission>> GetPermissions()
+    public async Task<List<Permission>> GetPermissions(CancellationToken cancellationToken)
     {
-        return await _permissionRepository.GetPermissionsAsync();
+        return await _permissionRepository.GetPermissionsAsync(cancellationToken);
     }
 
-    public async Task<Permission> GetPermissionById(int id)
+    public async Task<Permission> GetPermissionById(int id, CancellationToken cancellationToken)
     {
-        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(id);
+        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(id, cancellationToken);
         if (permission == null)
         {
             throw new NotFoundException("Permission not found");
@@ -29,9 +29,9 @@ public class PermissionService : IPermissionService
         return permission;
     }
 
-    public async Task<Permission> AddPermission(string name)
+    public async Task<Permission> AddPermission(string name, CancellationToken cancellationToken)
     {
-        if (await _permissionRepository.IsPermissionExistAsync(name))
+        if (await _permissionRepository.IsPermissionExistAsync(name, cancellationToken))
         {
             throw new ConflictException("Permission already existed");
         }
@@ -39,26 +39,26 @@ public class PermissionService : IPermissionService
         {
             Name = name
         };
-        return await _permissionRepository.AddPermissionAsync(permission);
+        return await _permissionRepository.AddPermissionAsync(permission, cancellationToken);
     }
 
-    public async Task UpdatePermissionById(int id, string newName)
+    public async Task UpdatePermissionById(int id, string newName, CancellationToken cancellationToken)
     {
-        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(id);
+        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(id, cancellationToken);
         if (permission == null)
         {
             throw new NotFoundException("Permission not found");
         }
-        await _permissionRepository.UpdatePermissionAsync(permission, newName);
+        await _permissionRepository.UpdatePermissionAsync(permission, newName, cancellationToken);
     }
 
-    public async Task DeletePermissionById(int id)
+    public async Task DeletePermissionById(int id, CancellationToken cancellationToken)
     {
-        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(id);
+        Permission? permission = await _permissionRepository.GetPermissionByIdAsync(id, cancellationToken);
         if (permission == null)
         {
             throw new NotFoundException("Permission not found");
         }
-        await _permissionRepository.DeletePermissionAsync(permission);
+        await _permissionRepository.DeletePermissionAsync(permission, cancellationToken);
     }
 }

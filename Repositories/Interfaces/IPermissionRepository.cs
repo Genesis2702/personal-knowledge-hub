@@ -4,10 +4,10 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces;
 
 public interface IPermissionRepository
 {
-    public Task<List<Permission>> GetPermissionsAsync();
-    public Task<Permission?> GetPermissionByIdAsync(int id);
-    public Task<Permission> AddPermissionAsync(Permission permission);
-    public Task UpdatePermissionAsync(Permission permission, string name);
-    public Task DeletePermissionAsync(Permission permission);
-    public Task<bool> IsPermissionExistAsync(string name);
+    public Task<List<Permission>> GetPermissionsAsync(CancellationToken cancellationToken);
+    public Task<Permission?> GetPermissionByIdAsync(int id, CancellationToken cancellationToken);
+    public Task<Permission> AddPermissionAsync(Permission permission, CancellationToken cancellationToken);
+    public Task UpdatePermissionAsync(Permission permission, string name, CancellationToken cancellationToken);
+    public Task DeletePermissionAsync(Permission permission, CancellationToken cancellationToken);
+    public Task<bool> IsPermissionExistAsync(string name, CancellationToken cancellationToken);
 }

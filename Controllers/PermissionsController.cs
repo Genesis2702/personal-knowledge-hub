@@ -20,9 +20,9 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<PermissionResponseDto>>> GetPermissions()
+        public async Task<ActionResult<List<PermissionResponseDto>>> GetPermissions(CancellationToken cancellationToken)
         {
-            List<Permission> permissions = await _permissionService.GetPermissions();
+            List<Permission> permissions = await _permissionService.GetPermissions(cancellationToken);
             List<PermissionResponseDto> permissionResponses = permissions.Select(permission => new PermissionResponseDto
             {
                 Name = permission.Name
@@ -31,9 +31,9 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<PermissionResponseDto>> GetPermissionById(int id)
+        public async Task<ActionResult<PermissionResponseDto>> GetPermissionById(int id, CancellationToken cancellationToken)
         {
-            Permission permission = await _permissionService.GetPermissionById(id);
+            Permission permission = await _permissionService.GetPermissionById(id, cancellationToken);
             PermissionResponseDto permissionResponse = new PermissionResponseDto
             {
                 Name = permission.Name
@@ -42,9 +42,9 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<PermissionResponseDto>> AddPermission(PermissionRequestDto permissionRequest)
+        public async Task<ActionResult<PermissionResponseDto>> AddPermission(PermissionRequestDto permissionRequest, CancellationToken cancellationToken)
         {
-            Permission permission = await _permissionService.AddPermission(permissionRequest.Name);
+            Permission permission = await _permissionService.AddPermission(permissionRequest.Name, cancellationToken);
             PermissionResponseDto permissionResponse = new PermissionResponseDto
             {
                 Name = permission.Name
@@ -53,16 +53,16 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePermissionById(int id, PermissionRequestDto permissionRequest)
+        public async Task<IActionResult> UpdatePermissionById(int id, PermissionRequestDto permissionRequest, CancellationToken cancellationToken)
         {
-            await _permissionService.UpdatePermissionById(id, permissionRequest.Name);
+            await _permissionService.UpdatePermissionById(id, permissionRequest.Name, cancellationToken);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePermissionById(int id)
+        public async Task<IActionResult> DeletePermissionById(int id, CancellationToken cancellationToken)
         {
-            await _permissionService.DeletePermissionById(id);
+            await _permissionService.DeletePermissionById(id, cancellationToken);
             return NoContent();
         }
     }

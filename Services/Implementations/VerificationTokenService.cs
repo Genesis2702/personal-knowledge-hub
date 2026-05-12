@@ -18,7 +18,7 @@ public class VerificationTokenService : IVerificationTokenService
         _verificationTokenRepository = verificationTokenRepository;
     }
 
-    public async Task<string> GenerateVerificationToken(int userId)
+    public async Task<string> GenerateVerificationToken(int userId, CancellationToken cancellationToken)
     {
         string rawToken = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
         byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
@@ -31,16 +31,16 @@ public class VerificationTokenService : IVerificationTokenService
             VerifiedAt = null,
             UserId = userId
         };
-        await _verificationTokenRepository.AddVerificationTokenAsync(verificationToken);
+        await _verificationTokenRepository.AddVerificationTokenAsync(verificationToken, cancellationToken);
         return rawToken;
     }
 
-    public async Task ValidateVerificationToken(string rawToken, int userId)
+    public async Task ValidateVerificationToken(string rawToken, int userId, CancellationToken cancellationToken)
     {
         byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
         byte[] hashedToken = SHA256.HashData(binaryToken);
         string token = Convert.ToHexString(hashedToken);
-        VerificationToken? verificationToken = await _verificationTokenRepository.GetVerificationTokenAsync(token);
+        VerificationToken? verificationToken = await _verificationTokenRepository.GetVerificationTokenAsync(token, cancellationToken);
         if (verificationToken == null)
         {
             throw new NotFoundException("Verification token not found");
@@ -57,15 +57,15 @@ public class VerificationTokenService : IVerificationTokenService
         {
             throw new ConflictException("Verification token already used");
         }
-        await _verificationTokenRepository.ValidateVerificationTokenAsync(verificationToken);
+        await _verificationTokenRepository.ValidateVerificationTokenAsync(verificationToken, cancellationToken);
     }
 
-    public async Task<int> ValidatePasswordResetToken(string rawToken)
+    public async Task<int> ValidatePasswordResetToken(string rawToken, CancellationToken cancellationToken)
     {
         byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
         byte[] hashedToken = SHA256.HashData(binaryToken);
         string token = Convert.ToHexString(hashedToken);
-        VerificationToken? verificationToken = await _verificationTokenRepository.GetVerificationTokenAsync(token);
+        VerificationToken? verificationToken = await _verificationTokenRepository.GetVerificationTokenAsync(token, cancellationToken);
         if (verificationToken == null)
         {
             throw new NotFoundException("Verification token not found");
@@ -78,7 +78,7 @@ public class VerificationTokenService : IVerificationTokenService
         {
             throw new ConflictException("Verification token already used");
         }
-        await _verificationTokenRepository.ValidateVerificationTokenAsync(verificationToken);
+        await _verificationTokenRepository.ValidateVerificationTokenAsync(verificationToken, cancellationToken);
         return verificationToken.UserId;
     }
 }

@@ -20,24 +20,24 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _authorizationService = authorizationService;
         }
 
-        public async Task<Tag> AddTag(TagRequestDto tagRequest, int userId)
+        public async Task<Tag> AddTag(TagRequestDto tagRequest, int userId, CancellationToken cancellationToken)
         {
             Tag tag = TagMapper.ToTag(tagRequest, userId);
-            if (await _tagRepository.IsTagExistAsync(tag.Name, userId))
+            if (await _tagRepository.IsTagExistAsync(tag.Name, userId, cancellationToken))
             {
                 throw new ConflictException("Tag already existed");
             }
-            return await _tagRepository.AddTagAsync(tag);
+            return await _tagRepository.AddTagAsync(tag, cancellationToken);
         }
 
-        public async Task<List<Tag>> GetTags(int userId)
+        public async Task<List<Tag>> GetTags(int userId, CancellationToken cancellationToken)
         {
-            return await _tagRepository.GetTagsAsync(userId);
+            return await _tagRepository.GetTagsAsync(userId, cancellationToken);
         }
 
-        public async Task<Tag> GetTagById(int tagId, int userId)
+        public async Task<Tag> GetTagById(int tagId, int userId, CancellationToken cancellationToken)
         {
-            Tag? tag = await _tagRepository.GetTagByIdAsync(tagId);
+            Tag? tag = await _tagRepository.GetTagByIdAsync(tagId, cancellationToken);
             if (tag == null)
             {
                 throw new NotFoundException("Tag not found");
@@ -49,9 +49,9 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return tag;
         }
 
-        public async Task UpdateTagById(ClaimsPrincipal user, TagRequestDto tagRequest, int tagId)
+        public async Task UpdateTagById(ClaimsPrincipal user, TagRequestDto tagRequest, int tagId, CancellationToken cancellationToken)
         {
-            Tag? tag = await _tagRepository.GetTagByIdAsync(tagId);
+            Tag? tag = await _tagRepository.GetTagByIdAsync(tagId, cancellationToken);
             if (tag == null)
             {
                 throw new NotFoundException("Tag not found");
@@ -63,20 +63,20 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             string tagName = tagRequest.Name.Trim().ToLower();
             int userId = int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            if (await _tagRepository.IsTagExistAsync(tagName, userId))
+            if (await _tagRepository.IsTagExistAsync(tagName, userId, cancellationToken))
             {
                 throw new ConflictException("Tag already existed");
             }
-            int updatedRows = await _tagRepository.UpdateTagAsync(tagId, tag.Version, tagName);
+            int updatedRows = await _tagRepository.UpdateTagAsync(tagId, tag.Version, tagName, cancellationToken);
             if (updatedRows == 0)
             {
                 throw new ConflictException("Tag has been updated by another user");
             }
         }
 
-        public async Task DeleteTagById(ClaimsPrincipal user, int tagId)
+        public async Task DeleteTagById(ClaimsPrincipal user, int tagId, CancellationToken cancellationToken)
         {
-            Tag? tag = await _tagRepository.GetTagByIdAsync(tagId);
+            Tag? tag = await _tagRepository.GetTagByIdAsync(tagId, cancellationToken);
             if (tag == null)
             {
                 throw new NotFoundException("Tag not found");
@@ -87,12 +87,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ForbiddenException("You are not authorized to delete this tag");
             }
             int userId = int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            await _tagRepository.DeleteTagAsync(tag, userId);
+            await _tagRepository.DeleteTagAsync(tag, userId, cancellationToken);
         }
 
-        public async Task<Tag> RestoreTagById(ClaimsPrincipal user, int tagId)
+        public async Task<Tag> RestoreTagById(ClaimsPrincipal user, int tagId, CancellationToken cancellationToken)
         {
-            Tag? tag = await _tagRepository.GetTagByIdForRestoreAsync(tagId);
+            Tag? tag = await _tagRepository.GetTagByIdForRestoreAsync(tagId, cancellationToken);
             if (tag == null)
             {
                 throw new NotFoundException("Tag not found");
@@ -102,7 +102,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("Tag found doesn't belong to current user");
             }
-            return await _tagRepository.RestoreTagAsync(tag);
+            return await _tagRepository.RestoreTagAsync(tag, cancellationToken);
         }
     }
 }

@@ -22,50 +22,50 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<TagResponseDto>> AddTag(TagRequestDto tagRequest)
+        public async Task<ActionResult<TagResponseDto>> AddTag(TagRequestDto tagRequest, CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            Tag tag = await _tagService.AddTag(tagRequest, userId);
+            Tag tag = await _tagService.AddTag(tagRequest, userId, cancellationToken);
             TagResponseDto tagResponse = TagMapper.ToTagResponseDto(tag);
             return CreatedAtAction(nameof(GetTagById), new { id = tag.Id }, tagResponse);
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<TagResponseDto>>> GetTags()
+        public async Task<ActionResult<List<TagResponseDto>>> GetTags(CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            List<Tag> tags = await _tagService.GetTags(userId);
+            List<Tag> tags = await _tagService.GetTags(userId, cancellationToken);
             List<TagResponseDto> tagResponses = TagMapper.ToTagResponseList(tags);
             return Ok(tagResponses);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<TagResponseDto>> GetTagById(int id)
+        public async Task<ActionResult<TagResponseDto>> GetTagById(int id, CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            Tag tag = await _tagService.GetTagById(id, userId);
+            Tag tag = await _tagService.GetTagById(id, userId, cancellationToken);
             TagResponseDto tagResponse = TagMapper.ToTagResponseDto(tag);
             return Ok(tagResponse);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTagById(TagRequestDto tagRequest, int id)
+        public async Task<IActionResult> UpdateTagById(TagRequestDto tagRequest, int id, CancellationToken cancellationToken)
         {
-            await _tagService.UpdateTagById(User, tagRequest, id);
+            await _tagService.UpdateTagById(User, tagRequest, id, cancellationToken);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTagById(int id)
+        public async Task<IActionResult> DeleteTagById(int id, CancellationToken cancellationToken)
         {
-            await _tagService.DeleteTagById(User, id);
+            await _tagService.DeleteTagById(User, id, cancellationToken);
             return NoContent();
         }
 
         [HttpPost("{id}/restore")]
-        public async Task<ActionResult<TagResponseDto>> RestoreTagById(int id)
+        public async Task<ActionResult<TagResponseDto>> RestoreTagById(int id, CancellationToken cancellationToken)
         {
-            Tag tag = await _tagService.RestoreTagById(User, id);
+            Tag tag = await _tagService.RestoreTagById(User, id, cancellationToken);
             TagResponseDto tagResponse = TagMapper.ToTagResponseDto(tag);
             return Ok(tagResponse);
         }

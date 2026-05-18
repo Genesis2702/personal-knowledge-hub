@@ -81,4 +81,9 @@ public class VerificationTokenService : IVerificationTokenService
         await _verificationTokenRepository.ValidateVerificationTokenAsync(verificationToken, cancellationToken);
         return verificationToken.UserId;
     }
+
+    public async Task CleanUpVerificationTokens(CancellationToken cancellationToken)
+    {
+        await _verificationTokenRepository.CleanUpVerificationTokenAsync(cancellationToken);
+    }
 }

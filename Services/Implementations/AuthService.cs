@@ -1,4 +1,5 @@
-﻿using PersonalKnowledgeHub.DTOs.Requests;
+﻿using PersonalKnowledgeHub.BackgroundTasks;
+using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
@@ -11,25 +12,25 @@ namespace PersonalKnowledgeHub.Services.Implementations
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepository;
-        private readonly ITokenRepository _tokenRepository;
         private readonly ITokenService _tokenService;
         private readonly IUnitOfWorkRepository _unitOfWorkRepository;
         private readonly IMailService _mailService;
         private readonly IMailFactoryService _mailFactoryService;
         private readonly IVerificationTokenService _verificationTokenService;
+        private readonly IBackgroundTaskQueue _backgroundTaskQueue;
 
         public AuthService(IUserRepository userRepository, ITokenRepository tokenRepository, 
             ITokenService tokenService, IUnitOfWorkRepository unitOfWorkRepository, 
             IMailFactoryService mailFactoryService, IMailService mailService,
-            IVerificationTokenService verificationTokenService)
+            IVerificationTokenService verificationTokenService, IBackgroundTaskQueue backgroundTaskQueue)
         {
             _userRepository = userRepository;
-            _tokenRepository = tokenRepository;
             _tokenService = tokenService;
             _unitOfWorkRepository = unitOfWorkRepository;
             _mailFactoryService = mailFactoryService;
             _mailService = mailService;
             _verificationTokenService = verificationTokenService;
+            _backgroundTaskQueue = backgroundTaskQueue;
         }
 
         public bool IsEmailValid(string email)
@@ -70,11 +71,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
             MailData verificationMail = _mailFactoryService.CreateVerificationMail(registeredUser.Email, 
                 registeredUser.UserName ?? registeredUser.Email, 
                 verificationToken, registeredUser.UserName ?? registeredUser.Email);
-            bool mailResult = await _mailService.SendMail(verificationMail);
-            if (!mailResult)
+            await _backgroundTaskQueue.Enqueue(async token =>
             {
-                throw new Exception("Mail sending failed");
-            }
+                await _mailService.SendMail(verificationMail);
+            });
             return AuthMapper.ToAuthResponseDto(refreshToken, accessToken);
         }
 
@@ -152,11 +152,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
             string passwordResetToken = await _verificationTokenService.GenerateVerificationToken(user.Id, cancellationToken);
             MailData resetPasswordMail = _mailFactoryService.CreatePasswordResetMail(user.Email, 
                 user.UserName ?? user.Email, passwordResetToken, user.UserName ?? user.Email);
-            bool mailResult = await _mailService.SendMail(resetPasswordMail);
-            if (!mailResult)
+            await _backgroundTaskQueue.Enqueue(async token =>
             {
-                throw new Exception("Mail sending failed");
-            }
+                await _mailService.SendMail(resetPasswordMail);
+            });
         }
 
         public async Task ResetPassword(ResetPasswordRequestDto resetPasswordRequest, int userId, CancellationToken cancellationToken)
@@ -177,11 +176,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ConflictException("User has been updated by another user");
             }
             MailData passwordChangedMail = _mailFactoryService.CreatePasswordChangedMail(user.Email, user.UserName ?? user.Email, user.UserName ?? user.Email);
-            bool mailResult = await _mailService.SendMail(passwordChangedMail);
-            if (!mailResult)
+            await _backgroundTaskQueue.Enqueue(async token =>
             {
-                throw new Exception("Mail sending failed");
-            }
+                await _mailService.SendMail(passwordChangedMail);
+            });
         }
 
         public async Task VerifyPendingUser(string token, int userId, CancellationToken cancellationToken)
@@ -206,11 +204,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
             MailData verificationMail = _mailFactoryService.CreateVerificationMail(user.Email, 
                 user.UserName ?? user.Email, 
                 verificationToken, user.UserName ?? user.Email);
-            bool mailResult = await _mailService.SendMail(verificationMail);
-            if (!mailResult)
+            await _backgroundTaskQueue.Enqueue(async token =>
             {
-                throw new Exception("Mail sending failed");
-            }
+                await _mailService.SendMail(verificationMail);
+            });
         }
 
         public async Task<int> VerifyPasswordChange(string token, ResetPasswordRequestDto resetPasswordRequest, CancellationToken cancellationToken)

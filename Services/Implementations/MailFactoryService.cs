@@ -1,17 +1,18 @@
 ﻿using PersonalKnowledgeHub.DTOs.Requests;
+using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Services.Interfaces;
 
 namespace PersonalKnowledgeHub.Services.Implementations;
 
 public class MailFactoryService : IMailFactoryService
 {
-    public MailData CreateVerificationMail(string emailToId, string emailToName, string verificationToken, string userName)
+    public MailData CreateVerificationMail(User user, string verificationToken)
     {
         string verificationLink = $"http://localhost:5165/auth/mail-verification?token={verificationToken}";
         return new MailData
         {
-            EmailToId = emailToId,
-            EmailToName = emailToName,
+            EmailToId = user.Email,
+            EmailToName = user.UserName ?? user.Email,
             EmailSubject = "Email Verification",
             EmailBody = $@"
                 <!DOCTYPE html>
@@ -50,7 +51,7 @@ public class MailFactoryService : IMailFactoryService
                           <tr>
                             <td align=""center"" style=""padding-bottom:28px;"">
                               <p style=""margin:0;color:#6A89A7;font-size:14px;line-height:1.6;"">
-                                {emailToId}
+                                {user.Email}
                               </p>
                             </td>
                           </tr>
@@ -58,7 +59,7 @@ public class MailFactoryService : IMailFactoryService
                           <tr>
                             <td>
                               <p style=""margin:0 0 16px;color:#384959;font-size:16px;line-height:1.7;"">
-                                Hello {userName},
+                                Hello {user.UserName ?? user.Email},
                               </p>
 
                               <p style=""margin:0 0 24px;color:#384959;font-size:16px;line-height:1.7;"">
@@ -104,13 +105,13 @@ public class MailFactoryService : IMailFactoryService
         };  
     }
 
-    public MailData CreatePasswordResetMail(string emailToId, string emailToName, string passwordResetToken, string userName)
+    public MailData CreatePasswordResetMail(User user, string passwordResetToken)
     {
         string resetPasswordLink = $"http://localhost:5165/auth/reset-password?token={passwordResetToken}";
         return new MailData
         {
-            EmailToId = emailToId,
-            EmailToName = emailToName,
+            EmailToId = user.Email,
+            EmailToName = user.UserName ?? user.Email,
             EmailSubject = "Password Reset",
             EmailBody = $@"
               <!DOCTYPE html>
@@ -149,7 +150,7 @@ public class MailFactoryService : IMailFactoryService
                         <tr>
                           <td align=""center"" style=""padding-bottom:28px;"">
                             <p style=""margin:0;color:#6A89A7;font-size:14px;line-height:1.6;"">
-                              {emailToId}
+                              {user.Email}
                             </p>
                           </td>
                         </tr>
@@ -157,7 +158,7 @@ public class MailFactoryService : IMailFactoryService
                         <tr>
                           <td>
                             <p style=""margin:0 0 16px;color:#384959;font-size:16px;line-height:1.7;"">
-                              Hello {userName},
+                              Hello {user.UserName ?? user.Email},
                             </p>
 
                             <p style=""margin:0 0 24px;color:#384959;font-size:16px;line-height:1.7;"">
@@ -203,12 +204,12 @@ public class MailFactoryService : IMailFactoryService
         };
     }
 
-    public MailData CreatePasswordChangedMail(string emailToId, string emailToName, string userName)
+    public MailData CreatePasswordChangedMail(User user)
     {
         return new MailData
         {
-            EmailToId = emailToId,
-            EmailToName = emailToName,
+            EmailToId = user.Email,
+            EmailToName = user.UserName ?? user.Email,
             EmailSubject = "Password Changed",
             EmailBody = $@"
               <!DOCTYPE html>
@@ -247,7 +248,7 @@ public class MailFactoryService : IMailFactoryService
                         <tr>
                           <td align=""center"" style=""padding-bottom:28px;"">
                             <p style=""margin:0;color:#6A89A7;font-size:14px;line-height:1.6;"">
-                              {emailToId}
+                              {user.Email}
                             </p>
                           </td>
                         </tr>
@@ -255,7 +256,7 @@ public class MailFactoryService : IMailFactoryService
                         <tr>
                           <td>
                             <p style=""margin:0 0 16px;color:#384959;font-size:16px;line-height:1.7;"">
-                              Hello {userName},
+                              Hello {user.UserName ?? user.Email},
                             </p>
 
                             <p style=""margin:0 0 24px;color:#384959;font-size:16px;line-height:1.7;"">

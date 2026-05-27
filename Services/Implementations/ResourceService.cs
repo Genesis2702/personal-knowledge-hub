@@ -110,6 +110,11 @@ namespace PersonalKnowledgeHub.Services.Implementations
             await _resourceRepository.DeleteResourceAsync(resource, userId, cancellationToken);
         }
 
+        public async Task CleanUpResources(CancellationToken cancellationToken)
+        {
+            await _resourceRepository.CleanUpResourcesAsync(cancellationToken);
+        }
+
         public async Task<Resource> RestoreResourceById(ClaimsPrincipal user, int resourceId, CancellationToken cancellationToken)
         {
             Resource? resource = await _resourceRepository.GetResourceByIdForRestoreAsync(resourceId, cancellationToken);

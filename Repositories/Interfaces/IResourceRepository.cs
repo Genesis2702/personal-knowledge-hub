@@ -11,6 +11,7 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces
         public Task<int> UpdateResourceAsync(int resourceId, long version, string? title, string? url, string? description, CancellationToken cancellationToken);
         public Task DeleteResourceAsync(Resource resource, int userId, CancellationToken cancellationToken);
         public Task<Resource> RestoreResourceAsync(Resource resource, CancellationToken cancellationToken);
+        public Task CleanUpResourcesAsync(CancellationToken cancellationToken);
         public Task<bool> IsTitleExistAsync(string resourceTitle, int userId, CancellationToken cancellationToken);
     }
 }

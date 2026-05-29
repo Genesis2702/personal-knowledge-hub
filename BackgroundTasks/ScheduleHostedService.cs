@@ -18,8 +18,12 @@ public class ScheduleHostedService : BackgroundService
             var scope = _scopeFactory.CreateScope();
             var refreshTokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
             var verificationTokenService = scope.ServiceProvider.GetRequiredService<IVerificationTokenService>();
+            var resourceService = scope.ServiceProvider.GetRequiredService<IResourceService>();
+            var tagService = scope.ServiceProvider.GetRequiredService<ITagService>();
             await refreshTokenService.CleanUpRefreshTokens(stoppingToken);
             await verificationTokenService.CleanUpVerificationTokens(stoppingToken);
+            await resourceService.CleanUpResources(stoppingToken);
+            await tagService.CleanUpTags(stoppingToken);
             await Task.Delay(TimeSpan.FromDays(30), stoppingToken);
         }
     }

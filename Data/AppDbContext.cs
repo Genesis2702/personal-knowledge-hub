@@ -19,6 +19,9 @@ namespace PersonalKnowledgeHub.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<User>().HasKey(user => user.Id);
+            modelBuilder.Entity<User>().HasIndex(user => user.Email).IsUnique();
+            
             modelBuilder.Entity<RefreshToken>().HasKey(refreshToken => refreshToken.Id);
             modelBuilder.Entity<RefreshToken>()
                 .HasOne(refreshToken => refreshToken.User)
@@ -50,7 +53,8 @@ namespace PersonalKnowledgeHub.Data
                 .HasConversion<string>();
             modelBuilder.Entity<Resource>()
                 .HasIndex(resource => new { resource.UserId, resource.Title })
-                .IsUnique();
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
             modelBuilder.Entity<Resource>().HasQueryFilter(resource => !resource.IsDeleted);
 
             modelBuilder.Entity<Tag>().HasKey(tag => tag.Id);
@@ -61,10 +65,11 @@ namespace PersonalKnowledgeHub.Data
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Tag>()
                 .HasIndex(tag => new { tag.UserId, tag.Name })
-                .IsUnique();
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
             modelBuilder.Entity<Tag>().HasQueryFilter(tag => !tag.IsDeleted);
 
-            modelBuilder.Entity<ResourceTag>().HasKey(resourceTag => new { resourceTag.TagId, resourceTag.ResourceId });
+            modelBuilder.Entity<ResourceTag>().HasKey(resourceTag => new { resourceTag.ResourceId, resourceTag.TagId });
             modelBuilder.Entity<ResourceTag>()
                 .HasOne(resourceTag => resourceTag.Tag)
                 .WithMany(tag => tag.ResourceTags)
@@ -75,6 +80,8 @@ namespace PersonalKnowledgeHub.Data
                 .WithMany(resource => resource.ResourceTags)
                 .HasForeignKey(resourceTag => resourceTag.ResourceId)
                 .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<ResourceTag>()
+                .HasIndex(resourceTag => new { resourceTag.TagId, resourceTag.ResourceId });
 
             modelBuilder.Entity<Role>().HasKey(role => role.Id);
             modelBuilder.Entity<Role>().HasIndex(role => role.Name).IsUnique();
@@ -92,19 +99,23 @@ namespace PersonalKnowledgeHub.Data
                 .HasOne(userRole => userRole.Role)
                 .WithMany(role => role.UserRoles)
                 .HasForeignKey(userRole => userRole.RoleId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<UserRole>()
+                .HasIndex(userRole => new { userRole.RoleId, userRole.UserId });
             
             modelBuilder.Entity<RolePermission>().HasKey(rolePermission => new { rolePermission.RoleId, rolePermission.PermissionId });
             modelBuilder.Entity<RolePermission>()
                 .HasOne(rolePermission => rolePermission.Role)
                 .WithMany(role => role.RolePermissions)
                 .HasForeignKey(rolePermission => rolePermission.RoleId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<RolePermission>()
                 .HasOne(rolePermission => rolePermission.Permission)
                 .WithMany(permission => permission.RolePermissions)
                 .HasForeignKey(rolePermission => rolePermission.PermissionId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<RolePermission>()
+                .HasIndex(rolePermission => new { rolePermission.PermissionId, rolePermission.RoleId });
         }
     }
 }

@@ -54,7 +54,7 @@ namespace PersonalKnowledgeHub.Data
             modelBuilder.Entity<Resource>()
                 .HasIndex(resource => new { resource.UserId, resource.Title })
                 .IsUnique()
-                .HasFilter("[IsDeleted] = 0");
+                .HasFilter("\"IsDeleted\" = false");
             modelBuilder.Entity<Resource>().HasQueryFilter(resource => !resource.IsDeleted);
 
             modelBuilder.Entity<Tag>().HasKey(tag => tag.Id);
@@ -66,7 +66,7 @@ namespace PersonalKnowledgeHub.Data
             modelBuilder.Entity<Tag>()
                 .HasIndex(tag => new { tag.UserId, tag.Name })
                 .IsUnique()
-                .HasFilter("[IsDeleted] = 0");
+                .HasFilter("\"IsDeleted\" = false");
             modelBuilder.Entity<Tag>().HasQueryFilter(tag => !tag.IsDeleted);
 
             modelBuilder.Entity<ResourceTag>().HasKey(resourceTag => new { resourceTag.ResourceId, resourceTag.TagId });

@@ -15,7 +15,7 @@ public class ScheduleHostedService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            var scope = _scopeFactory.CreateScope();
+            using var scope = _scopeFactory.CreateScope();
             var refreshTokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
             var verificationTokenService = scope.ServiceProvider.GetRequiredService<IVerificationTokenService>();
             var resourceService = scope.ServiceProvider.GetRequiredService<IResourceService>();

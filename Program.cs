@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Authorization;
+using PersonalKnowledgeHub.BackgroundTasks;
 using PersonalKnowledgeHub.Configuration;
 using PersonalKnowledgeHub.Policy.Security.Handlers;
 using PersonalKnowledgeHub.Policy.Security.Requirements;
@@ -48,6 +49,10 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddTransient<IMailService, MailService>();
 builder.Services.AddScoped<IMailFactoryService, MailFactoryService>();
 builder.Services.AddScoped<IVerificationTokenService, VerificationTokenService>();
+
+builder.Services.AddSingleton<IBackgroundTaskQueue>(_ => new BackgroundTaskQueue(capacity: 100));
+builder.Services.AddHostedService<QueueHostedService>();
+builder.Services.AddHostedService<ScheduleHostedService>();
 
 builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerOrAdminHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TagOwnerOrAdminHandler>();

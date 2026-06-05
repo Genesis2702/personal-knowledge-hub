@@ -70,7 +70,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             string verificationToken = await _verificationTokenService.GenerateVerificationToken(registeredUser.Id, cancellationToken);
             await _backgroundTaskQueue.Enqueue(async token =>
             {
-                var scope = _serviceScopeFactory.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 var mailService = scope.ServiceProvider.GetRequiredService<IMailService>();
                 MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
                 await mailService.SendMail(verificationMail);
@@ -152,7 +152,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             string passwordResetToken = await _verificationTokenService.GenerateVerificationToken(user.Id, cancellationToken);
             await _backgroundTaskQueue.Enqueue(async token =>
             {
-                var scope = _serviceScopeFactory.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 var mailService = scope.ServiceProvider.GetRequiredService<IMailService>();
                 MailData resetPasswordMail = _mailFactoryService.CreatePasswordResetMail(user, passwordResetToken);
                 await mailService.SendMail(resetPasswordMail);
@@ -178,7 +178,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             await _backgroundTaskQueue.Enqueue(async token =>
             {
-                var scope = _serviceScopeFactory.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 var mailService = scope.ServiceProvider.GetRequiredService<IMailService>();
                 MailData passwordChangedMail = _mailFactoryService.CreatePasswordChangedMail(user);
                 await mailService.SendMail(passwordChangedMail);
@@ -206,7 +206,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             string verificationToken = await _verificationTokenService.GenerateVerificationToken(user.Id, cancellationToken);
             await _backgroundTaskQueue.Enqueue(async token =>
             {
-                var scope = _serviceScopeFactory.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 var mailService = scope.ServiceProvider.GetRequiredService<IMailService>();
                 MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
                 await mailService.SendMail(verificationMail);

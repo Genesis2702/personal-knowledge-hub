@@ -6,6 +6,7 @@ using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
 using PersonalKnowledgeHub.Mapper;
+using Hangfire;
 
 namespace PersonalKnowledgeHub.Services.Implementations
 {
@@ -16,21 +17,18 @@ namespace PersonalKnowledgeHub.Services.Implementations
         private readonly IUnitOfWorkRepository _unitOfWorkRepository;
         private readonly IMailFactoryService _mailFactoryService;
         private readonly IVerificationTokenService _verificationTokenService;
-        private readonly IBackgroundTaskQueue _backgroundTaskQueue;
-        private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly IBackgroundJobClient _backgroundJobClient;
 
         public AuthService(IUserRepository userRepository, ITokenService tokenService, 
             IUnitOfWorkRepository unitOfWorkRepository, IMailFactoryService mailFactoryService, 
-            IVerificationTokenService verificationTokenService, IBackgroundTaskQueue backgroundTaskQueue, 
-            IServiceScopeFactory serviceScopeFactory)
+            IVerificationTokenService verificationTokenService, IBackgroundJobClient backgroundJobClient)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
             _unitOfWorkRepository = unitOfWorkRepository;
             _mailFactoryService = mailFactoryService;
             _verificationTokenService = verificationTokenService;
-            _backgroundTaskQueue = backgroundTaskQueue;
-            _serviceScopeFactory = serviceScopeFactory;
+            _backgroundJobClient = backgroundJobClient;
         }
 
         public bool IsEmailValid(string email)
@@ -68,13 +66,8 @@ namespace PersonalKnowledgeHub.Services.Implementations
             string refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id, Guid.NewGuid(), cancellationToken);
             string accessToken = await _tokenService.GenerateAccessToken(registeredUser.Id, cancellationToken);
             string verificationToken = await _verificationTokenService.GenerateVerificationToken(registeredUser.Id, cancellationToken);
-            await _backgroundTaskQueue.Enqueue(async token =>
-            {
-                using var scope = _serviceScopeFactory.CreateScope();
-                var mailService = scope.ServiceProvider.GetRequiredService<IMailService>();
-                MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
-                await mailService.SendMail(verificationMail);
-            });
+            MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
+            _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(verificationMail));
             return AuthMapper.ToAuthResponseDto(refreshToken, accessToken);
         }
 
@@ -150,13 +143,8 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new UnauthorizedException("Email is incorrect");
             }
             string passwordResetToken = await _verificationTokenService.GenerateVerificationToken(user.Id, cancellationToken);
-            await _backgroundTaskQueue.Enqueue(async token =>
-            {
-                using var scope = _serviceScopeFactory.CreateScope();
-                var mailService = scope.ServiceProvider.GetRequiredService<IMailService>();
-                MailData resetPasswordMail = _mailFactoryService.CreatePasswordResetMail(user, passwordResetToken);
-                await mailService.SendMail(resetPasswordMail);
-            });
+            MailData passwordResetMail = _mailFactoryService.CreatePasswordResetMail(user, passwordResetToken);
+            _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(passwordResetMail));
         }
 
         public async Task ResetPassword(ResetPasswordRequestDto resetPasswordRequest, int userId, CancellationToken cancellationToken)
@@ -176,13 +164,8 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ConflictException("User has been updated by another user");
             }
-            await _backgroundTaskQueue.Enqueue(async token =>
-            {
-                using var scope = _serviceScopeFactory.CreateScope();
-                var mailService = scope.ServiceProvider.GetRequiredService<IMailService>();
-                MailData passwordChangedMail = _mailFactoryService.CreatePasswordChangedMail(user);
-                await mailService.SendMail(passwordChangedMail);
-            });
+            MailData passwordChangedMail = _mailFactoryService.CreatePasswordChangedMail(user);
+            _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(passwordChangedMail));
         }
 
         public async Task VerifyPendingUser(string token, int userId, CancellationToken cancellationToken)
@@ -204,13 +187,8 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new NotFoundException("User not found");
             }
             string verificationToken = await _verificationTokenService.GenerateVerificationToken(user.Id, cancellationToken);
-            await _backgroundTaskQueue.Enqueue(async token =>
-            {
-                using var scope = _serviceScopeFactory.CreateScope();
-                var mailService = scope.ServiceProvider.GetRequiredService<IMailService>();
-                MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
-                await mailService.SendMail(verificationMail);
-            });
+            MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
+            _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(verificationMail));
         }
 
         public async Task<int> VerifyPasswordChange(string token, ResetPasswordRequestDto resetPasswordRequest, CancellationToken cancellationToken)

@@ -170,9 +170,18 @@ builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailS
 builder.Services.AddHangfire(configuration =>
 {
     configuration.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-    .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
-    .UsePostgreSqlStorage(options => options.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")));
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UsePostgreSqlStorage(
+            options =>
+            {
+                options.UseNpgsqlConnection(
+                    builder.Configuration.GetConnectionString("DefaultConnection"));
+            },
+            new PostgreSqlStorageOptions
+            {
+                SchemaName = "hangfire"
+            });
 });
 
 builder.Services.AddHangfireServer();

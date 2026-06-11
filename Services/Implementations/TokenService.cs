@@ -108,5 +108,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
             if (refreshToken == null) { throw new NotFoundException("Refresh token not found"); }
             return refreshToken;
         }
+
+        public async Task CleanUpRefreshTokens(CancellationToken cancellationToken)
+        {
+            await _tokenRepository.CleanUpRefreshTokenAsync(cancellationToken);
+        }
     }
 }

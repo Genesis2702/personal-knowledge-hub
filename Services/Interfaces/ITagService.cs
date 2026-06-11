@@ -11,6 +11,7 @@ namespace PersonalKnowledgeHub.Services.Interfaces
         public Task<Tag> GetTagById(int tagId, int userId, CancellationToken cancellationToken);
         public Task UpdateTagById(ClaimsPrincipal user, TagRequestDto tagRequest, int tagId, CancellationToken cancellationToken);
         public Task DeleteTagById(ClaimsPrincipal user, int tagId, CancellationToken cancellationToken);
+        public Task CleanUpTags(CancellationToken cancellationToken);
         public Task<Tag> RestoreTagById(ClaimsPrincipal user, int tagId, CancellationToken cancellationToken);
     }
 }

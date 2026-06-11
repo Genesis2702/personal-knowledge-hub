@@ -1,10 +1,11 @@
 ﻿using PersonalKnowledgeHub.DTOs.Requests;
+using PersonalKnowledgeHub.Entities;
 
 namespace PersonalKnowledgeHub.Services.Interfaces;
 
 public interface IMailFactoryService
 {
-    public MailData CreateVerificationMail(string emailToId, string emailToName, string verificationToken, string userName);
-    public MailData CreatePasswordResetMail(string emailToId, string emailToName, string passwordResetToken, string userName);
-    public MailData CreatePasswordChangedMail(string emailToId, string emailToName, string userName);
+    public MailData CreateVerificationMail(User user, string verificationToken);
+    public MailData CreatePasswordResetMail(User user, string passwordResetToken);
+    public MailData CreatePasswordChangedMail(User user);
 }

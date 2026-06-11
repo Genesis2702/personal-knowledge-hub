@@ -19,7 +19,7 @@ public class MailService : IMailService
         _pipelineProvider = pipeline;
     }
 
-    public async Task<bool> SendMail(MailData mailData)
+    public async Task SendMail(MailData mailData)
     {
         try
         {
@@ -42,12 +42,10 @@ public class MailService : IMailService
                 await mailClient.SendAsync(emailMessage, cancellationToken);
                 await mailClient.DisconnectAsync(true, cancellationToken);
             });
-            return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
-            return false;
+            throw new Exception(ex.Message);
         }
     }
 }

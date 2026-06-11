@@ -12,12 +12,15 @@ using System.Text;
 using System.Threading.RateLimiting;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Authorization;
+using PersonalKnowledgeHub.BackgroundTasks;
 using PersonalKnowledgeHub.Configuration;
 using PersonalKnowledgeHub.Policy.Security.Handlers;
 using PersonalKnowledgeHub.Policy.Security.Requirements;
 using Polly;
 using Polly.Retry;
 using Polly.Timeout;
+using Hangfire;
+using Hangfire.PostgreSql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -164,12 +167,32 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
+builder.Services.AddHangfire(configuration =>
+{
+    configuration.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UsePostgreSqlStorage(
+            options =>
+            {
+                options.UseNpgsqlConnection(
+                    builder.Configuration.GetConnectionString("DefaultConnection"));
+            },
+            new PostgreSqlStorageOptions
+            {
+                SchemaName = "hangfire"
+            });
+});
+
+builder.Services.AddHangfireServer();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseHangfireDashboard("/hangfire");
 }
 
 app.UseHttpsRedirection();
@@ -192,5 +215,7 @@ app.UseAuthorization();
 app.UseMiddleware<RateLimitMiddleware>();
 
 app.MapControllers();
+
+app.RegisterRecurringJobs();
 
 app.Run();

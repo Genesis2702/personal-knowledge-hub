@@ -93,6 +93,11 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return resource;
         }
 
+        public async Task CleanUpResourcesAsync(CancellationToken cancellationToken)
+        {
+            await _dbContext.Resources.Where(resource => resource.IsDeleted).ExecuteDeleteAsync(cancellationToken);
+        }
+
         public async Task<bool> IsTitleExistAsync(string resourceTitle, int userId, CancellationToken cancellationToken)
         {
             return await _dbContext.Resources.AnyAsync(resource => resource.Title == resourceTitle && resource.UserId == userId, cancellationToken);

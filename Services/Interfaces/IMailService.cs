@@ -4,5 +4,5 @@ namespace PersonalKnowledgeHub.Services.Interfaces;
 
 public interface IMailService
 {
-    public Task<bool> SendMail(MailData mailData);
+    public Task SendMail(MailData mailData);
 }

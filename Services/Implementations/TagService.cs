@@ -90,6 +90,11 @@ namespace PersonalKnowledgeHub.Services.Implementations
             await _tagRepository.DeleteTagAsync(tag, userId, cancellationToken);
         }
 
+        public async Task CleanUpTags(CancellationToken cancellationToken)
+        {
+            await _tagRepository.CleanUpTagsAsync(cancellationToken);
+        }
+
         public async Task<Tag> RestoreTagById(ClaimsPrincipal user, int tagId, CancellationToken cancellationToken)
         {
             Tag? tag = await _tagRepository.GetTagByIdForRestoreAsync(tagId, cancellationToken);

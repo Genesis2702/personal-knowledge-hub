@@ -63,6 +63,11 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             await _dbContext.SaveChangesAsync(cancellationToken);
             return tag;
         }
+        
+        public async Task CleanUpTagsAsync(CancellationToken cancellationToken)
+        {
+            await _dbContext.Tags.Where(tag => tag.IsDeleted).ExecuteDeleteAsync(cancellationToken);
+        }
 
         public async Task<bool> IsTagExistAsync(string tagName, int userId, CancellationToken cancellationToken)
         {

@@ -11,6 +11,7 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces
         public Task<int> UpdateTagAsync(int tagId, long version, string tagName, CancellationToken cancellationToken);
         public Task DeleteTagAsync(Tag tag, int userId, CancellationToken cancellationToken);
         public Task<Tag> RestoreTagAsync(Tag tag, CancellationToken cancellationToken);
+        public Task CleanUpTagsAsync(CancellationToken cancellationToken);
         public Task<bool> IsTagExistAsync(string tagName, int userId, CancellationToken cancellationToken);
     }
 }

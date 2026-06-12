@@ -124,7 +124,16 @@ builder.Services.AddResiliencePipeline("SendMail", static builder =>
     builder.AddTimeout(TimeSpan.FromSeconds(15));
 });
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<AppDbContext>(options => 
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsqlOptions =>
+        {
+            npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorCodesToAdd: null);
+        }
+));     
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration["RedisCacheSettings:ConnectionString"];

@@ -15,12 +15,15 @@ namespace PersonalKnowledgeHub.Services.Implementations
         private readonly IResourceRepository _resourceRepository;
         private readonly ITagRepository _tagRepository;
         private readonly IAuthorizationService _authorizationService;
+        private readonly ILogger<ResourceService> _logger;
 
-        public ResourceService(IResourceRepository resourceRepository, ITagRepository tagRepository, IAuthorizationService authorizationService)
+        public ResourceService(IResourceRepository resourceRepository, ITagRepository tagRepository, 
+            IAuthorizationService authorizationService, ILogger<ResourceService> logger)
         {
             _resourceRepository = resourceRepository;
             _tagRepository = tagRepository;
             _authorizationService = authorizationService;
+            _logger = logger;
         }
 
         public async Task<PageResult<Resource>> GetResources(int userId, ResourceQueryRequestDto resourceQueryRequest, CancellationToken cancellationToken)
@@ -112,7 +115,9 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task CleanUpResources(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Resources cleaning up started");
             await _resourceRepository.CleanUpResourcesAsync(cancellationToken);
+            _logger.LogInformation("Resources cleaned up successfully");
         }
 
         public async Task<Resource> RestoreResourceById(ClaimsPrincipal user, int resourceId, CancellationToken cancellationToken)

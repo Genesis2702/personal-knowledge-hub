@@ -16,12 +16,15 @@ namespace PersonalKnowledgeHub.Services.Implementations
         private readonly ITokenRepository _tokenRepository;
         private readonly IUserRepository _userRepository;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<TokenService> _logger;
 
-        public TokenService(ITokenRepository tokenRepository, IUserRepository userRepository, IConfiguration configuration)
+        public TokenService(ITokenRepository tokenRepository, IUserRepository userRepository, 
+            IConfiguration configuration, ILogger<TokenService> logger)
         {
             _tokenRepository = tokenRepository;
             _userRepository = userRepository;
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<string> GenerateRefreshToken(int userId, Guid familyId, CancellationToken cancellationToken)
@@ -111,7 +114,9 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task CleanUpRefreshTokens(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Refresh tokens cleaning up started");
             await _tokenRepository.CleanUpRefreshTokenAsync(cancellationToken);
+            _logger.LogInformation("Refresh tokens cleaned up successfully");
         }
     }
 }

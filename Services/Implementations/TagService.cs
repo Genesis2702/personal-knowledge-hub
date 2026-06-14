@@ -13,11 +13,13 @@ namespace PersonalKnowledgeHub.Services.Implementations
     {
         private readonly ITagRepository _tagRepository;
         private readonly IAuthorizationService _authorizationService;
+        private readonly ILogger<TagService> _logger;
 
-        public TagService(ITagRepository tagRepository, IAuthorizationService authorizationService)
+        public TagService(ITagRepository tagRepository, IAuthorizationService authorizationService, ILogger<TagService> logger)
         {
             _tagRepository = tagRepository;
             _authorizationService = authorizationService;
+            _logger = logger;
         }
 
         public async Task<Tag> AddTag(TagRequestDto tagRequest, int userId, CancellationToken cancellationToken)
@@ -92,7 +94,9 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task CleanUpTags(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Tags cleaning up started");
             await _tagRepository.CleanUpTagsAsync(cancellationToken);
+            _logger.LogInformation("Tags cleaned up successfully");
         }
 
         public async Task<Tag> RestoreTagById(ClaimsPrincipal user, int tagId, CancellationToken cancellationToken)

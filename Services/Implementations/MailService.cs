@@ -12,11 +12,13 @@ public class MailService : IMailService
 {
     private readonly MailSettings _mailSettings;
     private readonly ResiliencePipelineProvider<string> _pipelineProvider;
+    private readonly ILogger<MailService> _logger;
 
-    public MailService(IOptions<MailSettings> options, ResiliencePipelineProvider<string> pipeline)
+    public MailService(IOptions<MailSettings> options, ResiliencePipelineProvider<string> pipeline, ILogger<MailService> logger)
     {
         _mailSettings = options.Value;
         _pipelineProvider = pipeline;
+        _logger = logger;
     }
 
     public async Task SendMail(MailData mailData)
@@ -42,9 +44,11 @@ public class MailService : IMailService
                 await mailClient.SendAsync(emailMessage, cancellationToken);
                 await mailClient.DisconnectAsync(true, cancellationToken);
             });
+            _logger.LogInformation("Email sent to {user} successfully", mailData.EmailToName);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Email failed to send to {user}", mailData.EmailToName);
             throw new Exception(ex.Message);
         }
     }

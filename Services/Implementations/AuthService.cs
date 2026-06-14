@@ -18,10 +18,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
         private readonly IMailFactoryService _mailFactoryService;
         private readonly IVerificationTokenService _verificationTokenService;
         private readonly IBackgroundJobClient _backgroundJobClient;
+        private readonly ILogger<AuthService> _logger;
 
         public AuthService(IUserRepository userRepository, ITokenService tokenService, 
             IUnitOfWorkRepository unitOfWorkRepository, IMailFactoryService mailFactoryService, 
-            IVerificationTokenService verificationTokenService, IBackgroundJobClient backgroundJobClient)
+            IVerificationTokenService verificationTokenService, IBackgroundJobClient backgroundJobClient,
+            ILogger<AuthService> logger)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
@@ -29,6 +31,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _mailFactoryService = mailFactoryService;
             _verificationTokenService = verificationTokenService;
             _backgroundJobClient = backgroundJobClient;
+            _logger = logger;
         }
 
         public bool IsEmailValid(string email)
@@ -68,6 +71,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             string verificationToken = await _verificationTokenService.GenerateVerificationToken(registeredUser.Id, cancellationToken);
             MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
             _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(verificationMail));
+            _logger.LogInformation("User {user} registered successfully", registeredUser.UserName);
             return AuthMapper.ToAuthResponseDto(refreshToken, accessToken);
         }
 
@@ -92,6 +96,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             await _userRepository.ResetFailedLoginAttemptsAsync(loggedInUser.Id, cancellationToken);
             string refreshToken = await _tokenService.GenerateRefreshToken(loggedInUser.Id, Guid.NewGuid(), cancellationToken);
             string accessToken = await _tokenService.GenerateAccessToken(loggedInUser.Id, cancellationToken);
+            _logger.LogInformation("User {user} logged in successfully", loggedInUser.UserName);
             return AuthMapper.ToAuthResponseDto(refreshToken, accessToken);
         }
 
@@ -133,6 +138,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ForbiddenException("Refresh token belongs to another user");
             }
             await _tokenService.RevokeRefreshToken(refreshToken.Token, null, cancellationToken);
+            _logger.LogInformation("User {user} logged out successfully", refreshToken.User);
         }
 
         public async Task ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequest, CancellationToken cancellationToken)

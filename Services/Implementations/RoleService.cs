@@ -9,11 +9,13 @@ public class RoleService : IRoleService
 {
     private readonly IRoleRepository _roleRepository;
     private readonly IPermissionRepository _permissionRepository;
+    private readonly ILogger<RoleService> _logger;
 
-    public RoleService(IRoleRepository roleRepository, IPermissionRepository permissionRepository)
+    public RoleService(IRoleRepository roleRepository, IPermissionRepository permissionRepository, ILogger<RoleService> logger)
     {
         _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
+        _logger = logger;
     }
 
     public async Task<List<Role>> GetRoles(CancellationToken cancellationToken)
@@ -42,6 +44,7 @@ public class RoleService : IRoleService
         {
             Name = name.Trim().ToUpper()
         };
+        _logger.LogInformation("Role {name} added successfully", role.Name);
         return await _roleRepository.AddRoleAsync(role, cancellationToken);
     }
 
@@ -57,6 +60,7 @@ public class RoleService : IRoleService
             throw new ConflictException("Role name already existed");
         }
         await _roleRepository.UpdateRoleAsync(role, newName, cancellationToken);
+        _logger.LogInformation("Role {name} updated successfully", role.Name);
     }
 
     public async Task DeleteRoleById(int id, CancellationToken cancellationToken)
@@ -71,6 +75,7 @@ public class RoleService : IRoleService
             throw new ConflictException("Admin role cannot be deleted");
         }
         await _roleRepository.DeleteRoleAsync(role, cancellationToken);
+        _logger.LogInformation("Role {name} deleted successfully", role.Name);
     }
 
     public async Task<Role> AddPermissionToRole(int roleId, int permissionId, CancellationToken cancellationToken)
@@ -92,6 +97,7 @@ public class RoleService : IRoleService
             RoleId = roleId,
             PermissionId = permissionId
         };
+        _logger.LogInformation("Permission {name} added to role {roleName} successfully", permission.Name, role.Name);
         return await _roleRepository.AddPermissionToRoleAsync(rolePermission, cancellationToken);
     }
 
@@ -115,5 +121,6 @@ public class RoleService : IRoleService
             PermissionId = permissionId
         };
         await _roleRepository.RemovePermissionFromRoleAsync(rolePermission, cancellationToken);
+        _logger.LogInformation("Permission {name} removed from role {roleName} successfully", permission.Name, role.Name);
     }
 }

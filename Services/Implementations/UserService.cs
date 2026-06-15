@@ -13,12 +13,15 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
     private readonly ITokenRepository _tokenRepository;
+    private readonly ILogger<UserService> _logger;
 
-    public UserService(IUserRepository userRepository, IRoleRepository roleRepository, ITokenRepository tokenRepository)
+    public UserService(IUserRepository userRepository, IRoleRepository roleRepository, 
+        ITokenRepository tokenRepository, ILogger<UserService> logger)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _tokenRepository = tokenRepository;
+        _logger = logger;
     }
 
     public async Task<PageResult<User>> GetUsers(int pageIndex, int pageSize, UserStatus? status, CancellationToken cancellationToken)
@@ -92,6 +95,7 @@ public class UserService : IUserService
             UserId = userId,
             RoleId = roleId
         };
+        _logger.LogInformation("Role {name} added to user {userName} successfully", role.Name, user.UserName);
         return await _userRepository.AddRoleToUserAsync(userRole, cancellationToken);
     }
 
@@ -113,5 +117,6 @@ public class UserService : IUserService
             throw new NotFoundException("User role not found");
         }
         await _userRepository.RemoveRoleFromUserAsync(userRole, cancellationToken);
+        _logger.LogInformation("Role {name} removed from user {userName} successfully", role.Name, user.UserName);
     }
 }

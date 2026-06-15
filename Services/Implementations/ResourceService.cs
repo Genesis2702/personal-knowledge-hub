@@ -74,6 +74,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ConflictException("Title already existed");
             }
             Resource resource = ResourceMapper.ToResource(resourceRequest, userId);
+            _logger.LogInformation("Resource {title} added successfully for user {userId}", resource.Title, userId);
             return await _resourceRepository.AddResourceAsync(resource, cancellationToken);
         }
 
@@ -95,6 +96,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ConflictException("Resource has been updated by another user");
             }
+            _logger.LogInformation("Resource {title} updated successfully for user {userId}", resource.Title, user.FindFirstValue(ClaimTypes.NameIdentifier));
         }
 
         public async Task DeleteResourceById(ClaimsPrincipal user, int resourceId, CancellationToken cancellationToken)
@@ -111,6 +113,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             int userId = int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
             await _resourceRepository.DeleteResourceAsync(resource, userId, cancellationToken);
+            _logger.LogInformation("Resource {title} deleted successfully for user {userId}", resource.Title, userId);
         }
 
         public async Task CleanUpResources(CancellationToken cancellationToken)
@@ -132,6 +135,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("You are not authorized to restore this resource");
             }
+            _logger.LogInformation("Resource {title} restored successfully for user {userId}", resource.Title, user.FindFirstValue(ClaimTypes.NameIdentifier));
             return await _resourceRepository.RestoreResourceAsync(resource, cancellationToken);
         }
     }

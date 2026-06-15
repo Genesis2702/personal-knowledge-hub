@@ -62,6 +62,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             bool exist = await _userRepository.IsEmailExistAsync(email, cancellationToken);
             if (exist)
             {
+                _logger.LogWarning("User {email} tried to register", email);
                 throw new ConflictException("Email already existed");
             }
             User user = UserMapper.ToUser(registerRequest);
@@ -86,11 +87,13 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             if (loggedInUser.LockedUntil != null && loggedInUser.LockedUntil > DateTime.UtcNow)
             {
+                _logger.LogWarning("An attempt to login from user {user} is locked", loggedInUser.UserName);
                 throw new UnauthorizedException("User is locked");
             }
             if (!BCrypt.Net.BCrypt.Verify(user.PasswordHash, loggedInUser.PasswordHash))
             {
                 await _userRepository.UpdateFailedLoginAttemptsAsync(loggedInUser.Id, 5, 2, cancellationToken);
+                _logger.LogWarning("An attempt to login from user {user} failed", loggedInUser.UserName);
                 throw new UnauthorizedException("Password is incorrect");
             }
             await _userRepository.ResetFailedLoginAttemptsAsync(loggedInUser.Id, cancellationToken);
@@ -138,7 +141,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ForbiddenException("Refresh token belongs to another user");
             }
             await _tokenService.RevokeRefreshToken(refreshToken.Token, null, cancellationToken);
-            _logger.LogInformation("User {user} logged out successfully", refreshToken.User);
+            _logger.LogInformation("User {userId} logged out successfully", userId);
         }
 
         public async Task ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequest, CancellationToken cancellationToken)
@@ -172,6 +175,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             MailData passwordChangedMail = _mailFactoryService.CreatePasswordChangedMail(user);
             _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(passwordChangedMail));
+            _logger.LogInformation("User {user} password changed successfully", user.UserName);
         }
 
         public async Task VerifyPendingUser(string token, int userId, CancellationToken cancellationToken)
@@ -183,6 +187,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new NotFoundException("User not found");
             }
             await _userRepository.ChangeUserStatusAsync(user, UserStatus.Active, cancellationToken);
+            _logger.LogInformation("User {user} verified successfully", user.UserName);
         }
 
         public async Task ResendVerificationMail(int userId, CancellationToken cancellationToken)

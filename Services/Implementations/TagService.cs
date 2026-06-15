@@ -29,6 +29,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ConflictException("Tag already existed");
             }
+            _logger.LogInformation("Tag {name} added successfully for user {userId}", tag.Name, userId);
             return await _tagRepository.AddTagAsync(tag, cancellationToken);
         }
 
@@ -74,6 +75,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ConflictException("Tag has been updated by another user");
             }
+            _logger.LogInformation("Tag {name} updated successfully for user {userId}", tagName, userId);
         }
 
         public async Task DeleteTagById(ClaimsPrincipal user, int tagId, CancellationToken cancellationToken)
@@ -90,6 +92,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             int userId = int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
             await _tagRepository.DeleteTagAsync(tag, userId, cancellationToken);
+            _logger.LogInformation("Tag {name} deleted successfully for user {userId}", tag.Name, userId);
         }
 
         public async Task CleanUpTags(CancellationToken cancellationToken)
@@ -111,6 +114,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("Tag found doesn't belong to current user");
             }
+            _logger.LogInformation("Tag {name} restored successfully for user {userId}", tag.Name, user.FindFirstValue(ClaimTypes.NameIdentifier));
             return await _tagRepository.RestoreTagAsync(tag, cancellationToken);
         }
     }

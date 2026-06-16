@@ -95,7 +95,7 @@ public class UserService : IUserService
             UserId = userId,
             RoleId = roleId
         };
-        _logger.LogInformation("Role {name} added to user {userName} successfully", role.Name, user.UserName);
+        _logger.LogInformation("Role {name} added to user {userId} successfully", role.Name, user.Id);
         return await _userRepository.AddRoleToUserAsync(userRole, cancellationToken);
     }
 
@@ -117,6 +117,6 @@ public class UserService : IUserService
             throw new NotFoundException("User role not found");
         }
         await _userRepository.RemoveRoleFromUserAsync(userRole, cancellationToken);
-        _logger.LogInformation("Role {name} removed from user {userName} successfully", role.Name, user.UserName);
+        _logger.LogInformation("Role {name} removed from user {userId} successfully", role.Name, user.Id);
     }
 }

@@ -21,6 +21,7 @@ using Polly.Retry;
 using Polly.Timeout;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -195,8 +196,15 @@ builder.Services.AddHangfire(configuration =>
 
 builder.Services.AddHangfireServer();
 
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .WriteTo.File(
+        "Logs/app-.txt",
+        rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 var app = builder.Build();
 
@@ -219,6 +227,8 @@ else
 }
 
 app.UseMiddleware<MiddlewareException>();
+
+app.UseSerilogRequestLogging();
 
 app.UseAuthentication();
 

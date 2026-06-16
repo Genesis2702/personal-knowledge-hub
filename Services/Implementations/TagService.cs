@@ -29,8 +29,9 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ConflictException("Tag already existed");
             }
-            _logger.LogInformation("Tag {name} added successfully for user {userId}", tag.Name, userId);
-            return await _tagRepository.AddTagAsync(tag, cancellationToken);
+            Tag addedTag = await _tagRepository.AddTagAsync(tag, cancellationToken);
+            _logger.LogInformation("Tag {TagId} added successfully for user {UserId}", addedTag.Id, userId);
+            return addedTag;
         }
 
         public async Task<List<Tag>> GetTags(int userId, CancellationToken cancellationToken)
@@ -75,7 +76,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ConflictException("Tag has been updated by another user");
             }
-            _logger.LogInformation("Tag {name} updated successfully for user {userId}", tagName, userId);
+            _logger.LogInformation("Tag {TagId} updated successfully for user {UserId}", tag.Id, userId);
         }
 
         public async Task DeleteTagById(ClaimsPrincipal user, int tagId, CancellationToken cancellationToken)
@@ -92,14 +93,22 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             int userId = int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
             await _tagRepository.DeleteTagAsync(tag, userId, cancellationToken);
-            _logger.LogInformation("Tag {name} deleted successfully for user {userId}", tag.Name, userId);
+            _logger.LogInformation("Tag {TagId} deleted successfully for user {UserId}", tag.Id, userId);
         }
 
         public async Task CleanUpTags(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Tags cleaning up started");
-            await _tagRepository.CleanUpTagsAsync(cancellationToken);
-            _logger.LogInformation("Tags cleaned up successfully");
+            try
+            {
+                await _tagRepository.CleanUpTagsAsync(cancellationToken);
+                _logger.LogInformation("Tags cleaned up successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Tags cleaning up failed");
+                throw;
+            }
         }
 
         public async Task<Tag> RestoreTagById(ClaimsPrincipal user, int tagId, CancellationToken cancellationToken)
@@ -114,8 +123,9 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("Tag found doesn't belong to current user");
             }
-            _logger.LogInformation("Tag {name} restored successfully for user {userId}", tag.Name, user.FindFirstValue(ClaimTypes.NameIdentifier));
-            return await _tagRepository.RestoreTagAsync(tag, cancellationToken);
+            Tag restoredTag = await _tagRepository.RestoreTagAsync(tag, cancellationToken);
+            _logger.LogInformation("Tag {TagId} restored successfully for user {UserId}", restoredTag.Id, user.FindFirstValue(ClaimTypes.NameIdentifier));
+            return restoredTag;
         }
     }
 }

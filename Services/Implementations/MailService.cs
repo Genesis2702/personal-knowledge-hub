@@ -44,11 +44,11 @@ public class MailService : IMailService
                 await mailClient.SendAsync(emailMessage, cancellationToken);
                 await mailClient.DisconnectAsync(true, cancellationToken);
             });
-            _logger.LogInformation("Email sent to {user} successfully", mailData.EmailToName);
+            _logger.LogInformation("Email sent to {User} successfully", mailData.EmailToName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Email failed to send to {user}", mailData.EmailToName);
+            _logger.LogError(ex, "Email failed to send to {User}", mailData.EmailToName);
             throw new Exception(ex.Message);
         }
     }

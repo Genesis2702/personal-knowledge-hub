@@ -86,7 +86,15 @@ public class VerificationTokenService : IVerificationTokenService
     public async Task CleanUpVerificationTokens(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Verification tokens cleaning up started");
-        await _verificationTokenRepository.CleanUpVerificationTokenAsync(cancellationToken);
-        _logger.LogInformation("Verification tokens cleaned up successfully");
+        try
+        {
+            await _verificationTokenRepository.CleanUpVerificationTokenAsync(cancellationToken);
+            _logger.LogInformation("Verification tokens cleaned up successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Verification tokens cleaning up failed");
+            throw;
+        }
     }
 }

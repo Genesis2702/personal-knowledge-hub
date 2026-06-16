@@ -115,8 +115,16 @@ namespace PersonalKnowledgeHub.Services.Implementations
         public async Task CleanUpRefreshTokens(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Refresh tokens cleaning up started");
-            await _tokenRepository.CleanUpRefreshTokenAsync(cancellationToken);
-            _logger.LogInformation("Refresh tokens cleaned up successfully");
+            try
+            {
+                await _tokenRepository.CleanUpRefreshTokenAsync(cancellationToken);
+                _logger.LogInformation("Refresh tokens cleaned up successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Refresh tokens cleaning up failed");
+                throw;
+            }
         }
     }
 }

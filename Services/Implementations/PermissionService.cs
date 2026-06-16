@@ -41,8 +41,9 @@ public class PermissionService : IPermissionService
         {
             Name = name
         };
-        _logger.LogInformation("Permission {name} added successfully", permission.Name);
-        return await _permissionRepository.AddPermissionAsync(permission, cancellationToken);
+        Permission addedPermission = await _permissionRepository.AddPermissionAsync(permission, cancellationToken);
+        _logger.LogInformation("Permission {PermissionId} with name {PermissionName} added successfully", addedPermission.Id, addedPermission.Name);
+        return addedPermission;
     }
 
     public async Task UpdatePermissionById(int id, string newName, CancellationToken cancellationToken)
@@ -53,7 +54,8 @@ public class PermissionService : IPermissionService
             throw new NotFoundException("Permission not found");
         }
         await _permissionRepository.UpdatePermissionAsync(permission, newName, cancellationToken);
-        _logger.LogInformation("Permission {name} updated successfully", newName);
+        _logger.LogInformation("Permission {PermissionId} with {PermissionName} updated successfully", 
+            permission.Id, permission.Name);
     }
 
     public async Task DeletePermissionById(int id, CancellationToken cancellationToken)
@@ -64,6 +66,6 @@ public class PermissionService : IPermissionService
             throw new NotFoundException("Permission not found");
         }
         await _permissionRepository.DeletePermissionAsync(permission, cancellationToken);
-        _logger.LogInformation("Permission {name} deleted successfully", permission.Name);
+        _logger.LogInformation("Permission {PermissionId} deleted successfully", permission.Id);
     }
 }

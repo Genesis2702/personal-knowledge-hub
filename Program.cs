@@ -22,6 +22,7 @@ using Polly.Timeout;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -198,6 +199,8 @@ builder.Services.AddHangfireServer();
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
     .WriteTo.Console()
     .WriteTo.File(
         "Logs/app-.txt",

@@ -1,5 +1,4 @@
-﻿using PersonalKnowledgeHub.BackgroundTasks;
-using PersonalKnowledgeHub.DTOs.Requests;
+﻿using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;

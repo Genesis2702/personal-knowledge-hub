@@ -23,6 +23,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Serilog;
 using Serilog.Events;
+using Serilog.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -201,7 +202,10 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
     .MinimumLevel.Override("System", LogEventLevel.Warning)
-    .WriteTo.Console()
+    .Enrich.FromLogContext()
+    .WriteTo.Console(
+        outputTemplate:
+        "[{Timestamp:HH:mm:ss} {Level:u3}] [RequestId: {RequestId}] {Message:lj}{NewLine}{Exception}")
     .WriteTo.File(
         "Logs/app-.txt",
         rollingInterval: RollingInterval.Day)
@@ -231,7 +235,27 @@ else
 
 app.UseMiddleware<MiddlewareException>();
 
-app.UseSerilogRequestLogging();
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers["X-Request-ID"] = context.TraceIdentifier;
+        return Task.CompletedTask;
+    });
+
+    using (LogContext.PushProperty("RequestId", context.TraceIdentifier))
+    {
+        await next();
+    }
+});
+
+app.UseSerilogRequestLogging(options =>
+{
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("RequestId", httpContext.TraceIdentifier);
+    };
+});
 
 app.UseAuthentication();
 

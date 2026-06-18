@@ -32,6 +32,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             }
             int resourcesCount = await query.CountAsync(cancellationToken);
             List<Resource> resources = await query
+                .OrderBy(resource => resource.Id)
                 .Include(resource => resource.ResourceTags)
                 .ThenInclude(resourceTag => resourceTag.Tag)
                 .Skip((pageIndex - 1) * pageSize)

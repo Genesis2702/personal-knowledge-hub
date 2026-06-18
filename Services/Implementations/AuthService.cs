@@ -1,5 +1,4 @@
-﻿using PersonalKnowledgeHub.BackgroundTasks;
-using PersonalKnowledgeHub.DTOs.Requests;
+﻿using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
@@ -18,10 +17,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
         private readonly IMailFactoryService _mailFactoryService;
         private readonly IVerificationTokenService _verificationTokenService;
         private readonly IBackgroundJobClient _backgroundJobClient;
+        private readonly ILogger<AuthService> _logger;
 
         public AuthService(IUserRepository userRepository, ITokenService tokenService, 
             IUnitOfWorkRepository unitOfWorkRepository, IMailFactoryService mailFactoryService, 
-            IVerificationTokenService verificationTokenService, IBackgroundJobClient backgroundJobClient)
+            IVerificationTokenService verificationTokenService, IBackgroundJobClient backgroundJobClient,
+            ILogger<AuthService> logger)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
@@ -29,6 +30,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _mailFactoryService = mailFactoryService;
             _verificationTokenService = verificationTokenService;
             _backgroundJobClient = backgroundJobClient;
+            _logger = logger;
         }
 
         public bool IsEmailValid(string email)
@@ -59,6 +61,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             bool exist = await _userRepository.IsEmailExistAsync(email, cancellationToken);
             if (exist)
             {
+                _logger.LogWarning("Registration attempt failed because email already exists");
                 throw new ConflictException("Email already existed");
             }
             User user = UserMapper.ToUser(registerRequest);
@@ -68,6 +71,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             string verificationToken = await _verificationTokenService.GenerateVerificationToken(registeredUser.Id, cancellationToken);
             MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
             _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(verificationMail));
+            _logger.LogInformation("User {UserId} registered successfully", registeredUser.Id);
             return AuthMapper.ToAuthResponseDto(refreshToken, accessToken);
         }
 
@@ -82,16 +86,19 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             if (loggedInUser.LockedUntil != null && loggedInUser.LockedUntil > DateTime.UtcNow)
             {
+                _logger.LogWarning("Login attempt failed because user {UserId} is locked", loggedInUser.Id);
                 throw new UnauthorizedException("User is locked");
             }
             if (!BCrypt.Net.BCrypt.Verify(user.PasswordHash, loggedInUser.PasswordHash))
             {
                 await _userRepository.UpdateFailedLoginAttemptsAsync(loggedInUser.Id, 5, 2, cancellationToken);
+                _logger.LogWarning("Login attempt failed for user {UserId}", loggedInUser.Id);
                 throw new UnauthorizedException("Password is incorrect");
             }
             await _userRepository.ResetFailedLoginAttemptsAsync(loggedInUser.Id, cancellationToken);
             string refreshToken = await _tokenService.GenerateRefreshToken(loggedInUser.Id, Guid.NewGuid(), cancellationToken);
             string accessToken = await _tokenService.GenerateAccessToken(loggedInUser.Id, cancellationToken);
+            _logger.LogInformation("User {UserId} logged in successfully", loggedInUser.Id);
             return AuthMapper.ToAuthResponseDto(refreshToken, accessToken);
         }
 
@@ -133,6 +140,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ForbiddenException("Refresh token belongs to another user");
             }
             await _tokenService.RevokeRefreshToken(refreshToken.Token, null, cancellationToken);
+            _logger.LogInformation("User {UserId} logged out successfully", userId);
         }
 
         public async Task ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequest, CancellationToken cancellationToken)
@@ -166,6 +174,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             MailData passwordChangedMail = _mailFactoryService.CreatePasswordChangedMail(user);
             _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(passwordChangedMail));
+            _logger.LogInformation("User {UserId} password changed successfully", user.Id);
         }
 
         public async Task VerifyPendingUser(string token, int userId, CancellationToken cancellationToken)
@@ -177,6 +186,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new NotFoundException("User not found");
             }
             await _userRepository.ChangeUserStatusAsync(user, UserStatus.Active, cancellationToken);
+            _logger.LogInformation("User {UserId} verified successfully", user.Id);
         }
 
         public async Task ResendVerificationMail(int userId, CancellationToken cancellationToken)

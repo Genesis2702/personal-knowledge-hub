@@ -11,11 +11,12 @@ namespace PersonalKnowledgeHub.Services.Implementations;
 public class VerificationTokenService : IVerificationTokenService
 {
     private readonly IVerificationTokenRepository _verificationTokenRepository;
-    private readonly IUserRepository _userRepository;
+    private readonly ILogger<VerificationTokenService> _logger;
 
-    public VerificationTokenService(IVerificationTokenRepository verificationTokenRepository)
+    public VerificationTokenService(IVerificationTokenRepository verificationTokenRepository, ILogger<VerificationTokenService> logger)
     {
         _verificationTokenRepository = verificationTokenRepository;
+        _logger = logger;
     }
 
     public async Task<string> GenerateVerificationToken(int userId, CancellationToken cancellationToken)
@@ -84,6 +85,16 @@ public class VerificationTokenService : IVerificationTokenService
 
     public async Task CleanUpVerificationTokens(CancellationToken cancellationToken)
     {
-        await _verificationTokenRepository.CleanUpVerificationTokenAsync(cancellationToken);
+        _logger.LogInformation("Verification tokens cleaning up started");
+        try
+        {
+            await _verificationTokenRepository.CleanUpVerificationTokenAsync(cancellationToken);
+            _logger.LogInformation("Verification tokens cleaned up successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Verification tokens cleaning up failed");
+            throw;
+        }
     }
 }

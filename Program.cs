@@ -21,6 +21,9 @@ using Polly.Retry;
 using Polly.Timeout;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Serilog;
+using Serilog.Events;
+using Serilog.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -195,6 +198,21 @@ builder.Services.AddHangfire(configuration =>
 
 builder.Services.AddHangfireServer();
 
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(
+        outputTemplate:
+        "[{Timestamp:HH:mm:ss} {Level:u3}] [RequestId: {RequestId}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File(
+        "Logs/app-.txt",
+        rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -216,6 +234,28 @@ else
 }
 
 app.UseMiddleware<MiddlewareException>();
+
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers["X-Request-ID"] = context.TraceIdentifier;
+        return Task.CompletedTask;
+    });
+
+    using (LogContext.PushProperty("RequestId", context.TraceIdentifier))
+    {
+        await next();
+    }
+});
+
+app.UseSerilogRequestLogging(options =>
+{
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("RequestId", httpContext.TraceIdentifier);
+    };
+});
 
 app.UseAuthentication();
 

@@ -15,12 +15,15 @@ namespace PersonalKnowledgeHub.Services.Implementations
         private readonly IResourceRepository _resourceRepository;
         private readonly ITagRepository _tagRepository;
         private readonly IAuthorizationService _authorizationService;
+        private readonly ILogger<ResourceService> _logger;
 
-        public ResourceService(IResourceRepository resourceRepository, ITagRepository tagRepository, IAuthorizationService authorizationService)
+        public ResourceService(IResourceRepository resourceRepository, ITagRepository tagRepository, 
+            IAuthorizationService authorizationService, ILogger<ResourceService> logger)
         {
             _resourceRepository = resourceRepository;
             _tagRepository = tagRepository;
             _authorizationService = authorizationService;
+            _logger = logger;
         }
 
         public async Task<PageResult<Resource>> GetResources(int userId, ResourceQueryRequestDto resourceQueryRequest, CancellationToken cancellationToken)
@@ -71,7 +74,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ConflictException("Title already existed");
             }
             Resource resource = ResourceMapper.ToResource(resourceRequest, userId);
-            return await _resourceRepository.AddResourceAsync(resource, cancellationToken);
+            Resource addedResource = await _resourceRepository.AddResourceAsync(resource, cancellationToken);
+            _logger.LogInformation("Resource {ResourceId} added successfully for user {UserId}", 
+                addedResource.Id, userId);
+            return addedResource;
         }
 
         public async Task UpdateResourceById(ClaimsPrincipal user, int resourceId, ResourceUpdateRequestDto resourceUpdateRequest, CancellationToken cancellationToken)
@@ -92,6 +98,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ConflictException("Resource has been updated by another user");
             }
+            _logger.LogInformation("Resource {ResourceId} updated successfully for user {UserId}", resource.Id, user.FindFirstValue(ClaimTypes.NameIdentifier));
         }
 
         public async Task DeleteResourceById(ClaimsPrincipal user, int resourceId, CancellationToken cancellationToken)
@@ -108,11 +115,22 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             int userId = int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
             await _resourceRepository.DeleteResourceAsync(resource, userId, cancellationToken);
+            _logger.LogInformation("Resource {ResourceId} deleted successfully for user {UserId}", resource.Id, userId);
         }
 
         public async Task CleanUpResources(CancellationToken cancellationToken)
         {
-            await _resourceRepository.CleanUpResourcesAsync(cancellationToken);
+            _logger.LogInformation("Resources cleaning up started");
+            try
+            {
+                await _resourceRepository.CleanUpResourcesAsync(cancellationToken);
+                _logger.LogInformation("Resources cleaned up successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Resources cleaning up failed");
+                throw;
+            }
         }
 
         public async Task<Resource> RestoreResourceById(ClaimsPrincipal user, int resourceId, CancellationToken cancellationToken)
@@ -127,7 +145,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("You are not authorized to restore this resource");
             }
-            return await _resourceRepository.RestoreResourceAsync(resource, cancellationToken);
+            Resource restoredResource = await _resourceRepository.RestoreResourceAsync(resource, cancellationToken);
+            _logger.LogInformation("Resource {ResourceId} restored successfully for user {UserId}", 
+                restoredResource.Id, user.FindFirstValue(ClaimTypes.NameIdentifier));
+            return restoredResource;
         }
     }
 }

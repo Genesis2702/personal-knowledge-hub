@@ -13,12 +13,15 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
     private readonly ITokenRepository _tokenRepository;
+    private readonly ILogger<UserService> _logger;
 
-    public UserService(IUserRepository userRepository, IRoleRepository roleRepository, ITokenRepository tokenRepository)
+    public UserService(IUserRepository userRepository, IRoleRepository roleRepository, 
+        ITokenRepository tokenRepository, ILogger<UserService> logger)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _tokenRepository = tokenRepository;
+        _logger = logger;
     }
 
     public async Task<PageResult<User>> GetUsers(int pageIndex, int pageSize, UserStatus? status, CancellationToken cancellationToken)
@@ -50,6 +53,8 @@ public class UserService : IUserService
         {
             throw new ConflictException("User was updated by another user");
         }
+        _logger.LogInformation("User {UserId} with {UserName} updated successfully", 
+            user.Id, user.UserName);
     }
     
     public async Task BanUser(int userId, CancellationToken cancellationToken)
@@ -61,6 +66,7 @@ public class UserService : IUserService
         }
         await _userRepository.BanUserAsync(user, cancellationToken);
         await _tokenRepository.RevokeRefreshTokensByUserAsync(user.Id, cancellationToken);
+        _logger.LogInformation("User {UserId} banned successfully", user.Id);
     }
 
     public async Task UnbanUser(int userId, CancellationToken cancellationToken)
@@ -71,6 +77,7 @@ public class UserService : IUserService
             throw new NotFoundException("User not found");
         }
         await _userRepository.UnbanUserAsync(user, cancellationToken);
+        _logger.LogInformation("User {UserId} unbanned successfully", user.Id);
     }
 
     public async Task<User> AddRoleToUser(int userId, int roleId, CancellationToken cancellationToken)
@@ -92,7 +99,9 @@ public class UserService : IUserService
             UserId = userId,
             RoleId = roleId
         };
-        return await _userRepository.AddRoleToUserAsync(userRole, cancellationToken);
+        User userWithRole = await _userRepository.AddRoleToUserAsync(userRole, cancellationToken);
+        _logger.LogInformation("Role {RoleId} added to user {UserId} successfully", role.Id, user.Id);
+        return userWithRole;
     }
 
     public async Task RemoveRoleFromUser(int userId, int roleId, CancellationToken cancellationToken)
@@ -113,5 +122,6 @@ public class UserService : IUserService
             throw new NotFoundException("User role not found");
         }
         await _userRepository.RemoveRoleFromUserAsync(userRole, cancellationToken);
+        _logger.LogInformation("Role {RoleId} removed from user {UserId} successfully", role.Id, user.Id);
     }
 }

@@ -107,7 +107,7 @@ public class MailFactoryService : IMailFactoryService
 
     public MailData CreatePasswordResetMail(User user, string passwordResetToken)
     {
-        string resetPasswordLink = $"http://localhost:5165/auth/reset-password?token={passwordResetToken}";
+        string resetPasswordLink = $"https://localhost:7037/auth/reset-password?token={passwordResetToken}";
         return new MailData
         {
             EmailToId = user.Email,

@@ -36,10 +36,10 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             int usersCount = await query.CountAsync(cancellationToken);
             List<User> users = await query
                 .OrderBy(user => user.Id)
-                .Skip((pageIndex - 1) * pageSize)
-                .Take(pageSize)
                 .Include(user => user.UserRoles)
                 .ThenInclude(userRole => userRole.Role)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync(cancellationToken);
             return (users, usersCount);
         }

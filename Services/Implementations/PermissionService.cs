@@ -8,10 +8,12 @@ namespace PersonalKnowledgeHub.Services.Implementations;
 public class PermissionService : IPermissionService
 {
     private readonly IPermissionRepository _permissionRepository;
+    private readonly ILogger<PermissionService> _logger;
     
-    public PermissionService(IPermissionRepository permissionRepository)
+    public PermissionService(IPermissionRepository permissionRepository, ILogger<PermissionService> logger)
     {
         _permissionRepository = permissionRepository;
+        _logger = logger;
     }
 
     public async Task<List<Permission>> GetPermissions(CancellationToken cancellationToken)
@@ -39,7 +41,9 @@ public class PermissionService : IPermissionService
         {
             Name = name
         };
-        return await _permissionRepository.AddPermissionAsync(permission, cancellationToken);
+        Permission addedPermission = await _permissionRepository.AddPermissionAsync(permission, cancellationToken);
+        _logger.LogInformation("Permission {PermissionId} with name {PermissionName} added successfully", addedPermission.Id, addedPermission.Name);
+        return addedPermission;
     }
 
     public async Task UpdatePermissionById(int id, string newName, CancellationToken cancellationToken)
@@ -50,6 +54,8 @@ public class PermissionService : IPermissionService
             throw new NotFoundException("Permission not found");
         }
         await _permissionRepository.UpdatePermissionAsync(permission, newName, cancellationToken);
+        _logger.LogInformation("Permission {PermissionId} with {PermissionName} updated successfully", 
+            permission.Id, permission.Name);
     }
 
     public async Task DeletePermissionById(int id, CancellationToken cancellationToken)
@@ -60,5 +66,6 @@ public class PermissionService : IPermissionService
             throw new NotFoundException("Permission not found");
         }
         await _permissionRepository.DeletePermissionAsync(permission, cancellationToken);
+        _logger.LogInformation("Permission {PermissionId} deleted successfully", permission.Id);
     }
 }

@@ -213,6 +213,20 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        builder.Configuration.GetConnectionString("DefaultConnection")!,
+        name: "postgresql")
+    .AddRedis(
+        builder.Configuration["RedisCacheSettings:ConnectionString"]!,
+        name: "redis")
+    .AddHangfire(
+        options =>
+        {
+            options.MinimumAvailableServers = 1;
+        },
+        name: "hangfire");
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -262,6 +276,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseMiddleware<RateLimitMiddleware>();
+
+app.MapHealthChecks("/health");
 
 app.MapControllers();
 

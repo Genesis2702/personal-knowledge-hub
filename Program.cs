@@ -21,6 +21,7 @@ using Polly.Retry;
 using Polly.Timeout;
 using Hangfire;
 using Hangfire.PostgreSql;
+using OpenTelemetry.Metrics;
 using Serilog;
 using Serilog.Events;
 using Serilog.Context;
@@ -227,6 +228,16 @@ builder.Services.AddHealthChecks()
         },
         name: "hangfire");
 
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddPrometheusExporter();
+    });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -278,6 +289,8 @@ app.UseAuthorization();
 app.UseMiddleware<RateLimitMiddleware>();
 
 app.MapHealthChecks("/health");
+
+app.MapPrometheusScrapingEndpoint("/metrics");
 
 app.MapControllers();
 

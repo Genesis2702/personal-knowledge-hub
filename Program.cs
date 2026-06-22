@@ -22,6 +22,7 @@ using Polly.Timeout;
 using Hangfire;
 using Hangfire.PostgreSql;
 using OpenTelemetry.Metrics;
+using PersonalKnowledgeHub.Observability;
 using Serilog;
 using Serilog.Events;
 using Serilog.Context;
@@ -34,6 +35,7 @@ builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializ
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+// Repositories
 builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
@@ -44,6 +46,7 @@ builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 builder.Services.AddScoped<IVerificationTokenRepository, VerificationTokenRepository>();
 
+// Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
@@ -56,8 +59,12 @@ builder.Services.AddTransient<IMailService, MailService>();
 builder.Services.AddScoped<IMailFactoryService, MailFactoryService>();
 builder.Services.AddScoped<IVerificationTokenService, VerificationTokenService>();
 
+// Policies
 builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerOrAdminHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TagOwnerOrAdminHandler>();
+
+// Metrics 
+builder.Services.AddSingleton<AppMetrics>();
 
 builder.Services.Configure<HostOptions>(option =>
 {
@@ -241,7 +248,8 @@ builder.Services.AddOpenTelemetry()
                 "Microsoft.AspNetCore.Diagnostics",
                 "Microsoft.AspNetCore.RateLimiting",
                 "Microsoft.AspNetCore.Authentication",
-                "Microsoft.AspNetCore.Authorization")
+                "Microsoft.AspNetCore.Authorization",
+                "PersonalKnowledgeHub")
             .AddPrometheusExporter();
     });
 

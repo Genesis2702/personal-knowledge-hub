@@ -6,6 +6,7 @@ using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
 using PersonalKnowledgeHub.Mapper;
 using Hangfire;
+using PersonalKnowledgeHub.Observability;
 
 namespace PersonalKnowledgeHub.Services.Implementations
 {
@@ -18,11 +19,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
         private readonly IVerificationTokenService _verificationTokenService;
         private readonly IBackgroundJobClient _backgroundJobClient;
         private readonly ILogger<AuthService> _logger;
+        private readonly AppMetrics _metrics;
 
         public AuthService(IUserRepository userRepository, ITokenService tokenService, 
             IUnitOfWorkRepository unitOfWorkRepository, IMailFactoryService mailFactoryService, 
             IVerificationTokenService verificationTokenService, IBackgroundJobClient backgroundJobClient,
-            ILogger<AuthService> logger)
+            ILogger<AuthService> logger, AppMetrics metrics)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
@@ -31,6 +33,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _verificationTokenService = verificationTokenService;
             _backgroundJobClient = backgroundJobClient;
             _logger = logger;
+            _metrics = metrics;
         }
 
         public bool IsEmailValid(string email)
@@ -87,12 +90,14 @@ namespace PersonalKnowledgeHub.Services.Implementations
             if (loggedInUser.LockedUntil != null && loggedInUser.LockedUntil > DateTime.UtcNow)
             {
                 _logger.LogWarning("Login attempt failed because user {UserId} is locked", loggedInUser.Id);
+                _metrics.LoginFailed();
                 throw new UnauthorizedException("User is locked");
             }
             if (!BCrypt.Net.BCrypt.Verify(user.PasswordHash, loggedInUser.PasswordHash))
             {
                 await _userRepository.UpdateFailedLoginAttemptsAsync(loggedInUser.Id, 5, 2, cancellationToken);
                 _logger.LogWarning("Login attempt failed for user {UserId}", loggedInUser.Id);
+                _metrics.LoginFailed();
                 throw new UnauthorizedException("Password is incorrect");
             }
             await _userRepository.ResetFailedLoginAttemptsAsync(loggedInUser.Id, cancellationToken);

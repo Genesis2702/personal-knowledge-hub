@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using PersonalKnowledgeHub.Configuration;
 using PersonalKnowledgeHub.DTOs.Requests;
+using PersonalKnowledgeHub.Observability;
 using PersonalKnowledgeHub.Services.Interfaces;
 using Polly.Registry;
 
@@ -13,12 +14,15 @@ public class MailService : IMailService
     private readonly MailSettings _mailSettings;
     private readonly ResiliencePipelineProvider<string> _pipelineProvider;
     private readonly ILogger<MailService> _logger;
+    private readonly AppMetrics _metrics;
 
-    public MailService(IOptions<MailSettings> options, ResiliencePipelineProvider<string> pipeline, ILogger<MailService> logger)
+    public MailService(IOptions<MailSettings> options, ResiliencePipelineProvider<string> pipeline, 
+        ILogger<MailService> logger, AppMetrics metrics)
     {
         _mailSettings = options.Value;
         _pipelineProvider = pipeline;
         _logger = logger;
+        _metrics = metrics;
     }
 
     public async Task SendMail(MailData mailData)
@@ -49,6 +53,7 @@ public class MailService : IMailService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Email failed to send to {User}", mailData.EmailToName);
+            _metrics.EmailSendFailed();
             throw new Exception(ex.Message);
         }
     }

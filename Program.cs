@@ -235,6 +235,13 @@ builder.Services.AddOpenTelemetry()
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
             .AddRuntimeInstrumentation()
+            .AddMeter(
+                "Microsoft.AspNetCore.Hosting",
+                "Microsoft.AspNetCore.Routing",
+                "Microsoft.AspNetCore.Diagnostics",
+                "Microsoft.AspNetCore.RateLimiting",
+                "Microsoft.AspNetCore.Authentication",
+                "Microsoft.AspNetCore.Authorization")
             .AddPrometheusExporter();
     });
 

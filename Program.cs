@@ -22,6 +22,7 @@ using Polly.Timeout;
 using Hangfire;
 using Hangfire.PostgreSql;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using PersonalKnowledgeHub.Observability;
 using Serilog;
 using Serilog.Events;
@@ -251,6 +252,13 @@ builder.Services.AddOpenTelemetry()
                 "Microsoft.AspNetCore.Authorization",
                 "PersonalKnowledgeHub")
             .AddPrometheusExporter();
+    })
+    .WithTracing(tracing =>
+    {
+        tracing
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddConsoleExporter();
     });
 
 var app = builder.Build();

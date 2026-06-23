@@ -258,6 +258,7 @@ builder.Services.AddOpenTelemetry()
         tracing
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
+            .AddSource(AppTracing.ServiceName)
             .AddConsoleExporter();
     });
 

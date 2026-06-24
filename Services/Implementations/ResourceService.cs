@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using PersonalKnowledgeHub.Common;
 using PersonalKnowledgeHub.DTOs.Requests;
@@ -7,6 +8,7 @@ using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
 using PersonalKnowledgeHub.Mapper;
+using PersonalKnowledgeHub.Observability;
 
 namespace PersonalKnowledgeHub.Services.Implementations
 {
@@ -28,18 +30,31 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<PageResult<Resource>> GetResources(int userId, ResourceQueryRequestDto resourceQueryRequest, CancellationToken cancellationToken)
         {
+            using var activity = AppTracing.ActivitySource.StartActivity("ResourceService.GetResources");
+            activity?.SetTag("resource.query.tag_id_provided", resourceQueryRequest.TagId.HasValue);
+            activity?.SetTag("resource.query.page_index", resourceQueryRequest.PageIndex);
+            activity?.SetTag("resource.query.page_size", resourceQueryRequest.PageSize);
+            activity?.SetTag("resource.query.type", resourceQueryRequest.ResourceType?.ToString());
+            activity?.SetTag("resource.query.has_search", !string.IsNullOrWhiteSpace(resourceQueryRequest.Search));
             if (resourceQueryRequest.TagId.HasValue)
             {
+                activity?.AddEvent(new ActivityEvent("tag_lookup_started"));
                 Tag? tag = await _tagRepository.GetTagByIdAsync(resourceQueryRequest.TagId.Value, cancellationToken);
+                activity?.AddEvent(new ActivityEvent("tag_lookup_finished"));
                 if (tag == null)
                 {
+                    activity?.SetTag("tag.found", false);
                     throw new NotFoundException("Tag not found");
                 }
+                activity?.SetTag("tag.found", true);
                 if (tag.UserId != userId)
                 {
+                    activity?.SetTag("tag.owned_by_current_user", false);
                     throw new ForbiddenException("Tag found doesn't belong to current user");
                 }
+                activity?.SetTag("tag.owned_by_current_user", true);
             }
+            activity?.AddEvent(new ActivityEvent("resources_query_started"));
             (List<Resource> resources, int resourcesCount) = await _resourceRepository.GetResourcesAsync
                 (
                     userId, 
@@ -50,6 +65,9 @@ namespace PersonalKnowledgeHub.Services.Implementations
                     resourceQueryRequest.Search,
                     cancellationToken
                 );
+            activity?.AddEvent(new ActivityEvent("resources_query_finished"));
+            activity?.SetTag("resource.result.count", resources.Count);
+            activity?.SetTag("resource.result.total_count", resourcesCount);
             return ResourceMapper.ToResourcesPageResult(resources, resourcesCount, resourceQueryRequest.PageIndex, resourceQueryRequest.PageSize);
         }
 

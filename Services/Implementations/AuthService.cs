@@ -60,12 +60,13 @@ namespace PersonalKnowledgeHub.Services.Implementations
             activity?.SetTag("auth.register.success", false);
             string email = registerRequest.Email.Trim().ToLower();
             bool valid = IsEmailValid(email);
-            activity?.SetTag("auth.email_valid", valid);
             if (!valid)
             {
+                activity?.SetTag("auth.email_valid", false);
                 activity?.SetTag("auth.failure_reason", "invalid credentials");
                 throw new ValidationException("Email is invalid");
             }
+            activity?.SetTag("auth.email_valid", true);
             bool exist = await _userRepository.IsEmailExistAsync(email, cancellationToken);
             if (exist)
             {
@@ -74,16 +75,21 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new ConflictException("Email already existed");
             }
             User user = UserMapper.ToUser(registerRequest);
-            activity?.AddEvent(new ActivityEvent("user_registered"));
+            activity?.AddEvent(new ActivityEvent("user_registration_started"));
             User registeredUser = await _userRepository.AddUserAsync(user, cancellationToken);
-            activity?.AddEvent(new ActivityEvent("refresh_token_generated"));
+            activity?.AddEvent(new ActivityEvent("user_registration_finished"));
+            activity?.AddEvent(new ActivityEvent("refresh_token_generation_started"));
             string refreshToken = await _tokenService.GenerateRefreshToken(registeredUser.Id, Guid.NewGuid(), cancellationToken);
-            activity?.AddEvent(new ActivityEvent("access_token_generated"));
+            activity?.AddEvent(new ActivityEvent("refresh_token_generation_finished"));
+            activity?.AddEvent(new ActivityEvent("access_token_generation_started"));
             string accessToken = await _tokenService.GenerateAccessToken(registeredUser.Id, cancellationToken);
-            activity?.AddEvent(new ActivityEvent("verification_token_generated"));
+            activity?.AddEvent(new ActivityEvent("access_token_generation_finished"));
+            activity?.AddEvent(new ActivityEvent("verification_token_generation_started"));
             string verificationToken = await _verificationTokenService.GenerateVerificationToken(registeredUser.Id, cancellationToken);
+            activity?.AddEvent(new ActivityEvent("verification_token_generation_finished"));
             activity?.AddEvent(new ActivityEvent("verification_mail_queued"));
             MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
+            activity?.AddEvent(new ActivityEvent("verification_mail_sent"));
             _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(verificationMail));
             activity?.SetTag("auth.register.success", true);
             _logger.LogInformation("User {UserId} registered successfully", registeredUser.Id);
@@ -97,33 +103,38 @@ namespace PersonalKnowledgeHub.Services.Implementations
             User user = UserMapper.ToUser(loginRequest);
             user.Email = user.Email.Trim().ToLower();
             User? loggedInUser = await _userRepository.GetUserByEmailAsync(user.Email, cancellationToken);
-            activity?.SetTag("auth.user_found", loggedInUser is not null);
             if (loggedInUser == null)
             {
+                activity?.SetTag("auth.user_found", false);
                 activity?.SetTag("auth.failure_reason", "invalid credentials");
                 throw new UnauthorizedException("User not found");
             }
+            activity?.SetTag("auth.user_found", true);
             if (loggedInUser.LockedUntil != null && loggedInUser.LockedUntil > DateTime.UtcNow)
             {
                 _logger.LogWarning("Login attempt failed because user {UserId} is locked", loggedInUser.Id);
                 _metrics.LoginFailed();
                 throw new UnauthorizedException("User is locked");
             }
-            var passwordValid = BCrypt.Net.BCrypt.Verify(user.PasswordHash, loggedInUser.PasswordHash);
-            activity?.SetTag("auth.password_valid", passwordValid);
-            if (!passwordValid)
+            if (!BCrypt.Net.BCrypt.Verify(user.PasswordHash, loggedInUser.PasswordHash))
             {
+                activity?.SetTag("auth.password_valid", false);
                 activity?.SetTag("auth.failure_reason", "invalid credentials");
                 await _userRepository.UpdateFailedLoginAttemptsAsync(loggedInUser.Id, 5, 2, cancellationToken);
                 _logger.LogWarning("Login attempt failed for user {UserId}", loggedInUser.Id);
                 _metrics.LoginFailed();
                 throw new UnauthorizedException("Password is incorrect");
             }
+            activity?.SetTag("auth.password_valid", true);
+            activity?.AddEvent(new ActivityEvent("failed_login_attempts_reset_started"));
             await _userRepository.ResetFailedLoginAttemptsAsync(loggedInUser.Id, cancellationToken);
-            activity?.AddEvent(new ActivityEvent("refresh_token_generated"));
+            activity?.AddEvent(new ActivityEvent("failed_login_attempts_reset_finished"));
+            activity?.AddEvent(new ActivityEvent("refresh_token_generation_started"));
             string refreshToken = await _tokenService.GenerateRefreshToken(loggedInUser.Id, Guid.NewGuid(), cancellationToken);
-            activity?.AddEvent(new ActivityEvent("access_token_generated"));
+            activity?.AddEvent(new ActivityEvent("refresh_token_generation_finished"));
+            activity?.AddEvent(new ActivityEvent("access_token_generation_started"));
             string accessToken = await _tokenService.GenerateAccessToken(loggedInUser.Id, cancellationToken);
+            activity?.AddEvent(new ActivityEvent("access_token_generation_finished"));
             activity?.SetTag("auth.login.success", true);
             _logger.LogInformation("User {UserId} logged in successfully", loggedInUser.Id);
             return AuthMapper.ToAuthResponseDto(refreshToken, accessToken);

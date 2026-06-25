@@ -21,6 +21,7 @@ using Polly.Retry;
 using Polly.Timeout;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using PersonalKnowledgeHub.Observability;
@@ -225,16 +226,19 @@ builder.Host.UseSerilog();
 builder.Services.AddHealthChecks()
     .AddNpgSql(
         builder.Configuration.GetConnectionString("DefaultConnection")!,
-        name: "postgresql")
+        name: "postgresql",
+        tags: new[] {"ready"})
     .AddRedis(
         builder.Configuration["RedisCacheSettings:ConnectionString"]!,
-        name: "redis")
+        name: "redis",
+        tags: new[] {"ready"})
     .AddHangfire(
         options =>
         {
             options.MinimumAvailableServers = 1;
         },
-        name: "hangfire");
+        name: "hangfire",
+        tags: new[] {"ready"});
 
 builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics =>
@@ -313,6 +317,16 @@ app.UseAuthorization();
 app.UseMiddleware<RateLimitMiddleware>();
 
 app.MapHealthChecks("/health");
+
+app.MapHealthChecks("/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+
+app.MapHealthChecks("/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
 
 app.MapPrometheusScrapingEndpoint("/metrics");
 

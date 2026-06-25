@@ -1,0 +1,12 @@
+﻿global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "personal-knowledge-hub-api"
+    scheme: "https"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets:
+          - "host.docker.internal:7037"
+    tls_config:
+      insecure_skip_verify: true

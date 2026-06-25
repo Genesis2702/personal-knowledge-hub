@@ -21,6 +21,10 @@ using Polly.Retry;
 using Polly.Timeout;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+using PersonalKnowledgeHub.Observability;
 using Serilog;
 using Serilog.Events;
 using Serilog.Context;
@@ -33,6 +37,7 @@ builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializ
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+// Repositories
 builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
@@ -43,6 +48,7 @@ builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 builder.Services.AddScoped<IVerificationTokenRepository, VerificationTokenRepository>();
 
+// Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
@@ -55,8 +61,12 @@ builder.Services.AddTransient<IMailService, MailService>();
 builder.Services.AddScoped<IMailFactoryService, MailFactoryService>();
 builder.Services.AddScoped<IVerificationTokenService, VerificationTokenService>();
 
+// Policies
 builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerOrAdminHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TagOwnerOrAdminHandler>();
+
+// Metrics 
+builder.Services.AddSingleton<AppMetrics>();
 
 builder.Services.Configure<HostOptions>(option =>
 {
@@ -213,6 +223,49 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        builder.Configuration.GetConnectionString("DefaultConnection")!,
+        name: "postgresql",
+        tags: new[] {"ready"})
+    .AddRedis(
+        builder.Configuration["RedisCacheSettings:ConnectionString"]!,
+        name: "redis",
+        tags: new[] {"ready"})
+    .AddHangfire(
+        options =>
+        {
+            options.MinimumAvailableServers = 1;
+        },
+        name: "hangfire",
+        tags: new[] {"ready"});
+
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddMeter(
+                "Microsoft.AspNetCore.Hosting",
+                "Microsoft.AspNetCore.Routing",
+                "Microsoft.AspNetCore.Diagnostics",
+                "Microsoft.AspNetCore.RateLimiting",
+                "Microsoft.AspNetCore.Authentication",
+                "Microsoft.AspNetCore.Authorization",
+                "PersonalKnowledgeHub")
+            .AddPrometheusExporter();
+    })
+    .WithTracing(tracing =>
+    {
+        tracing
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddSource(AppTracing.ServiceName)
+            .AddConsoleExporter();
+    });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -262,6 +315,20 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseMiddleware<RateLimitMiddleware>();
+
+app.MapHealthChecks("/health");
+
+app.MapHealthChecks("/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+
+app.MapHealthChecks("/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
+
+app.MapPrometheusScrapingEndpoint("/metrics");
 
 app.MapControllers();
 

@@ -6,16 +6,18 @@ EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["PersonalKnowledgeHub.csproj", "./"]
-RUN dotnet restore "PersonalKnowledgeHub.csproj"
+WORKDIR /repo
+
+COPY ["src/PersonalKnowledgeHub.Api/PersonalKnowledgeHub.csproj", "src/PersonalKnowledgeHub.Api/"]
+RUN dotnet restore "src/PersonalKnowledgeHub.Api/PersonalKnowledgeHub.csproj"
+
 COPY . .
-WORKDIR "/src/"
-RUN dotnet build "./PersonalKnowledgeHub.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/repo/src/PersonalKnowledgeHub.Api"
+RUN dotnet build "PersonalKnowledgeHub.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./PersonalKnowledgeHub.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "PersonalKnowledgeHub.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

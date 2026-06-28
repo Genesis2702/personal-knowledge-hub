@@ -6,4 +6,5 @@
     <File Path="README.md" />
   </Folder>
   <Project Path="src/PersonalKnowledgeHub.Api/PersonalKnowledgeHub.csproj" />
+  <Project Path="tests/PersonalKnowledgeHub.UnitTests/PersonalKnowledgeHub.UnitTests.csproj" />
 </Solution>

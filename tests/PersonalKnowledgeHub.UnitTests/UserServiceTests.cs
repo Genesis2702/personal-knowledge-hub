@@ -66,9 +66,9 @@ public class UserServiceTests
         var result = await _userService.GetUsers(pageIndex, pageSize, status, CancellationToken.None);
 
         Assert.NotEmpty(result.Items);
-        Assert.Equal(result.PageCount, (int)Math.Ceiling((double)userCount / pageSize));
-        Assert.Equal(result.PageIndex, pageIndex);
-        Assert.Equal(result.PageSize, pageSize);
+        Assert.Equal((int)Math.Ceiling((double)userCount / pageSize), result.PageCount);
+        Assert.Equal(pageIndex, result.PageIndex);
+        Assert.Equal(pageSize, result.PageSize);
         
         _userRepository.Verify(x => x.GetUsersAsync(pageIndex, pageSize, status, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -90,9 +90,9 @@ public class UserServiceTests
         var result = await _userService.GetUsers(pageIndex, pageSize, status, CancellationToken.None);
         
         Assert.Empty(result.Items);
-        Assert.Equal(result.PageCount, (int)Math.Ceiling((double)userCount / pageSize));
-        Assert.Equal(result.PageIndex, pageIndex);
-        Assert.Equal(result.PageSize, pageSize);
+        Assert.Equal((int)Math.Ceiling((double)userCount / pageSize), result.PageCount);
+        Assert.Equal(pageIndex, result.PageIndex);
+        Assert.Equal(pageSize, result.PageSize);
         
         _userRepository.Verify(x => x.GetUsersAsync(pageIndex, pageSize, status, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -191,7 +191,7 @@ public class UserServiceTests
     }
     
     [Fact]
-    public async Task UpdateUserName_WhenUserNameAlreadyUpdatedByAnotherUser_ThrowsConflictException()
+    public async Task UpdateUserName_WhenUserAlreadyUpdatedByAnotherUser_ThrowsConflictException()
     {
         int userId = 1;
 
@@ -347,14 +347,6 @@ public class UserServiceTests
             Name = "test role"
         };
 
-        UserRole userRole = new UserRole
-        {
-            User = user,
-            Role = role,
-            UserId = userId,
-            RoleId = roleId
-        };
-
         _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _roleRepository.Setup(x => x.GetRoleByIdAsync(roleId, It.IsAny<CancellationToken>()))
@@ -368,7 +360,8 @@ public class UserServiceTests
         
         var result = await _userService.AddRoleToUser(userId, roleId, CancellationToken.None);
         
-        Assert.Contains(user.UserRoles, ur => ur.UserId == userId && ur.RoleId == roleId);
+        Assert.Contains(result.UserRoles, ur => ur.UserId == userId && ur.RoleId == roleId);
+        Assert.Same(user, result);
         
         _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
         _roleRepository.Verify(x => x.GetRoleByIdAsync(roleId, It.IsAny<CancellationToken>()), Times.Once);

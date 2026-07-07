@@ -12,4 +12,6 @@ public interface IRoleRepository
     public Task<bool> IsRoleExistAsync(string name, CancellationToken cancellationToken);
     public Task<Role> AddPermissionToRoleAsync(RolePermission rolePermission, CancellationToken cancellationToken);
     public Task RemovePermissionFromRoleAsync(RolePermission rolePermission, CancellationToken cancellationToken);
+    public Task<RolePermission?> GetRolePermissionAsync(int roleId, int permissionId,
+        CancellationToken cancellationToken);
 }

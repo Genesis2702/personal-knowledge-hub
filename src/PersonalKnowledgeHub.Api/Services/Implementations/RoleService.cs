@@ -116,13 +116,11 @@ public class RoleService : IRoleService
         {
             throw new NotFoundException("Permission not found");
         }
-        RolePermission rolePermission = new RolePermission
+        RolePermission? rolePermission = await _roleRepository.GetRolePermissionAsync(roleId, permissionId, cancellationToken);
+        if (rolePermission == null)
         {
-            Role = role,
-            Permission = permission,
-            RoleId = roleId,
-            PermissionId = permissionId
-        };
+            throw new NotFoundException("Role permission not found");
+        }
         await _roleRepository.RemovePermissionFromRoleAsync(rolePermission, cancellationToken);
         _logger.LogInformation("Permission {PermissionId} removed from role {RoleId} successfully", permission.Id, role.Id);
     }

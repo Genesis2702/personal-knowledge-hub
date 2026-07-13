@@ -930,13 +930,16 @@ public class AuthServiceTests
             NewPassword = newPassword,
             ConfirmationPassword = newPassword
         };
+
+        _verificationTokenService
+            .Setup(x => x.ValidatePasswordResetToken(verificationToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userId);
         
-        _verificationTokenService.Setup(x => x.ValidateVerificationToken(verificationToken, It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        var result = await _authService.VerifyPasswordChange(verificationToken, resetPasswordRequest, CancellationToken.None);
         
-        await _authService.VerifyPasswordChange(verificationToken, resetPasswordRequest, CancellationToken.None);
+        Assert.Equal(userId, result);
         
-        _verificationTokenService.Verify(x => x.ValidateVerificationToken(verificationToken, userId, It.IsAny<CancellationToken>()), Times.Once);
+        _verificationTokenService.Verify(x => x.ValidatePasswordResetToken(verificationToken, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -957,6 +960,6 @@ public class AuthServiceTests
         
         await Assert.ThrowsAsync<UnauthorizedException>(result);       
         
-        _verificationTokenService.Verify(x => x.ValidateVerificationToken(verificationToken, userId, It.IsAny<CancellationToken>()), Times.Never);
+        _verificationTokenService.Verify(x => x.ValidatePasswordResetToken(verificationToken, It.IsAny<CancellationToken>()), Times.Never);
     }
 }

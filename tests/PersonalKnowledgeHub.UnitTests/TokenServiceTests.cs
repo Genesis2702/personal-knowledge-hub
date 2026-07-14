@@ -10,6 +10,7 @@ using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Implementations;
 using PersonalKnowledgeHub.Services.Interfaces;
+using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace PersonalKnowledgeHub.UnitTests;
 
@@ -17,15 +18,25 @@ public class TokenServiceTests
 {
     private readonly Mock<ITokenRepository> _tokenRepository;
     private readonly Mock<IUserRepository> _userRepository;
-    private readonly Mock<IConfiguration> _configuration;
     private readonly ITokenService _tokenService;
 
     public TokenServiceTests()
     {
         _tokenRepository = new Mock<ITokenRepository>();
         _userRepository = new Mock<IUserRepository>();
-        _configuration = new Mock<IConfiguration>();
-        _tokenService = new TokenService(_tokenRepository.Object, _userRepository.Object, _configuration.Object,
+
+        var configurationValues = new Dictionary<string, string?>
+        {
+            ["Jwt:Key"] = "72017c9e26c060901a0fd6acfbdeb938",
+            ["Jwt:Issuer"] = "TestIssuer",
+            ["Jwt:Audience"] = "TestAudience"
+        };
+
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(configurationValues)
+            .Build();
+        
+        _tokenService = new TokenService(_tokenRepository.Object, _userRepository.Object,configuration,
             NullLogger<TokenService>.Instance);
     }
 
@@ -78,9 +89,13 @@ public class TokenServiceTests
         
         JwtSecurityToken token = new JwtSecurityTokenHandler().ReadJwtToken(result);
         
-        Assert.Equal(userId.ToString(), token.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);
-        Assert.Equal(userEmail, token.Claims.First(c => c.Type == ClaimTypes.Email).Value);
-        Assert.Equal(user.Status.ToString(), token.Claims.First(c => c.Type == "status").Value);
+        var userIdClaim = token.Claims.First(c => c.Type == JwtRegisteredClaimNames.NameId);
+        var userEmailClaim = token.Claims.First(c => c.Type == JwtRegisteredClaimNames.Email);
+        var userStatusClaim = token.Claims.First(c => c.Type == "status");
+        
+        Assert.Equal(userId.ToString(), userIdClaim.Value);
+        Assert.Equal(userEmail, userEmailClaim.Value);
+        Assert.Equal(user.Status.ToString(), userStatusClaim.Value);
         
         _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -122,126 +137,132 @@ public class TokenServiceTests
     public async Task ValidateRefreshToken_WhenRefreshTokenExists_ReturnsRefreshToken()
     {
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
         RefreshToken refreshToken = new RefreshToken
         {
             Id = 1,
-            Token = token,
+            Token = expectedToken,
             Revoked = false,
             RevokedAt = null,
             ReplacedByTokenId = null,
             ExpiresAt = DateTime.UtcNow.AddDays(1)
         };
         
-        _tokenRepository.Setup(x => x.GetRefreshTokenAsync(token, It.IsAny<CancellationToken>()))
+        _tokenRepository.Setup(x => x.GetRefreshTokenForUpdateAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(refreshToken);
         
         var result = await _tokenService.ValidateRefreshToken(token, CancellationToken.None);
         
         Assert.Equal(refreshToken, result);
         
-        _tokenRepository.Verify(x => x.GetRefreshTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);
+        _tokenRepository.Verify(x => x.GetRefreshTokenForUpdateAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);
     }
     
     [Fact]
     public async Task ValidateRefreshToken_WhenRefreshTokenDoesNotExist_ThrowsNotFoundException()
     {
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
         
-        _tokenRepository.Setup(x => x.GetRefreshTokenAsync(token, It.IsAny<CancellationToken>()))
+        _tokenRepository.Setup(x => x.GetRefreshTokenForUpdateAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync((RefreshToken?)null);
 
         Func<Task> result = () => _tokenService.ValidateRefreshToken(token, CancellationToken.None);
 
         await Assert.ThrowsAsync<NotFoundException>(result);
         
-        _tokenRepository.Verify(x => x.GetRefreshTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);   
+        _tokenRepository.Verify(x => x.GetRefreshTokenForUpdateAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);   
     }
     
     [Fact]
     public async Task ValidateRefreshToken_WhenRefreshTokenAlreadyRevoked_ThrowsUnauthorizedException()
     {
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
         RefreshToken refreshToken = new RefreshToken
         {
             Id = 1,
-            Token = token,
+            Token = expectedToken,
             Revoked = true,
             RevokedAt = DateTime.UtcNow.AddDays(-1),
             ReplacedByTokenId = null,
             ExpiresAt = DateTime.UtcNow.AddDays(1)
         };
         
-        _tokenRepository.Setup(x => x.GetRefreshTokenAsync(token, It.IsAny<CancellationToken>()))
+        _tokenRepository.Setup(x => x.GetRefreshTokenForUpdateAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(refreshToken);
         
         Func<Task> result = () => _tokenService.ValidateRefreshToken(token, CancellationToken.None);
         
         await Assert.ThrowsAsync<UnauthorizedException>(result);
         
-        _tokenRepository.Verify(x => x.GetRefreshTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);  
+        _tokenRepository.Verify(x => x.GetRefreshTokenForUpdateAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);  
     }
     
     [Fact]
     public async Task ValidateRefreshToken_WhenRefreshTokenExpired_ThrowsUnauthorizedException()
     {
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
         RefreshToken refreshToken = new RefreshToken
         {
             Id = 1,
-            Token = token,
+            Token = expectedToken,
             Revoked = false,
             RevokedAt = null,
             ReplacedByTokenId = null,
             ExpiresAt = DateTime.UtcNow.AddDays(-1)
         };
         
-        _tokenRepository.Setup(x => x.GetRefreshTokenAsync(token, It.IsAny<CancellationToken>()))
+        _tokenRepository.Setup(x => x.GetRefreshTokenForUpdateAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(refreshToken);
         
         Func<Task> result = () => _tokenService.ValidateRefreshToken(token, CancellationToken.None);
         
         await Assert.ThrowsAsync<UnauthorizedException>(result);
         
-        _tokenRepository.Verify(x => x.GetRefreshTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once); 
+        _tokenRepository.Verify(x => x.GetRefreshTokenForUpdateAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once); 
     }
     
     [Fact]
     public async Task GetRefreshToken_WhenRefreshTokenExists_ReturnsRefreshToken()
     {
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
         RefreshToken refreshToken = new RefreshToken
         {
             Id = 1,
-            Token = token
+            Token = expectedToken
         };
         
-        _tokenRepository.Setup(x => x.GetRefreshTokenAsync(token, It.IsAny<CancellationToken>()))
+        _tokenRepository.Setup(x => x.GetRefreshTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(refreshToken);
         
         var result = await _tokenService.GetRefreshToken(token, CancellationToken.None);
         
         Assert.Equal(refreshToken, result);
         
-        _tokenRepository.Verify(x => x.GetRefreshTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);
+        _tokenRepository.Verify(x => x.GetRefreshTokenAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);
     }
     
     [Fact]
     public async Task GetRefreshToken_WhenRefreshTokenDoesNotExist_ThrowsNotFoundException()
     {
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
         
-        _tokenRepository.Setup(x => x.GetRefreshTokenAsync(token, It.IsAny<CancellationToken>()))
+        _tokenRepository.Setup(x => x.GetRefreshTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync((RefreshToken?)null);
         
         Func<Task> result = () => _tokenService.GetRefreshToken(token, CancellationToken.None);
         
         await Assert.ThrowsAsync<NotFoundException>(result);      
         
-        _tokenRepository.Verify(x => x.GetRefreshTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);
+        _tokenRepository.Verify(x => x.GetRefreshTokenAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

@@ -39,7 +39,8 @@ public class ResourceTagServiceTests
         {
             Title = "test",
             ResourceType = ResourceType.Article,
-            UserId = userId
+            UserId = userId,
+            ResourceTags = new List<ResourceTag>()
         };
 
         _resourceTagRepository.Setup(x =>
@@ -50,11 +51,12 @@ public class ResourceTagServiceTests
         _resourceRepository.Setup(x => x.GetResourceByIdAsync(resourceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(resource);
         _resourceTagRepository.Setup(x => x.AddResourceTagAsync(It.Is<ResourceTag>(rt => rt.TagId == tagId && rt.ResourceId == resourceId), It.IsAny<CancellationToken>()))
+            .Callback<ResourceTag, CancellationToken>((rt, _) => resource.ResourceTags.Add(rt))
             .ReturnsAsync((ResourceTag resourceTag, CancellationToken _) => resourceTag);
         
         var result = await _resourceTagService.AddResourceTag(tagId, resourceId, userId, CancellationToken.None);
 
-        Assert.Contains(result.ResourceTags, rt => rt.Tag == tag && rt.Resource == resource);
+        Assert.Contains(result.ResourceTags, rt => rt.TagId == tagId && rt.ResourceId == resourceId);
         
         _resourceTagRepository.Verify(x => x.IsResourceTagExistAsync(tagId, resourceId, It.IsAny<CancellationToken>()), Times.Once);
         _tagRepository.Verify(x => x.GetTagByIdAsync(tagId, It.IsAny<CancellationToken>()), Times.Once);

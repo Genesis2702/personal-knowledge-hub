@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging.Abstractions;
+﻿using System.Security.Cryptography;
+using System.Text;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Implementations;
@@ -32,7 +34,9 @@ public class VerificationTokenServiceTests
         
         var result = await _verificationTokenService.GenerateVerificationToken(userId, CancellationToken.None);
         
-        Assert.Equal(verificationToken!.Token, result);
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(result)));      
+        
+        Assert.Equal(expectedToken, verificationToken!.Token);
         Assert.Equal(userId, verificationToken.UserId);
         
         _verificationTokenRepository.Verify(x => x.AddVerificationTokenAsync(It.IsAny<VerificationToken>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -43,6 +47,7 @@ public class VerificationTokenServiceTests
     {
         int userId = 1;
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));      
 
         VerificationToken verificationToken = new VerificationToken
         {
@@ -53,7 +58,7 @@ public class VerificationTokenServiceTests
             UserId = userId
         };
         
-        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()))
+        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(verificationToken);
         _verificationTokenRepository.Setup(x => x.ValidateVerificationTokenAsync(verificationToken, It.IsAny<CancellationToken>()))
             .Callback<VerificationToken, CancellationToken>((t, _) =>
@@ -67,7 +72,7 @@ public class VerificationTokenServiceTests
         
         Assert.NotNull(verificationToken.VerifiedAt);
         
-        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);
+        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);
         _verificationTokenRepository.Verify(x => x.ValidateVerificationTokenAsync(verificationToken, It.IsAny<CancellationToken>()), Times.Once);       
         
     }
@@ -77,8 +82,9 @@ public class VerificationTokenServiceTests
     {
         int userId = 1;
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));       
         
-        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()))
+        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync((VerificationToken?)null);
 
         Func<Task> result = () =>
@@ -86,7 +92,7 @@ public class VerificationTokenServiceTests
 
         await Assert.ThrowsAsync<NotFoundException>(result);
         
-        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);      
+        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);      
         _verificationTokenRepository.Verify(x => x.ValidateVerificationTokenAsync(It.IsAny<VerificationToken>(), It.IsAny<CancellationToken>()), Times.Never);      
     }
     
@@ -95,6 +101,7 @@ public class VerificationTokenServiceTests
     {
         int userId = 1;
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));      
 
         VerificationToken verificationToken = new VerificationToken
         {
@@ -105,7 +112,7 @@ public class VerificationTokenServiceTests
             UserId = userId
         };
         
-        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()))
+        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(verificationToken);
         
         Func<Task> result = () =>
@@ -113,7 +120,7 @@ public class VerificationTokenServiceTests
         
         await Assert.ThrowsAsync<UnauthorizedException>(result);
         
-        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);      
+        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);      
         _verificationTokenRepository.Verify(x => x.ValidateVerificationTokenAsync(It.IsAny<VerificationToken>(), It.IsAny<CancellationToken>()), Times.Never);     
     }
     
@@ -122,6 +129,7 @@ public class VerificationTokenServiceTests
     {
         int userId = 1;
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));     
 
         VerificationToken verificationToken = new VerificationToken
         {
@@ -132,7 +140,7 @@ public class VerificationTokenServiceTests
             UserId = 20
         };
         
-        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()))
+        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(verificationToken);
         
         Func<Task> result = () =>
@@ -140,7 +148,7 @@ public class VerificationTokenServiceTests
         
         await Assert.ThrowsAsync<UnauthorizedException>(result);
         
-        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);      
+        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);      
         _verificationTokenRepository.Verify(x => x.ValidateVerificationTokenAsync(It.IsAny<VerificationToken>(), It.IsAny<CancellationToken>()), Times.Never);    
     }
     
@@ -149,6 +157,7 @@ public class VerificationTokenServiceTests
     {
         int userId = 1;
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
         VerificationToken verificationToken = new VerificationToken
         {
@@ -159,7 +168,7 @@ public class VerificationTokenServiceTests
             UserId = userId
         };
         
-        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()))
+        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(verificationToken);
         
         Func<Task> result = () =>
@@ -167,7 +176,7 @@ public class VerificationTokenServiceTests
         
         await Assert.ThrowsAsync<ConflictException>(result);
         
-        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);      
+        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);      
         _verificationTokenRepository.Verify(x => x.ValidateVerificationTokenAsync(It.IsAny<VerificationToken>(), It.IsAny<CancellationToken>()), Times.Never);   
     }
 
@@ -176,6 +185,7 @@ public class VerificationTokenServiceTests
     {
         int userId = 1;
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
         VerificationToken passwordResetToken = new VerificationToken
         {
@@ -186,7 +196,7 @@ public class VerificationTokenServiceTests
             UserId = userId,
         };
         
-        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()))
+        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(passwordResetToken);
         _verificationTokenRepository.Setup(x => x.ValidateVerificationTokenAsync(passwordResetToken, It.IsAny<CancellationToken>()))
             .Callback<VerificationToken, CancellationToken>((t, _) =>
@@ -200,7 +210,7 @@ public class VerificationTokenServiceTests
         
         Assert.Equal(userId, result);
         
-        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);
+        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);
         _verificationTokenRepository.Verify(x => x.ValidateVerificationTokenAsync(passwordResetToken, It.IsAny<CancellationToken>()), Times.Once);      
     }
 
@@ -208,15 +218,16 @@ public class VerificationTokenServiceTests
     public async Task ValidatePasswordResetToken_WhenTokenDoesNotExist_ThrowsNotFoundException()
     {
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
         
-        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()))
+        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync((VerificationToken?)null);
         
         Func<Task> result = () => _verificationTokenService.ValidatePasswordResetToken(token, CancellationToken.None);
         
         await Assert.ThrowsAsync<NotFoundException>(result);
         
-        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);      
+        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);      
         _verificationTokenRepository.Verify(x => x.ValidateVerificationTokenAsync(It.IsAny<VerificationToken>(), It.IsAny<CancellationToken>()), Times.Never);     
     }
     
@@ -225,6 +236,7 @@ public class VerificationTokenServiceTests
     {
         int userId = 1;
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
         VerificationToken passwordResetToken = new VerificationToken
         {
@@ -235,14 +247,14 @@ public class VerificationTokenServiceTests
             UserId = userId,
         };
         
-        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()))
+        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(passwordResetToken);
         
         Func<Task> result = () => _verificationTokenService.ValidatePasswordResetToken(token, CancellationToken.None);
         
         await Assert.ThrowsAsync<UnauthorizedException>(result);
         
-        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);      
+        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);      
         _verificationTokenRepository.Verify(x => x.ValidateVerificationTokenAsync(It.IsAny<VerificationToken>(), It.IsAny<CancellationToken>()), Times.Never);    
     }
     
@@ -251,6 +263,7 @@ public class VerificationTokenServiceTests
     {
         int userId = 1;
         string token = "test token";
+        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
         VerificationToken passwordResetToken = new VerificationToken
         {
@@ -261,14 +274,14 @@ public class VerificationTokenServiceTests
             UserId = userId,
         };
         
-        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()))
+        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(passwordResetToken);
         
         Func<Task> result = () => _verificationTokenService.ValidatePasswordResetToken(token, CancellationToken.None);
         
         await Assert.ThrowsAsync<ConflictException>(result);
         
-        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);      
+        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);      
         _verificationTokenRepository.Verify(x => x.ValidateVerificationTokenAsync(It.IsAny<VerificationToken>(), It.IsAny<CancellationToken>()), Times.Never);  
     }
 

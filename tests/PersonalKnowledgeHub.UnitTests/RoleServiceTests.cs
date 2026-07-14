@@ -111,7 +111,7 @@ public class RoleServiceTests
     public async Task AddRole_WhenRoleDoesNotExist_ReturnsAddedRole()
     {
         int roleId = 1;
-        string roleName = "role";
+        string roleName = "ROLE";
 
         _roleRepository.Setup(x => x.IsRoleExistAsync(roleName, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);

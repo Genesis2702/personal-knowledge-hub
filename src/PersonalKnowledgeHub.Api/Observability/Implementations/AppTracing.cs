@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace PersonalKnowledgeHub.Observability;
+namespace PersonalKnowledgeHub.Observability.Implementations;
 
 public static class AppTracing
 {

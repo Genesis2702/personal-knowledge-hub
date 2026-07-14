@@ -5,7 +5,7 @@ using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
-using PersonalKnowledgeHub.Observability;
+using PersonalKnowledgeHub.Observability.Interfaces;
 using PersonalKnowledgeHub.Services.Implementations;
 using Hangfire.Common;
 using Hangfire.States;
@@ -23,7 +23,7 @@ public class AuthServiceTests
     private readonly Mock<IVerificationTokenService> _verificationTokenService;
     private readonly Mock<IBackgroundJobClient> _backgroundJobClient;
     private readonly Mock<IDbContextTransaction> _transaction = new();
-    private readonly Mock<AppMetrics> _metrics;
+    private readonly Mock<IAppMetrics> _metrics;
     private readonly IAuthService _authService;
     
     public AuthServiceTests()
@@ -34,7 +34,7 @@ public class AuthServiceTests
         _mailFactoryService = new Mock<IMailFactoryService>();
         _verificationTokenService = new Mock<IVerificationTokenService>();
         _backgroundJobClient = new Mock<IBackgroundJobClient>();
-        _metrics = new Mock<AppMetrics>();
+        _metrics = new Mock<IAppMetrics>();
         _authService = new AuthService(_userRepository.Object, _tokenService.Object, _unitOfWorkRepository.Object,
             _mailFactoryService.Object,
             _verificationTokenService.Object, _backgroundJobClient.Object, NullLogger<AuthService>.Instance,

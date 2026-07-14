@@ -24,7 +24,8 @@ using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using PersonalKnowledgeHub.Observability;
+using PersonalKnowledgeHub.Observability.Implementations;
+using PersonalKnowledgeHub.Observability.Interfaces;
 using Serilog;
 using Serilog.Events;
 using Serilog.Context;
@@ -66,7 +67,7 @@ builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerOrAdminHandler>()
 builder.Services.AddScoped<IAuthorizationHandler, TagOwnerOrAdminHandler>();
 
 // Metrics 
-builder.Services.AddSingleton<AppMetrics>();
+builder.Services.AddSingleton<IAppMetrics, AppMetrics>();
 
 builder.Services.Configure<HostOptions>(option =>
 {

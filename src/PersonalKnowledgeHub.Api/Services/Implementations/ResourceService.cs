@@ -8,7 +8,7 @@ using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
 using PersonalKnowledgeHub.Mapper;
-using PersonalKnowledgeHub.Observability;
+using PersonalKnowledgeHub.Observability.Implementations;
 
 namespace PersonalKnowledgeHub.Services.Implementations
 {

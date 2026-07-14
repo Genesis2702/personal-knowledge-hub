@@ -7,7 +7,8 @@ using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
 using PersonalKnowledgeHub.Mapper;
 using Hangfire;
-using PersonalKnowledgeHub.Observability;
+using PersonalKnowledgeHub.Observability.Implementations;
+using PersonalKnowledgeHub.Observability.Interfaces;
 
 namespace PersonalKnowledgeHub.Services.Implementations
 {
@@ -20,12 +21,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
         private readonly IVerificationTokenService _verificationTokenService;
         private readonly IBackgroundJobClient _backgroundJobClient;
         private readonly ILogger<AuthService> _logger;
-        private readonly AppMetrics _metrics;
+        private readonly IAppMetrics _metrics;
 
         public AuthService(IUserRepository userRepository, ITokenService tokenService, 
             IUnitOfWorkRepository unitOfWorkRepository, IMailFactoryService mailFactoryService, 
             IVerificationTokenService verificationTokenService, IBackgroundJobClient backgroundJobClient,
-            ILogger<AuthService> logger, AppMetrics metrics)
+            ILogger<AuthService> logger, IAppMetrics metrics)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;

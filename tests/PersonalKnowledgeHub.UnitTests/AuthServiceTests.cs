@@ -76,7 +76,7 @@ public class AuthServiceTests
                 addedUser.Id = userId;
                 return addedUser;
             });
-        _tokenService.Setup(x => x.GenerateRefreshToken(userId, Guid.NewGuid(), It.IsAny<CancellationToken>()))
+        _tokenService.Setup(x => x.GenerateRefreshToken(userId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(refreshToken);
         _tokenService.Setup(x => x.GenerateAccessToken(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(accessToken);
@@ -94,7 +94,7 @@ public class AuthServiceTests
         _userRepository.Verify(x => x.IsEmailExistAsync(registerRequest.Email, It.IsAny<CancellationToken>()), Times.Once);
         _userRepository.Verify(x => x.AddUserAsync(It.Is<User>(u => 
             u.UserName == registerRequest.UserName && u.Email == registerRequest.Email), It.IsAny<CancellationToken>()), Times.Once);
-        _tokenService.Verify(x => x.GenerateRefreshToken(userId, Guid.NewGuid(), It.IsAny<CancellationToken>()), Times.Once);
+        _tokenService.Verify(x => x.GenerateRefreshToken(userId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.GenerateAccessToken(userId, It.IsAny<CancellationToken>()), Times.Once);
         _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Once);
         _mailFactoryService.Verify(x => x.CreateVerificationMail(It.Is<User>(u =>
@@ -195,7 +195,7 @@ public class AuthServiceTests
             Id = userId,
             UserName = userName,
             Email = userEmail,
-            PasswordHash = userPassword,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(userPassword),
             FailedLoginAttempts = 0,
             LockedUntil = null
         };
@@ -215,7 +215,7 @@ public class AuthServiceTests
                 user.LockedUntil = null;
             })
             .ReturnsAsync(1);
-        _tokenService.Setup(x => x.GenerateRefreshToken(userId, Guid.NewGuid(), It.IsAny<CancellationToken>()))
+        _tokenService.Setup(x => x.GenerateRefreshToken(userId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(refreshToken);
         _tokenService.Setup(x => x.GenerateAccessToken(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(accessToken);
@@ -227,12 +227,12 @@ public class AuthServiceTests
         
         _userRepository.Verify(x => x.GetUserByEmailAsync(loginRequest.Email, It.IsAny<CancellationToken>()), Times.Once);
         _userRepository.Verify(x => x.ResetFailedLoginAttemptsAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-        _tokenService.Verify(x => x.GenerateRefreshToken(userId, Guid.NewGuid(), It.IsAny<CancellationToken>()), Times.Once);
+        _tokenService.Verify(x => x.GenerateRefreshToken(userId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.GenerateAccessToken(userId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task AuthenticateUser_WhenUserDoesNotExist_ThrowsNotFoundException()
+    public async Task AuthenticateUser_WhenUserDoesNotExist_ThrowsUnauthorizedException()
     {
         int userId = 1;
         string userEmail = "email@gmail.com";
@@ -249,7 +249,7 @@ public class AuthServiceTests
         
         Func<Task> result = () => _authService.AuthenticateUser(loginRequest, CancellationToken.None);
         
-        await Assert.ThrowsAsync<NotFoundException>(result);
+        await Assert.ThrowsAsync<UnauthorizedException>(result);
         
         _userRepository.Verify(x => x.GetUserByEmailAsync(loginRequest.Email, It.IsAny<CancellationToken>()), Times.Once);
         _userRepository.Verify(x => x.ResetFailedLoginAttemptsAsync(userId, It.IsAny<CancellationToken>()), Times.Never);
@@ -270,7 +270,7 @@ public class AuthServiceTests
             Id = userId,
             UserName = userName,
             Email = userEmail,
-            PasswordHash = userPassword,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(userPassword),
             FailedLoginAttempts = 0,
             LockedUntil = DateTime.UtcNow.AddMinutes(2)
         };
@@ -310,7 +310,7 @@ public class AuthServiceTests
             Id = userId,
             UserName = userName,
             Email = userEmail,
-            PasswordHash = userCorrectPassword,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(userCorrectPassword),
             FailedLoginAttempts = 0,
             LockedUntil = null
         };
@@ -324,7 +324,7 @@ public class AuthServiceTests
         _userRepository.Setup(x => x.GetUserByEmailAsync(loginRequest.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _userRepository.Setup(x => x.UpdateFailedLoginAttemptsAsync(userId, failedLoginLimit, lockedMinutes, It.IsAny<CancellationToken>()))
-            .Callback<int, int, DateTime?, CancellationToken>((id, limit, lockedUntil, _) =>
+            .Callback<int, int, int, CancellationToken>((id, limit, lockedUntil, _) =>
             {
                 user.FailedLoginAttempts++;
             })
@@ -478,7 +478,7 @@ public class AuthServiceTests
         _tokenService.Setup(x => x.GetRefreshToken(logoutRequest.RefreshToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(refreshToken);
         _tokenService.Setup(x => x.RevokeRefreshToken(logoutRequest.RefreshToken, null, It.IsAny<CancellationToken>()))
-            .Callback<string, DateTime?, CancellationToken>((token, _, __) =>
+            .Callback<string, int?, CancellationToken>((token, _, __) =>
             {
                 refreshToken.Revoked = true;
             })
@@ -574,7 +574,7 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task ForgotPassword_WhenUserDoesNotExist_ThrowsNotFoundException()
+    public async Task ForgotPassword_WhenUserDoesNotExist_ThrowsUnauthorizedException()
     {
         int userId = 1;
         string userName = "test user";
@@ -590,7 +590,7 @@ public class AuthServiceTests
         
         Func<Task> result = () => _authService.ForgotPassword(forgotPasswordRequest, CancellationToken.None);
         
-        await Assert.ThrowsAsync<NotFoundException>(result);       
+        await Assert.ThrowsAsync<UnauthorizedException>(result);       
         
         _userRepository.Verify(x => x.GetUserByEmailAsync(forgotPasswordRequest.Email, It.IsAny<CancellationToken>()), Times.Once);
         _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Never);
@@ -637,7 +637,7 @@ public class AuthServiceTests
 
         _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _userRepository.Setup(x => x.ResetPasswordAsync(userId, newPassword, It.IsAny<CancellationToken>()))
+        _userRepository.Setup(x => x.ResetPasswordAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Callback<int, string, CancellationToken>((id, password, _) =>
                 {
                     user.PasswordHash = password;
@@ -650,10 +650,10 @@ public class AuthServiceTests
         
         await _authService.ResetPassword(resetPasswordRequest, userId, CancellationToken.None);
         
-        Assert.Equal(newPassword, user.PasswordHash);
+        Assert.True(BCrypt.Net.BCrypt.Verify(newPassword, user.PasswordHash));      
         
         _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-        _userRepository.Verify(x => x.ResetPasswordAsync(userId, newPassword, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepository.Verify(x => x.ResetPasswordAsync(userId, It.Is<string>(hash => BCrypt.Net.BCrypt.Verify(newPassword, user.PasswordHash)), It.IsAny<CancellationToken>()), Times.Once);
         _mailFactoryService.Verify(x => x.CreatePasswordChangedMail(It.Is<User>(u =>
             u.Email == userEmail &&
             u.UserName == userName)), Times.Once);
@@ -688,7 +688,7 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task ResetPassword_WhenPasswordDoesNotMatch_ThrowsUnauthorizedException()
+    public async Task ResetPassword_WhenPasswordDoesNotMatch_ThrowsConflictException()
     {
         int userId = 1;
         string userName = "test user";
@@ -716,7 +716,7 @@ public class AuthServiceTests
         
         Func<Task> result = () => _authService.ResetPassword(resetPasswordRequest, userId, CancellationToken.None);
         
-        await Assert.ThrowsAsync<UnauthorizedException>(result);       
+        await Assert.ThrowsAsync<ConflictException>(result);       
         
         _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
         _userRepository.Verify(x => x.ResetPasswordAsync(userId, newPassword, It.IsAny<CancellationToken>()), Times.Never);
@@ -733,6 +733,7 @@ public class AuthServiceTests
         string userEmail = "test email";
         string userPassword = "test password";
         string newPassword = "new password";
+        string capturedPassword = null;
 
         User user = new User
         {
@@ -750,10 +751,11 @@ public class AuthServiceTests
         
         _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _userRepository.Setup(x => x.ResetPasswordAsync(userId, newPassword, It.IsAny<CancellationToken>()))
+        _userRepository.Setup(x => x.ResetPasswordAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Callback<int, string, CancellationToken>((id, password, _) =>
                 {
                     user.PasswordHash = password;
+                    capturedPassword = password;
                 })
             .ReturnsAsync(0);
         
@@ -762,7 +764,7 @@ public class AuthServiceTests
         await Assert.ThrowsAsync<ConflictException>(result);       
         
         _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-        _userRepository.Verify(x => x.ResetPasswordAsync(userId, newPassword, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepository.Verify(x => x.ResetPasswordAsync(userId, It.Is<string>(hash => BCrypt.Net.BCrypt.Verify(newPassword, capturedPassword)), It.IsAny<CancellationToken>()), Times.Once);
         _mailFactoryService.Verify(x => x.CreatePasswordChangedMail(It.Is<User>(u =>
             u.Email == userEmail &&
             u.UserName == userName)), Times.Never);       
@@ -943,7 +945,7 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task VerifyPasswordChange_WhenPasswordDoesNotMatch_ThrowsUnauthorizedException()
+    public async Task VerifyPasswordChange_WhenPasswordDoesNotMatch_ThrowsConflictException()
     {
         int userId = 1;
         string verificationToken = "test verification token";
@@ -958,7 +960,7 @@ public class AuthServiceTests
         
         Func<Task> result = () => _authService.VerifyPasswordChange(verificationToken, resetPasswordRequest, CancellationToken.None);
         
-        await Assert.ThrowsAsync<UnauthorizedException>(result);       
+        await Assert.ThrowsAsync<ConflictException>(result);       
         
         _verificationTokenService.Verify(x => x.ValidatePasswordResetToken(verificationToken, It.IsAny<CancellationToken>()), Times.Never);
     }

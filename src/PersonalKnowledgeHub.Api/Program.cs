@@ -336,3 +336,5 @@ app.MapControllers();
 app.RegisterRecurringJobs();
 
 app.Run();
+
+public partial class Program { }

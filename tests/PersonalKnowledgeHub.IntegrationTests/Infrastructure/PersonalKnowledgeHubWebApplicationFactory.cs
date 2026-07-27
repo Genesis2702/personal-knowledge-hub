@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PersonalKnowledgeHub.Data;
@@ -27,6 +28,18 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
             
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(_connectionString));
+        });
+
+        builder.ConfigureAppConfiguration((_, configuration) =>
+        {
+            configuration.AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["Jwt:Key"] = "72017c9e26c060901a0fd6acfbdeb938",
+                    ["Jwt:Issuer"] = "TestIssuer",
+                    ["Jwt:Audience"] = "TestAudience",
+                    ["ConnectionStrings:DefaultConnection"] =  _connectionString
+                });
         });
     }
 }

@@ -13,7 +13,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
 
     public IntegrationFixture()
     {
-        _postgreSqlContainer = new PostgreSqlBuilder("postgres:15.1")
+        _postgreSqlContainer = new PostgreSqlBuilder("postgres:16")
             .WithDatabase("personal_knowledge_hub_test")
             .WithUsername("postgres")
             .WithPassword("postgres")
@@ -24,8 +24,9 @@ public sealed class IntegrationFixture : IAsyncLifetime
     {
         await _postgreSqlContainer.StartAsync();
         Factory = new PersonalKnowledgeHubWebApplicationFactory(_postgreSqlContainer.GetConnectionString());
-        Client = Factory.CreateClient();
         await ApplyMigrationAsync();
+        await ResetDatabaseAsync();
+        Client = Factory.CreateClient();
     }
 
     private async Task ApplyMigrationAsync()
@@ -33,6 +34,13 @@ public sealed class IntegrationFixture : IAsyncLifetime
         await using var scope = Factory.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await dbContext.Database.MigrateAsync();
+    }
+
+    private async Task ResetDatabaseAsync()
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await dbContext.Database.EnsureDeletedAsync();
     }
 
     public async Task DisposeAsync()

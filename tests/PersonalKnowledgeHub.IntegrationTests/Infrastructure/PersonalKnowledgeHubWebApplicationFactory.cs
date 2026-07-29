@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -28,6 +29,9 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
             
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(_connectionString));
+
+            services.RemoveAll<IDistributedCache>();
+            services.AddDistributedMemoryCache();
         });
 
         builder.ConfigureAppConfiguration((_, configuration) =>

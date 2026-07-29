@@ -1,13 +1,18 @@
 ﻿using Testcontainers.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using PersonalKnowledgeHub.Data;
+using Respawn;
+using Respawn.Graph;
 
 namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;
 
 public sealed class IntegrationFixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgreSqlContainer;
+    private NpgsqlConnection _connection = null!;
+    private Respawner _respawner = null!;
     public HttpClient Client { get; private set; } = null!;
     public PersonalKnowledgeHubWebApplicationFactory Factory { get; private set; } = null!;
 
@@ -25,8 +30,30 @@ public sealed class IntegrationFixture : IAsyncLifetime
         await _postgreSqlContainer.StartAsync();
         Factory = new PersonalKnowledgeHubWebApplicationFactory(_postgreSqlContainer.GetConnectionString());
         await ApplyMigrationAsync();
-        await ResetDatabaseAsync();
+        await InitializeRespawnerAsync();
         Client = Factory.CreateClient();
+    }
+
+    private async Task InitializeRespawnerAsync()
+    {
+        _connection = new NpgsqlConnection(_postgreSqlContainer.GetConnectionString());
+        await _connection.OpenAsync();
+        _respawner = await Respawner.CreateAsync(
+            _connection,
+            new RespawnerOptions
+            {
+                DbAdapter = DbAdapter.Postgres,
+                SchemasToInclude = ["public"],
+                TablesToIgnore =
+                [
+                    new Table("__EFMigrationsHistory")
+                ]
+            });
+    }
+
+    public Task ResetDatabaseAsync()
+    {
+        return _respawner.ResetAsync(_connection);
     }
 
     private async Task ApplyMigrationAsync()
@@ -36,16 +63,10 @@ public sealed class IntegrationFixture : IAsyncLifetime
         await dbContext.Database.MigrateAsync();
     }
 
-    private async Task ResetDatabaseAsync()
-    {
-        await using var scope = Factory.Services.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await dbContext.Database.EnsureDeletedAsync();
-    }
-
     public async Task DisposeAsync()
     {
         Client.Dispose();
+        await _connection.DisposeAsync();
         await Factory.DisposeAsync();
         await _postgreSqlContainer.DisposeAsync();
     }

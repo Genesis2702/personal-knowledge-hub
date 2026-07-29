@@ -207,7 +207,11 @@ builder.Services.AddHangfire(configuration =>
             });
 });
 
-builder.Services.AddHangfireServer();
+var enableHangfireServer = builder.Configuration.GetValue<bool?>("Features:EnableHangfireServer") ?? true;
+if (enableHangfireServer)
+{
+    builder.Services.AddHangfireServer();
+}
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -228,18 +232,21 @@ builder.Services.AddHealthChecks()
     .AddNpgSql(
         builder.Configuration.GetConnectionString("DefaultConnection")!,
         name: "postgresql",
-        tags: new[] {"ready"})
-    .AddRedis(
-        builder.Configuration["RedisCacheSettings:ConnectionString"]!,
-        name: "redis",
-        tags: new[] {"ready"})
-    .AddHangfire(
-        options =>
-        {
-            options.MinimumAvailableServers = 1;
-        },
-        name: "hangfire",
-        tags: new[] {"ready"});
+        tags: new[] { "ready" });
+
+var enableExternalHealthChecks = builder.Configuration.GetValue<bool?>("Features:EnableExternalHealthChecks") ?? true;
+if (enableExternalHealthChecks)
+{
+    builder.Services.AddHealthChecks()
+        .AddRedis(
+            builder.Configuration["RedisCacheSettings:ConnectionString"]!,
+            name: "redis",
+            tags: new[] { "ready" })
+        .AddHangfire(
+            options => { options.MinimumAvailableServers = 1; },
+            name: "hangfire",
+            tags: new[] { "ready" });
+}
 
 builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics =>
@@ -333,7 +340,11 @@ app.MapPrometheusScrapingEndpoint("/metrics");
 
 app.MapControllers();
 
-app.RegisterRecurringJobs();
+var enableRecurringJobs = builder.Configuration.GetValue<bool?>("Features:EnableRecurringJobs") ?? true;
+if (enableRecurringJobs)
+{
+    app.RegisterRecurringJobs();
+}
 
 app.Run();
 

@@ -42,7 +42,10 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
                     ["Jwt:Key"] = "72017c9e26c060901a0fd6acfbdeb938",
                     ["Jwt:Issuer"] = "TestIssuer",
                     ["Jwt:Audience"] = "TestAudience",
-                    ["ConnectionStrings:DefaultConnection"] =  _connectionString
+                    ["ConnectionStrings:DefaultConnection"] =  _connectionString,
+                    ["Features:EnableHangfireServer"] = "false",
+                    ["Features:EnableRecurringJobs"] = "false",
+                    ["Features:EnableExternalHealthChecks"] = "false"
                 });
         });
     }

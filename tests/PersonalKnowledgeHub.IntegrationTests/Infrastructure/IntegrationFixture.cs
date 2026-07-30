@@ -28,7 +28,13 @@ public sealed class IntegrationFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _postgreSqlContainer.StartAsync();
-        Factory = new PersonalKnowledgeHubWebApplicationFactory(_postgreSqlContainer.GetConnectionString());
+        Factory = new PersonalKnowledgeHubWebApplicationFactory(_postgreSqlContainer.GetConnectionString(),
+            new IntegrationFactoryOptions
+            {
+                EnableHangfireServer = false,
+                EnableRecurringJobs = false,
+                EnableExternalHealthChecks = false
+            });
         await ApplyMigrationAsync();
         await InitializeRespawnerAsync();
         Client = Factory.CreateClient();

@@ -12,10 +12,12 @@ namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;
 public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _connectionString;
+    private readonly IntegrationFactoryOptions _options;
 
-    public PersonalKnowledgeHubWebApplicationFactory(string connectionString)
+    public PersonalKnowledgeHubWebApplicationFactory(string connectionString, IntegrationFactoryOptions options)
     {
         _connectionString = connectionString;
+        _options = options;
     }
     
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -46,9 +48,9 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
                     ["Jwt:Issuer"] = "TestIssuer",
                     ["Jwt:Audience"] = "TestAudience",
                     ["ConnectionStrings:DefaultConnection"] =  _connectionString,
-                    ["Features:EnableHangfireServer"] = "false",
-                    ["Features:EnableRecurringJobs"] = "false",
-                    ["Features:EnableExternalHealthChecks"] = "false"
+                    ["Features:EnableHangfireServer"] = _options.EnableHangfireServer.ToString(),
+                    ["Features:EnableRecurringJobs"] = _options.EnableRecurringJobs.ToString(),
+                    ["Features:EnableExternalHealthChecks"] = _options.EnableExternalHealthChecks.ToString()
                 });
         });
     }

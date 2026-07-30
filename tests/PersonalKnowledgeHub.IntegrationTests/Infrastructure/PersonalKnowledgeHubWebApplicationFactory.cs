@@ -31,7 +31,10 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
                 options.UseNpgsql(_connectionString));
 
             services.RemoveAll<IDistributedCache>();
-            services.AddDistributedMemoryCache();
+            services.AddSingleton<MemoryDistributedCache>();
+            services.AddSingleton<ResettableCache>();
+            services.AddSingleton<IDistributedCache>(provider => provider.GetRequiredService<ResettableCache>());
+            services.AddSingleton<IResettableCache>(provider => provider.GetRequiredService<ResettableCache>());
         });
 
         builder.ConfigureAppConfiguration((_, configuration) =>

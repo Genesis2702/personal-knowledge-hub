@@ -51,9 +51,11 @@ public sealed class IntegrationFixture : IAsyncLifetime
             });
     }
 
-    public Task ResetDatabaseAsync()
+    public async Task ResetStateAsync()
     {
-        return _respawner.ResetAsync(_connection);
+        await _respawner.ResetAsync(_connection);
+        var cache = Factory.Services.GetRequiredService<IResettableCache>();
+        await cache.ResetAsync();
     }
 
     private async Task ApplyMigrationAsync()

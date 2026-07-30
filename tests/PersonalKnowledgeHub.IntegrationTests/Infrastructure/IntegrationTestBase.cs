@@ -11,7 +11,7 @@ public class IntegrationTestBase : IAsyncLifetime
     
     public Task InitializeAsync()
     {
-        return Fixture.ResetDatabaseAsync();
+        return Fixture.ResetStateAsync();
     }
 
     public Task DisposeAsync()

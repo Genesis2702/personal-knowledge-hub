@@ -33,6 +33,8 @@ public sealed class IntegrationFixture : IAsyncLifetime
             {
                 EnableHangfireServer = false,
                 EnableRecurringJobs = false,
+                EnableHangfireWrapper = true,
+                EnableRedisWrapper = true,
                 EnableExternalHealthChecks = false
             });
         await ApplyMigrationAsync();

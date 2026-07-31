@@ -33,15 +33,24 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(_connectionString));
 
-            services.RemoveAll<IDistributedCache>();
-            services.AddSingleton<MemoryDistributedCache>();
-            services.AddSingleton<ResettableCache>();
-            services.AddSingleton<IDistributedCache>(provider => provider.GetRequiredService<ResettableCache>());
-            services.AddSingleton<IResettableCache>(provider => provider.GetRequiredService<ResettableCache>());
+            if (_options.EnableRedisWrapper)
+            {
+                services.RemoveAll<IDistributedCache>();
+                services.AddSingleton<MemoryDistributedCache>();
+                services.AddSingleton<ResettableCache>();
+                services.AddSingleton<IDistributedCache>(provider => provider.GetRequiredService<ResettableCache>());
+                services.AddSingleton<IResettableCache>(provider => provider.GetRequiredService<ResettableCache>());
+            }
 
-            services.AddSingleton<RecordingBackgroundJobClient>();
-            services.AddSingleton<IBackgroundJobClient>(provider => provider.GetRequiredService<RecordingBackgroundJobClient>());
-            services.AddSingleton<IResettableBackgroundJobClient>(provider => provider.GetRequiredService<RecordingBackgroundJobClient>());
+            if (_options.EnableHangfireWrapper)
+            {
+                services.RemoveAll<IBackgroundJobClient>();
+                services.AddSingleton<RecordingBackgroundJobClient>();
+                services.AddSingleton<IBackgroundJobClient>(provider =>
+                    provider.GetRequiredService<RecordingBackgroundJobClient>());
+                services.AddSingleton<IResettableBackgroundJobClient>(provider =>
+                    provider.GetRequiredService<RecordingBackgroundJobClient>());
+            }
         });
 
         builder.ConfigureAppConfiguration((_, configuration) =>

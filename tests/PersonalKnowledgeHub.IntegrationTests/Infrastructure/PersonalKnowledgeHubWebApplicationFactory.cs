@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Hangfire;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
@@ -37,6 +38,10 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
             services.AddSingleton<ResettableCache>();
             services.AddSingleton<IDistributedCache>(provider => provider.GetRequiredService<ResettableCache>());
             services.AddSingleton<IResettableCache>(provider => provider.GetRequiredService<ResettableCache>());
+
+            services.AddSingleton<RecordingBackgroundJobClient>();
+            services.AddSingleton<IBackgroundJobClient>(provider => provider.GetRequiredService<RecordingBackgroundJobClient>());
+            services.AddSingleton<IResettableBackgroundJobClient>(provider => provider.GetRequiredService<RecordingBackgroundJobClient>());
         });
 
         builder.ConfigureAppConfiguration((_, configuration) =>

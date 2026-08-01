@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Sockets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -321,6 +322,15 @@ app.UseSerilogRequestLogging(options =>
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+if (app.Environment.IsEnvironment("IntegrationTesting"))
+{
+    app.Use(async (context, next) =>
+    {
+        context.Connection.RemoteIpAddress ??= IPAddress.Loopback;
+        await next();
+    });
+}
 
 app.UseMiddleware<RateLimitMiddleware>();
 

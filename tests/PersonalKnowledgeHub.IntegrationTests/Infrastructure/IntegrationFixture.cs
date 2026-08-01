@@ -11,10 +11,11 @@ namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;
 public sealed class IntegrationFixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgreSqlContainer;
-    private NpgsqlConnection _connection = null!;
-    private Respawner _respawner = null!;
-    public HttpClient Client { get; private set; } = null!;
-    public PersonalKnowledgeHubWebApplicationFactory Factory { get; private set; } = null!;
+    private NpgsqlConnection? _connection;
+    private Respawner? _respawner;
+    private bool _disposed;
+    public HttpClient? Client { get; private set; }
+    public PersonalKnowledgeHubWebApplicationFactory? Factory { get; private set; }
 
     public IntegrationFixture()
     {
@@ -27,19 +28,27 @@ public sealed class IntegrationFixture : IAsyncLifetime
     
     public async Task InitializeAsync()
     {
-        await _postgreSqlContainer.StartAsync();
-        Factory = new PersonalKnowledgeHubWebApplicationFactory(_postgreSqlContainer.GetConnectionString(),
-            new IntegrationFactoryOptions
-            {
-                EnableHangfireServer = false,
-                EnableRecurringJobs = false,
-                EnableHangfireWrapper = true,
-                EnableRedisWrapper = true,
-                EnableExternalHealthChecks = false
-            });
-        await ApplyMigrationAsync();
-        await InitializeRespawnerAsync();
-        Client = Factory.CreateClient();
+        try
+        {
+            await _postgreSqlContainer.StartAsync();
+            Factory = new PersonalKnowledgeHubWebApplicationFactory(_postgreSqlContainer.GetConnectionString(),
+                new IntegrationFactoryOptions
+                {
+                    EnableHangfireServer = false,
+                    EnableRecurringJobs = false,
+                    EnableHangfireWrapper = true,
+                    EnableRedisWrapper = true,
+                    EnableExternalHealthChecks = false
+                });
+            await ApplyMigrationAsync();
+            await InitializeRespawnerAsync();
+            Client = Factory.CreateClient();
+        }
+        catch
+        {
+            await DisposeAsync();
+            throw;
+        }
     }
 
     private async Task InitializeRespawnerAsync()
@@ -61,23 +70,64 @@ public sealed class IntegrationFixture : IAsyncLifetime
 
     public async Task ResetStateAsync()
     {
-        await _respawner.ResetAsync(_connection);
-        await Factory.Services.GetRequiredService<IResettableCache>().ResetAsync();
+        await _respawner!.ResetAsync(_connection!);
+        await Factory!.Services.GetRequiredService<IResettableCache>().ResetAsync();
         Factory.Services.GetRequiredService<IResettableBackgroundJobClient>().Reset();
     }
 
     private async Task ApplyMigrationAsync()
     {
-        await using var scope = Factory.Services.CreateAsyncScope();
+        await using var scope = Factory!.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await dbContext.Database.MigrateAsync();
     }
 
     public async Task DisposeAsync()
     {
-        Client.Dispose();
-        await _connection.DisposeAsync();
-        await Factory.DisposeAsync();
-        await _postgreSqlContainer.DisposeAsync();
+        if (_disposed) return;
+        _disposed = true;
+
+        List<Exception> exceptions = [];
+
+        try
+        {
+            Client?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            exceptions.Add(ex);
+        }
+
+        try
+        {
+            if (_connection != null) await _connection.DisposeAsync();
+        }
+        catch (Exception ex)
+        {
+            exceptions.Add(ex);
+        }
+
+        try
+        {
+            if (Factory != null) await Factory.DisposeAsync();
+        }
+        catch (Exception ex)
+        {
+            exceptions.Add(ex);
+        }
+
+        try
+        {
+            await _postgreSqlContainer.DisposeAsync();
+        }
+        catch (Exception ex)
+        {
+            exceptions.Add(ex);
+        }
+
+        if (exceptions.Count > 0)
+        {
+            throw new AggregateException("One or more integration fixture resources failed to dispose", exceptions);
+        }
     }
 }

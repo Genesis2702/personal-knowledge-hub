@@ -31,4 +31,13 @@
       <ProjectReference Include="..\..\src\PersonalKnowledgeHub.Api\PersonalKnowledgeHub.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Features\Auth\" />
+      <Folder Include="Features\Permission\" />
+      <Folder Include="Features\Resource\" />
+      <Folder Include="Features\Role\" />
+      <Folder Include="Features\User\" />
+      <Folder Include="Platforms\" />
+    </ItemGroup>
+
 </Project>

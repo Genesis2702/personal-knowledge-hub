@@ -36,6 +36,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
                 {
                     EnableHangfireServer = false,
                     EnableRecurringJobs = false,
+                    EnableHangfireStorage = false,
                     EnableHangfireWrapper = true,
                     EnableRedisWrapper = true,
                     EnableExternalHealthChecks = false

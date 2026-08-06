@@ -191,22 +191,26 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
-builder.Services.AddHangfire(configuration =>
+var enableHangfireStorage = builder.Configuration.GetValue<bool?>("Features:EnableHangfireStorage") ?? true;
+if (enableHangfireStorage) 
 {
-    configuration.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-        .UseSimpleAssemblyNameTypeSerializer()
-        .UseRecommendedSerializerSettings()
-        .UsePostgreSqlStorage(
-            options =>
-            {
-                options.UseNpgsqlConnection(
-                    builder.Configuration.GetConnectionString("DefaultConnection"));
-            },
-            new PostgreSqlStorageOptions
-            {
-                SchemaName = "hangfire"
-            });
-});
+    builder.Services.AddHangfire(configuration =>
+    {
+        configuration.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(
+                options =>
+                {
+                    options.UseNpgsqlConnection(
+                        builder.Configuration.GetConnectionString("DefaultConnection"));
+                },
+                new PostgreSqlStorageOptions
+                {
+                    SchemaName = "hangfire"
+                });
+    });
+}
 
 var enableHangfireServer = builder.Configuration.GetValue<bool?>("Features:EnableHangfireServer") ?? true;
 if (enableHangfireServer)
@@ -229,16 +233,15 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-builder.Services.AddHealthChecks()
-    .AddNpgSql(
-        builder.Configuration.GetConnectionString("DefaultConnection")!,
-        name: "postgresql",
-        tags: new[] { "ready" });
-
+var healthCheck = builder.Services.AddHealthChecks();
 var enableExternalHealthChecks = builder.Configuration.GetValue<bool?>("Features:EnableExternalHealthChecks") ?? true;
 if (enableExternalHealthChecks)
 {
-    builder.Services.AddHealthChecks()
+    healthCheck
+        .AddNpgSql(
+            builder.Configuration.GetConnectionString("DefaultConnection")!,
+            name: "postgresql",
+            tags: new[] { "ready" })
         .AddRedis(
             builder.Configuration["RedisCacheSettings:ConnectionString"]!,
             name: "redis",

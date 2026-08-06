@@ -25,6 +25,15 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
     {
         builder.UseEnvironment("IntegrationTesting");
         
+        builder.UseSetting("Features:EnableHangfireServer",  _options.EnableHangfireServer.ToString());
+        builder.UseSetting("Features:EnableRecurringJobs",  _options.EnableRecurringJobs.ToString());
+        builder.UseSetting("Features:EnableHangfireStorage", _options.EnableHangfireStorage.ToString());
+        builder.UseSetting("Features:EnableExternalHealthChecks", _options.EnableExternalHealthChecks.ToString());
+        builder.UseSetting("Jwt:Key", "72017c9e26c060901a0fd6acfbdeb938");
+        builder.UseSetting("Jwt:Issuer", "TestIssuer");
+        builder.UseSetting("Jwt:Audience", "TestAudience");
+        builder.UseSetting("ConnectionStrings:DefaultConnection", _connectionString);
+        
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<DbContextOptions<AppDbContext>>();
@@ -51,21 +60,6 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
                 services.AddSingleton<IResettableBackgroundJobClient>(provider =>
                     provider.GetRequiredService<RecordingBackgroundJobClient>());
             }
-        });
-
-        builder.ConfigureAppConfiguration((_, configuration) =>
-        {
-            configuration.AddInMemoryCollection(
-                new Dictionary<string, string?>
-                {
-                    ["Jwt:Key"] = "72017c9e26c060901a0fd6acfbdeb938",
-                    ["Jwt:Issuer"] = "TestIssuer",
-                    ["Jwt:Audience"] = "TestAudience",
-                    ["ConnectionStrings:DefaultConnection"] =  _connectionString,
-                    ["Features:EnableHangfireServer"] = _options.EnableHangfireServer.ToString(),
-                    ["Features:EnableRecurringJobs"] = _options.EnableRecurringJobs.ToString(),
-                    ["Features:EnableExternalHealthChecks"] = _options.EnableExternalHealthChecks.ToString()
-                });
         });
     }
 }

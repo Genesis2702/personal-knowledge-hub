@@ -107,7 +107,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
     [Fact]
     public async Task GetUsers_WhenRequestIsInvalid_ReturnsBadRequest()
     {
-                await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
 
@@ -166,13 +166,8 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         string accessToken = await tokenService.GenerateAccessToken(admin.Id, CancellationToken.None);
 
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "/users");
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "/users?pageIndex=-1&pageSize=10");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        request.Content = JsonContent.Create(new UserQueryRequestDto
-        {
-            PageIndex = -1,
-            PageSize = 10
-        });
 
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
         
@@ -449,6 +444,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    
     [Fact]
     public async Task GetUserById_WhenUserIsNotActive_ReturnsForbidden()
     {

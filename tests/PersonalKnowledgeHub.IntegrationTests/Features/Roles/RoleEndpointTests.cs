@@ -766,6 +766,9 @@ public class RoleEndpointTests : IntegrationTestBase
         {
             Name = "USER"
         };
+        
+        dbContext.Roles.Add(userRole);
+        await dbContext.SaveChangesAsync();
 
         UserRole adminUserRole = new UserRole
         {
@@ -1164,7 +1167,7 @@ public class RoleEndpointTests : IntegrationTestBase
     [Fact]
     public async Task AddPermissionToRole_WhenUserIsNotActive_ReturnsForbidden()
     {
-                await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
 
@@ -1280,7 +1283,7 @@ public class RoleEndpointTests : IntegrationTestBase
     [Fact]
     public async Task AddPermissionToRole_WhenPermissionDoesNotExist_ReturnsNotFound()
     {
-                await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
 
@@ -1320,7 +1323,7 @@ public class RoleEndpointTests : IntegrationTestBase
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
         
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         
         Role? addedPermissionRole =  await dbContext.Roles.AsNoTracking()
             .Include(role => role.RolePermissions)

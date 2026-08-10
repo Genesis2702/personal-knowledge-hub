@@ -72,7 +72,7 @@ public class RoleService : IRoleService
         {
             throw new NotFoundException("Role not found");
         }
-        if (role.Name == "admin")
+        if (role.Name == "ADMIN")
         {
             throw new ConflictException("Admin role cannot be deleted");
         }

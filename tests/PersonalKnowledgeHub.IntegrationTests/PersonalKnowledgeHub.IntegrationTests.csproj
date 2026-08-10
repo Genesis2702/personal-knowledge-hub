@@ -35,7 +35,6 @@
       <Folder Include="Features\Auth\" />
       <Folder Include="Features\Permissions\" />
       <Folder Include="Features\Resources\" />
-      <Folder Include="Features\Roles\" />
       <Folder Include="Platforms\" />
     </ItemGroup>
 

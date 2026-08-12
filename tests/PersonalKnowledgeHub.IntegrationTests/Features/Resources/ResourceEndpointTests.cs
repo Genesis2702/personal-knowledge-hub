@@ -1,8 +1,11 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using PersonalKnowledgeHub.Common;
 using PersonalKnowledgeHub.Data;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
@@ -73,13 +76,16 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<List<ResourceResponseDto>>();
+        var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        jsonOptions.Converters.Add(new JsonStringEnumConverter());
+        var body = await response.Content.ReadFromJsonAsync<PageResult<ResourceResponseDto>>(jsonOptions);
         
         Assert.NotNull(body);
-        Assert.Equal(3, body.Count);
-        Assert.Contains(body, r => r.Title == "math");
-        Assert.Contains(body, r => r.Title == "english");
-        Assert.Contains(body, r => r.Title == "literature");
+        Assert.False(body.HasNextPage);
+        Assert.False(body.HasPreviousPage);
+        Assert.Contains(body.Items, r => r.Title == "math");
+        Assert.Contains(body.Items, r => r.Title == "english");
+        Assert.Contains(body.Items, r => r.Title == "literature");
     }
 
     [Fact]
@@ -232,7 +238,9 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<ResourceResponseDto>();
+        var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        jsonOptions.Converters.Add(new JsonStringEnumConverter());
+        var body = await response.Content.ReadFromJsonAsync<ResourceResponseDto>(jsonOptions);
         
         Assert.NotNull(body);
         Assert.Equal(resource.Title, body.Title);
@@ -380,8 +388,10 @@ public class ResourceEndpointTests : IntegrationTestBase
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
         
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-
-        var body = await response.Content.ReadFromJsonAsync<ResourceResponseDto>();
+        
+        var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        jsonOptions.Converters.Add(new JsonStringEnumConverter());
+        var body = await response.Content.ReadFromJsonAsync<ResourceResponseDto>(jsonOptions);
         
         Assert.NotNull(body);
         Assert.Equal("math", body.Title);
@@ -690,7 +700,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         {
             Email = "user@gmail.com",
             PasswordHash = "user password",
-            Status = UserStatus.Inactive,
+            Status = UserStatus.Active,
         };
         
         dbContext.Users.Add(user);
@@ -774,7 +784,10 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         
-        Resource? updatedResource = await dbContext.Resources.AsNoTracking().SingleOrDefaultAsync(r => r.Id == resource.Id);
+        Resource? updatedResource = await dbContext.Resources
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .SingleOrDefaultAsync(r => r.Id == resource.Id);
         
         Assert.NotNull(updatedResource);
         Assert.True(updatedResource.IsDeleted);
@@ -822,7 +835,10 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         
-        Resource? updatedResource = await dbContext.Resources.AsNoTracking().SingleOrDefaultAsync(r => r.Id == resource.Id);
+        Resource? updatedResource = await dbContext.Resources
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .SingleOrDefaultAsync(r => r.Id == resource.Id);
         
         Assert.NotNull(updatedResource);
         Assert.False(updatedResource.IsDeleted);
@@ -841,7 +857,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         {
             Email = "user@gmail.com",
             PasswordHash = "user password",
-            Status = UserStatus.Inactive,
+            Status = UserStatus.Active,
         };
         
         dbContext.Users.Add(user);
@@ -868,7 +884,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         {
             Email = "user@gmail.com",
             PasswordHash = "user password",
-            Status = UserStatus.Inactive,
+            Status = UserStatus.Active,
         };
         
         dbContext.Users.Add(user);
@@ -906,7 +922,10 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         
-        Resource? updatedResource = await dbContext.Resources.AsNoTracking().SingleOrDefaultAsync(r => r.Id == resource.Id);
+        Resource? updatedResource = await dbContext.Resources
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .SingleOrDefaultAsync(r => r.Id == resource.Id);
         
         Assert.NotNull(updatedResource);
         Assert.False(updatedResource.IsDeleted);

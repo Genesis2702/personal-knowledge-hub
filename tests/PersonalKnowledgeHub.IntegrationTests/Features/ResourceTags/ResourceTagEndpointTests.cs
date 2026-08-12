@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PersonalKnowledgeHub.Data;
@@ -66,7 +68,9 @@ public class ResourceTagEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<ResourceResponseDto>();
+        var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        jsonOptions.Converters.Add(new JsonStringEnumConverter());
+        var body = await response.Content.ReadFromJsonAsync<ResourceResponseDto>(jsonOptions);
         
         Assert.NotNull(body);
         Assert.Contains(body.Tags, tagName => tagName == tag.Name);

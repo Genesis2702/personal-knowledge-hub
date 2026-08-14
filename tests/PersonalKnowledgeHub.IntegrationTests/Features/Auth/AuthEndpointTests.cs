@@ -1066,6 +1066,45 @@ public class AuthEndpointTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task VerifyMail_WhenUserIsNotPending_ReturnsUnauthorized()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var verificationTokenService =  scope.ServiceProvider.GetRequiredService<IVerificationTokenService>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("user password"),
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+        
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/verify-mail?token={verificationToken}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        
+        HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        
+        VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == verificationToken);
+        
+        Assert.NotNull(token);
+        Assert.Null(token.VerifiedAt);
+        
+        User? statusChangedUser = await dbContext.Users.AsNoTracking().SingleOrDefaultAsync(t => t.Id == user.Id);
+        
+        Assert.NotNull(statusChangedUser);
+        Assert.Equal(UserStatus.Active, statusChangedUser.Status);
+    }
+
+    [Fact]
     public async Task ResendMail_WhenUserIsPending_ReturnsOk()
     {
         await using var scope = Fixture.Factory!.Services.CreateAsyncScope();

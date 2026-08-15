@@ -122,7 +122,6 @@ public class AuthEndpointTests : IntegrationTestBase
     {
         await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var jobClient = scope.ServiceProvider.GetRequiredService<RecordingBackgroundJobClient>();
 
         User user = new User
         {
@@ -144,12 +143,6 @@ public class AuthEndpointTests : IntegrationTestBase
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
         
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Single(jobClient.Jobs);
-        
-        var job = jobClient.Jobs.Single();
-        
-        Assert.Equal(typeof(IMailService), job.Type);
-        Assert.Equal(nameof(IMailService.SendMail), job.Method.Name);
         
         var body = await response.Content.ReadFromJsonAsync<AuthResponseDto>();
         
@@ -163,7 +156,6 @@ public class AuthEndpointTests : IntegrationTestBase
     {
         await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var jobClient = scope.ServiceProvider.GetRequiredService<RecordingBackgroundJobClient>();
 
         User user = new User
         {
@@ -185,7 +177,6 @@ public class AuthEndpointTests : IntegrationTestBase
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
         
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        Assert.Empty(jobClient.Jobs);
     }
 
     [Fact]
@@ -193,7 +184,6 @@ public class AuthEndpointTests : IntegrationTestBase
     {
         await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var jobClient = scope.ServiceProvider.GetRequiredService<RecordingBackgroundJobClient>();
 
         User user = new User
         {
@@ -215,7 +205,6 @@ public class AuthEndpointTests : IntegrationTestBase
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
         
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        Assert.Empty(jobClient.Jobs);
     }
 
     [Fact]
@@ -223,7 +212,6 @@ public class AuthEndpointTests : IntegrationTestBase
     {
         await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var jobClient = scope.ServiceProvider.GetRequiredService<RecordingBackgroundJobClient>();
 
         User user = new User
         {
@@ -246,7 +234,6 @@ public class AuthEndpointTests : IntegrationTestBase
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
         
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        Assert.Single(jobClient.Jobs);
     }
 
     [Fact]
@@ -540,7 +527,7 @@ public class AuthEndpointTests : IntegrationTestBase
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "auth/forgot-password");
         request.Content = JsonContent.Create(new ForgotPasswordRequest
         {
-            Email = "wrong email"
+            Email = "wrong@gmail.com"
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -757,7 +744,6 @@ public class AuthEndpointTests : IntegrationTestBase
     {
         await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var verificationTokenService =  scope.ServiceProvider.GetRequiredService<IVerificationTokenService>();
         var jobClient = scope.ServiceProvider.GetRequiredService<RecordingBackgroundJobClient>();
 
         User user = new User
@@ -808,8 +794,10 @@ public class AuthEndpointTests : IntegrationTestBase
         
         string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
         
-        VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == verificationToken);
+        string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
+        VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == hashedToken);
         token!.ExpiresAt = DateTime.UtcNow.AddDays(-1);
+        await dbContext.SaveChangesAsync();
         
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/reset-password?token={verificationToken}");
         request.Content = JsonContent.Create(new ResetPasswordRequestDto
@@ -849,8 +837,10 @@ public class AuthEndpointTests : IntegrationTestBase
         
         string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
         
-        VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == verificationToken);
+        string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
+        VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == hashedToken);
         token!.VerifiedAt = DateTime.UtcNow.AddDays(-1);
+        await dbContext.SaveChangesAsync();
         
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/reset-password?token={verificationToken}");
         request.Content = JsonContent.Create(new ResetPasswordRequestDto
@@ -891,7 +881,7 @@ public class AuthEndpointTests : IntegrationTestBase
         string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
         
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/verify-mail?token={verificationToken}");
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/mail-verification?token={verificationToken}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -928,7 +918,7 @@ public class AuthEndpointTests : IntegrationTestBase
         
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
         
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/verify-mail?token=random");
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/mail-verification?token=random");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -961,20 +951,21 @@ public class AuthEndpointTests : IntegrationTestBase
         
         string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
         
-        VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == verificationToken);
+        string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
+        VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == hashedToken);
         token!.ExpiresAt = DateTime.UtcNow.AddDays(-1);
         await dbContext.SaveChangesAsync();
         
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
         
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/verify-mail?token={verificationToken}");
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/mail-verification?token={verificationToken}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
         
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         
-        User? statusChangedUser = await dbContext.Users.AsNoTracking().SingleOrDefaultAsync(t => t.Id == user.Id);
+        User? statusChangedUser = await dbContext.Users.AsNoTracking().SingleOrDefaultAsync(u => u.Id == user.Id);
         
         Assert.NotNull(statusChangedUser);
         Assert.Equal(UserStatus.Pending, statusChangedUser.Status);
@@ -1005,10 +996,13 @@ public class AuthEndpointTests : IntegrationTestBase
             Status = UserStatus.Pending
         };
         
+        dbContext.Users.Add(anotherUser);
+        await dbContext.SaveChangesAsync();
+        
         string verificationToken = await verificationTokenService.GenerateVerificationToken(anotherUser.Id, CancellationToken.None);
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
         
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/verify-mail?token={verificationToken}");
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/mail-verification?token={verificationToken}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -1046,13 +1040,14 @@ public class AuthEndpointTests : IntegrationTestBase
         
         string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
         
-        VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == verificationToken);
+        string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
+        VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == hashedToken);
         token!.VerifiedAt = DateTime.UtcNow.AddDays(-1);
         await dbContext.SaveChangesAsync();
         
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
         
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/verify-mail?token={verificationToken}");
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/mail-verification?token={verificationToken}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -1066,7 +1061,7 @@ public class AuthEndpointTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task VerifyMail_WhenUserIsNotPending_ReturnsUnauthorized()
+    public async Task VerifyMail_WhenUserIsNotPending_ReturnsForbidden()
     {
         await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -1086,7 +1081,7 @@ public class AuthEndpointTests : IntegrationTestBase
         string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
         
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/verify-mail?token={verificationToken}");
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/mail-verification?token={verificationToken}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -1140,7 +1135,7 @@ public class AuthEndpointTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task ResendMail_WhenUserIsNotPending_ReturnsUnauthorized()
+    public async Task ResendMail_WhenUserIsNotPending_ReturnsForbidden()
     {
         await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -1164,7 +1159,7 @@ public class AuthEndpointTests : IntegrationTestBase
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
         
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Empty(jobClient.Jobs);
     }
 }

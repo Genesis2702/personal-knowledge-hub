@@ -888,7 +888,8 @@ public class AuthEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         
-        VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == verificationToken);
+        string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
+        VerificationToken? token = await dbContext.VerificationTokens.AsNoTracking().SingleOrDefaultAsync(t => t.Token == hashedToken);
         
         Assert.NotNull(token);
         Assert.NotNull(token.VerifiedAt);
@@ -1009,7 +1010,8 @@ public class AuthEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         
-        VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == verificationToken);
+        string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
+        VerificationToken? token = await dbContext.VerificationTokens.AsNoTracking().SingleOrDefaultAsync(t => t.Token == hashedToken);
         
         Assert.NotNull(token);
         Assert.Null(token.VerifiedAt);
@@ -1086,9 +1088,10 @@ public class AuthEndpointTests : IntegrationTestBase
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
         
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         
-        VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == verificationToken);
+        string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
+        VerificationToken? token = await dbContext.VerificationTokens.AsNoTracking().SingleOrDefaultAsync(t => t.Token == hashedToken);
         
         Assert.NotNull(token);
         Assert.Null(token.VerifiedAt);

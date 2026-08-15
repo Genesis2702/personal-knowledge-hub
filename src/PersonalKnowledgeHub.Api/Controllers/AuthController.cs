@@ -43,7 +43,7 @@ namespace PersonalKnowledgeHub.Controllers
         }
         
         [HttpPost("logout")]
-        [Authorize(Policy = "ActiveAccount,PendingAccount")]
+        [Authorize(Policy = "PendingOrActiveAccount")]
         public async Task<IActionResult> Logout(LogoutRequestDto logoutRequest, CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

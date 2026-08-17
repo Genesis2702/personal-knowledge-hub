@@ -12,12 +12,17 @@ namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;
 
 public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<Program>
 {
-    private readonly string _connectionString;
-    private readonly IntegrationFactoryOptions _options;
+    private readonly string _postgresConnectionString;
+    private readonly string _redisConnectionString;
+    private readonly FactoryOptions _options;
 
-    public PersonalKnowledgeHubWebApplicationFactory(string connectionString, IntegrationFactoryOptions options)
+    public PersonalKnowledgeHubWebApplicationFactory(string postgresConnectionString, string? redisConnectionString, FactoryOptions options)
     {
-        _connectionString = connectionString;
+        _postgresConnectionString = postgresConnectionString;
+        if (!string.IsNullOrEmpty(redisConnectionString))
+        {
+            _redisConnectionString = redisConnectionString;
+        }
         _options = options;
     }
     
@@ -32,7 +37,8 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
         builder.UseSetting("Jwt:Key", "72017c9e26c060901a0fd6acfbdeb938");
         builder.UseSetting("Jwt:Issuer", "TestIssuer");
         builder.UseSetting("Jwt:Audience", "TestAudience");
-        builder.UseSetting("ConnectionStrings:DefaultConnection", _connectionString);
+        builder.UseSetting("ConnectionStrings:DefaultConnection", _postgresConnectionString);
+        builder.UseSetting("RedisCacheSettings:ConnectionString", _redisConnectionString);
         
         builder.ConfigureServices(services =>
         {
@@ -40,7 +46,13 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
             services.RemoveAll<AppDbContext>();
             
             services.AddDbContext<AppDbContext>(options =>
-                options.UseNpgsql(_connectionString));
+                options.UseNpgsql(_postgresConnectionString));
+
+            if (!string.IsNullOrEmpty(_redisConnectionString))
+            {
+                services.AddStackExchangeRedisCache(options =>
+                    options.Configuration = _redisConnectionString);
+            }
 
             if (_options.EnableRedisWrapper)
             {

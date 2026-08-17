@@ -33,10 +33,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Infrastructure\Hangfire\" />
-      <Folder Include="Infrastructure\Mail\" />
-      <Folder Include="Infrastructure\RateLimiting\" />
-      <Folder Include="Infrastructure\Redis\" />
       <Folder Include="Platforms\Hangfire\" />
       <Folder Include="Platforms\Mail\" />
       <Folder Include="Platforms\RateLimiting\" />

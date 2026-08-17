@@ -1,6 +1,7 @@
 ﻿namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.RateLimiting;
 
-public class RateLimitingCollection
+[CollectionDefinition(nameof(RateLimitingCollection))]
+public class RateLimitingCollection : ICollectionFixture<RateLimitingFixture>
 {
     
 }

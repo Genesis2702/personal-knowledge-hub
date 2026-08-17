@@ -1,9 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 using PersonalKnowledgeHub.Data;
-using Respawn;
-using Respawn.Graph;
 using Testcontainers.PostgreSql;
 
 namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.Hangfire;
@@ -11,8 +8,6 @@ namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.Hangfire;
 public class HangfireFixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres;
-    private NpgsqlConnection? _connection;
-    private Respawner? _respawner;
     private bool _disposed;
     
     public HttpClient? Client { get; private set; }
@@ -45,7 +40,6 @@ public class HangfireFixture : IAsyncLifetime
                     EnableExternalHealthChecks = false
                 });
             await ApplyMigrationAsync();
-            await InitializeRespawnerAsync();
             Client = Factory.CreateClient();
         }
         catch
@@ -53,23 +47,6 @@ public class HangfireFixture : IAsyncLifetime
             await DisposeAsync();
             throw;
         }
-    }
-    
-    private async Task InitializeRespawnerAsync()
-    {
-        _connection = new NpgsqlConnection(_postgres.GetConnectionString());
-        await _connection.OpenAsync();
-        _respawner = await Respawner.CreateAsync(
-            _connection,
-            new RespawnerOptions
-            {
-                DbAdapter = DbAdapter.Postgres,
-                SchemasToInclude = ["public", "hangfire"],
-                TablesToIgnore =
-                [
-                    new Table("__EFMigrationsHistory")
-                ]
-            });
     }
 
     private async Task ApplyMigrationAsync()
@@ -89,15 +66,6 @@ public class HangfireFixture : IAsyncLifetime
         try
         {
             Client?.Dispose();
-        }
-        catch (Exception ex)
-        {
-            exceptions.Add(ex);
-        }
-
-        try
-        {
-            if (_connection != null) await _connection.DisposeAsync();
         }
         catch (Exception ex)
         {

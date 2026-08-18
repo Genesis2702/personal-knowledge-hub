@@ -10,7 +10,7 @@ using PersonalKnowledgeHub.Data;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
-using PersonalKnowledgeHub.IntegrationTests.Infrastructure;
+using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Integration;
 using PersonalKnowledgeHub.Services.Interfaces;
 
 namespace PersonalKnowledgeHub.IntegrationTests.Features.Users;

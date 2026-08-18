@@ -1,4 +1,4 @@
-﻿namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;
+﻿namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.Integration;
 
 public class IntegrationTestBase : IAsyncLifetime
 {

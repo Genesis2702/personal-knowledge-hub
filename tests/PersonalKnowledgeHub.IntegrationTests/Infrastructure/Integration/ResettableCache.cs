@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Distributed;
 
-namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;
+namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.Integration;
 
 public sealed class ResettableCache : IDistributedCache, IResettableCache
 {

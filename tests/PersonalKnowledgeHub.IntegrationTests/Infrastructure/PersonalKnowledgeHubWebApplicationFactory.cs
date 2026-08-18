@@ -6,6 +6,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PersonalKnowledgeHub.Data;
+using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Integration;
 using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Options;
 
 namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;

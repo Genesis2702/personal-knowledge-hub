@@ -1,13 +1,13 @@
-﻿using Testcontainers.PostgreSql;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using PersonalKnowledgeHub.Data;
 using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Options;
 using Respawn;
 using Respawn.Graph;
+using Testcontainers.PostgreSql;
 
-namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;
+namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.Integration;
 
 public sealed class IntegrationFixture : IAsyncLifetime
 {

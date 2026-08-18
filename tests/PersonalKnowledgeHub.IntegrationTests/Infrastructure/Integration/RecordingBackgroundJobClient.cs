@@ -3,7 +3,7 @@ using Hangfire;
 using Hangfire.Common;
 using Hangfire.States;
 
-namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;
+namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.Integration;
 
 public sealed class RecordingBackgroundJobClient : IBackgroundJobClient, IResettableBackgroundJobClient
 {

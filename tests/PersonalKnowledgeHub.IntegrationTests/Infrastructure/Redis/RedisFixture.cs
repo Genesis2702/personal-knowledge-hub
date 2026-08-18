@@ -32,8 +32,9 @@ public class RedisFixture : IAsyncLifetime
     {
         try
         {
-            await _postgres.StartAsync();
-            await _redis.StartAsync();
+            await Task.WhenAll(
+                _postgres.StartAsync(),
+                _redis.StartAsync());
             Factory = new PersonalKnowledgeHubWebApplicationFactory(
                 _postgres.GetConnectionString(),
                 _redis.GetConnectionString(),

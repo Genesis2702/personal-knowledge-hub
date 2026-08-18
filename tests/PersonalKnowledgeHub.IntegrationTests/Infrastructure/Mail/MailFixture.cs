@@ -27,7 +27,7 @@ public class MailFixture : IAsyncLifetime
             .WithPassword("postgres")
             .Build();
 
-        _mailpit = new MailpitBuilder("mailpit:lastest")
+        _mailpit = new MailpitBuilder("axllent/mailpit:v1.30.7")
             .WithSmtpAuthCredentials(
                 new NetworkCredential(SmtpUserName, SmtpPassword),
                 allowInsecure: true)
@@ -60,7 +60,7 @@ public class MailFixture : IAsyncLifetime
                         SenderName = "Knowledge Hub Tests",
                         SenderEmail = SmtpUserName,
                         Password = SmtpPassword,
-                        UseSsl = true
+                        UseSsl = false
                     }
                 });
             await ApplyMigrationAsync();

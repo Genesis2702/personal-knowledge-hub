@@ -39,7 +39,11 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
         builder.UseSetting("Jwt:Issuer", "TestIssuer");
         builder.UseSetting("Jwt:Audience", "TestAudience");
         builder.UseSetting("ConnectionStrings:DefaultConnection", _postgresConnectionString);
-        builder.UseSetting("RedisCacheSettings:ConnectionString", _redisConnectionString);
+
+        if (_redisConnectionString is not null)
+        {
+            builder.UseSetting("RedisCacheSettings:ConnectionString", _redisConnectionString);
+        }
 
         if (_options.Mail is not null)
         {
@@ -64,12 +68,6 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
             
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(_postgresConnectionString));
-
-            if (!string.IsNullOrEmpty(_redisConnectionString))
-            {
-                services.AddStackExchangeRedisCache(options =>
-                    options.Configuration = _redisConnectionString);
-            }
 
             if (_options.EnableRedisWrapper)
             {

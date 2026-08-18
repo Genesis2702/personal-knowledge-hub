@@ -3,17 +3,17 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PersonalKnowledgeHub.Data;
+using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Options;
 
 namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;
 
 public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _postgresConnectionString;
-    private readonly string _redisConnectionString;
+    private readonly string? _redisConnectionString;
     private readonly FactoryOptions _options;
 
     public PersonalKnowledgeHubWebApplicationFactory(string postgresConnectionString, string? redisConnectionString, FactoryOptions options)
@@ -39,6 +39,22 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
         builder.UseSetting("Jwt:Audience", "TestAudience");
         builder.UseSetting("ConnectionStrings:DefaultConnection", _postgresConnectionString);
         builder.UseSetting("RedisCacheSettings:ConnectionString", _redisConnectionString);
+
+        if (_options.Mail is not null)
+        {
+            builder.UseSetting("MailSettings:Host", _options.Mail.Host);
+            builder.UseSetting(
+                "MailSettings:Port",
+                _options.Mail.Port.ToString());
+
+            builder.UseSetting("MailSettings:Name", _options.Mail.SenderName);
+            builder.UseSetting("MailSettings:EmailId", _options.Mail.SenderEmail);
+            builder.UseSetting("MailSettings:UserName", _options.Mail.SenderEmail);
+            builder.UseSetting("MailSettings:Password", _options.Mail.Password);
+            builder.UseSetting(
+                "MailSettings:UseSsl",
+                _options.Mail.UseSsl.ToString());
+        }
         
         builder.ConfigureServices(services =>
         {

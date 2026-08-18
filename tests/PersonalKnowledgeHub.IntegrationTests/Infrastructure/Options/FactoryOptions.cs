@@ -1,4 +1,4 @@
-﻿namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;
+﻿namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.Options;
 
 public sealed class FactoryOptions
 {
@@ -8,4 +8,5 @@ public sealed class FactoryOptions
     public bool EnableHangfireWrapper { get; init; }
     public bool EnableRedisWrapper { get; init; }
     public bool EnableExternalHealthChecks { get; init; }
+    public TestMailOptions? Mail { get; init; }
 }

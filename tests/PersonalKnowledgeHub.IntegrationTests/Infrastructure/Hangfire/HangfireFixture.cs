@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PersonalKnowledgeHub.Data;
+using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Options;
 using Testcontainers.PostgreSql;
 
 namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.Hangfire;

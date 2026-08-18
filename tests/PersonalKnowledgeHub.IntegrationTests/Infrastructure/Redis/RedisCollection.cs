@@ -1,6 +1,7 @@
 ﻿namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.Redis;
 
-public class RedisCollection
+[CollectionDefinition(nameof(RedisCollection))]
+public class RedisCollection : ICollectionFixture<RedisFixture>
 {
     
 }

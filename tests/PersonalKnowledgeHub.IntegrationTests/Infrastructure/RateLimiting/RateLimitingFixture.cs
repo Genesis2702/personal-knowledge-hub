@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PersonalKnowledgeHub.Data;
+using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Options;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
 
@@ -31,11 +32,13 @@ public class RateLimitingFixture : IAsyncLifetime
     {
         try
         {
-            await _postgres.StartAsync();
-            await _redis.StartAsync();
+            await Task.WhenAll(
+                _postgres.StartAsync(),
+                _redis.StartAsync()
+            );
             Factory = new PersonalKnowledgeHubWebApplicationFactory(
                 _postgres.GetConnectionString(),
-                null,
+                _redis.GetConnectionString(),
                 new FactoryOptions
                 {
                     EnableHangfireServer = false,
@@ -89,7 +92,10 @@ public class RateLimitingFixture : IAsyncLifetime
 
         try
         {
-            await _postgres.DisposeAsync();
+            await Task.WhenAll(
+                _postgres.DisposeAsync().AsTask(),
+                _redis.DisposeAsync().AsTask()
+            );
         }
         catch (Exception ex)
         {

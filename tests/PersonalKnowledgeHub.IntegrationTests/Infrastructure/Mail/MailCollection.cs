@@ -1,6 +1,7 @@
 ﻿namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.Mail;
 
-public class MailCollection
+[CollectionDefinition(nameof(MailCollection))]
+public class MailCollection : ICollectionFixture<MailFixture>
 {
     
 }

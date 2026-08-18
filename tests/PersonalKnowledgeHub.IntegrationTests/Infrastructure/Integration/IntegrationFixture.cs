@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using PersonalKnowledgeHub.Data;
+using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Options;
 using Respawn;
 using Respawn.Graph;
 

@@ -19,7 +19,7 @@ public class HangfireTests
     }
 
     [Fact]
-    public async Task CleanUpRefreshTokens_WhenCalled_CleanUpRefreshTokens()
+    public async Task CleanUpRefreshTokens_WhenCalled_RemovesOldRevokedTokens()
     {
         await using var scope = _fixture.Factory!.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -43,12 +43,12 @@ public class HangfireTests
         
         RefreshToken refreshToken1 = await tokenService.GetRefreshToken(token1, CancellationToken.None);
         refreshToken1.Revoked = true;
-        refreshToken1.ExpiresAt = DateTime.UtcNow.AddDays(-31);
+        refreshToken1.RevokedAt = DateTime.UtcNow.AddDays(-31);
         await  dbContext.SaveChangesAsync();
         
         RefreshToken refreshToken2 = await tokenService.GetRefreshToken(token2, CancellationToken.None);
         refreshToken2.Revoked = true;
-        refreshToken2.ExpiresAt = DateTime.UtcNow.AddDays(-31);
+        refreshToken2.RevokedAt = DateTime.UtcNow.AddDays(-31);
         await dbContext.SaveChangesAsync();
         
         RefreshToken refreshToken3 = await tokenService.GetRefreshToken(token3, CancellationToken.None);

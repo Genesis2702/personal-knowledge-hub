@@ -30,6 +30,7 @@ using PersonalKnowledgeHub.Observability.Interfaces;
 using Serilog;
 using Serilog.Events;
 using Serilog.Context;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,6 +63,10 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddTransient<IMailService, MailService>();
 builder.Services.AddScoped<IMailFactoryService, MailFactoryService>();
 builder.Services.AddScoped<IVerificationTokenService, VerificationTokenService>();
+
+// Redis connection
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+    ConnectionMultiplexer.Connect(builder.Configuration["RedisCacheSettings:ConnectionString"]!));
 
 // Policies
 builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerOrAdminHandler>();

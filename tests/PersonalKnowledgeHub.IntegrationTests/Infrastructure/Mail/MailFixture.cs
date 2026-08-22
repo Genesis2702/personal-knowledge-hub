@@ -16,6 +16,9 @@ public class MailFixture : IAsyncLifetime
     private const string SmtpUserName = "sender@test.local";
     private const string SmtpPassword = "test-password";
     
+    public string MailpitWebAddress => _mailpit.GetWebAddress();
+    public HttpClient MailpitClient;
+    
     public HttpClient? Client { get; private set; }
     public PersonalKnowledgeHubWebApplicationFactory? Factory { get; private set; }
 
@@ -42,6 +45,12 @@ public class MailFixture : IAsyncLifetime
             await Task.WhenAll(
                 _postgres.StartAsync(),
                 _mailpit.StartAsync());
+            
+            MailpitClient = new HttpClient
+            {
+                BaseAddress = new Uri(MailpitWebAddress)
+            };
+            
             Factory = new PersonalKnowledgeHubWebApplicationFactory(
                 _postgres.GetConnectionString(),
                 null,
@@ -63,7 +72,9 @@ public class MailFixture : IAsyncLifetime
                         UseSsl = false
                     }
                 });
+            
             await ApplyMigrationAsync();
+            
             Client = Factory.CreateClient();
         }
         catch
@@ -99,6 +110,15 @@ public class MailFixture : IAsyncLifetime
         try
         {
             if (Factory != null) await Factory.DisposeAsync();
+        }
+        catch (Exception ex)
+        {
+            exceptions.Add(ex);
+        }
+
+        try
+        {
+            MailpitClient?.Dispose();
         }
         catch (Exception ex)
         {

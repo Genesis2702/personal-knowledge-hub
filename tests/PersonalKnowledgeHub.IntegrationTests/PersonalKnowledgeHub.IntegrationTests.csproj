@@ -33,8 +33,4 @@
       <ProjectReference Include="..\..\src\PersonalKnowledgeHub.Api\PersonalKnowledgeHub.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Platforms\Redis\" />
-    </ItemGroup>
-
 </Project>

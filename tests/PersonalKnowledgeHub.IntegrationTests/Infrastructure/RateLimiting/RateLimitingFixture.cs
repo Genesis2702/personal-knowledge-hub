@@ -45,6 +45,7 @@ public class RateLimitingFixture : IAsyncLifetime
                     EnableRecurringJobs = false,
                     EnableHangfireStorage = false,
                     EnableHangfireWrapper = true,
+                    EnableRateLimitMiddleware = true,
                     EnableRedisWrapper = false,
                     EnableExternalHealthChecks = false
                 });

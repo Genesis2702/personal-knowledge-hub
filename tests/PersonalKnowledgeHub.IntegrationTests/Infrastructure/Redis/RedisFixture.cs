@@ -44,6 +44,7 @@ public class RedisFixture : IAsyncLifetime
                     EnableRecurringJobs = false,
                     EnableHangfireStorage = false,
                     EnableHangfireWrapper = true,
+                    EnableRateLimitMiddleware = false,
                     EnableRedisWrapper = false,
                     EnableExternalHealthChecks = false
                 });

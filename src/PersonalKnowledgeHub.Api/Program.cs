@@ -342,7 +342,11 @@ if (app.Environment.IsEnvironment("IntegrationTesting"))
     });
 }
 
-app.UseMiddleware<RateLimitMiddleware>();
+var enableRateLimitMiddleware = builder.Configuration.GetValue<bool?>("Features:EnableRateLimitMiddleware") ?? true;
+if (enableRateLimitMiddleware)
+{
+    app.UseMiddleware<RateLimitMiddleware>();
+}
 
 app.MapHealthChecks("/health");
 

@@ -17,7 +17,7 @@ public class MailFixture : IAsyncLifetime
     private const string SmtpPassword = "test-password";
     
     public string MailpitWebAddress => _mailpit.GetWebAddress();
-    public HttpClient MailpitClient;
+    public HttpClient? MailpitClient { get; private set; }
     
     public HttpClient? Client { get; private set; }
     public PersonalKnowledgeHubWebApplicationFactory? Factory { get; private set; }
@@ -60,6 +60,7 @@ public class MailFixture : IAsyncLifetime
                     EnableRecurringJobs = false,
                     EnableHangfireStorage = true,
                     EnableHangfireWrapper = false,
+                    EnableRateLimitMiddleware = false,
                     EnableRedisWrapper = true,
                     EnableExternalHealthChecks = false,
                     Mail = new TestMailOptions

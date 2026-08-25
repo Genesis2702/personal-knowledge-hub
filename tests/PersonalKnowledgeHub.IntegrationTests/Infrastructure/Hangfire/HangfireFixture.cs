@@ -37,6 +37,7 @@ public class HangfireFixture : IAsyncLifetime
                     EnableRecurringJobs = false,
                     EnableHangfireStorage = true,
                     EnableHangfireWrapper = false,
+                    EnableRateLimitMiddleware = false,
                     EnableRedisWrapper = true,
                     EnableExternalHealthChecks = false
                 });

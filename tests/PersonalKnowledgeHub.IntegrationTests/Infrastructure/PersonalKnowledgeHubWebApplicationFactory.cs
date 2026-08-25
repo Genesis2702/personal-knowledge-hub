@@ -34,6 +34,7 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
         builder.UseSetting("Features:EnableHangfireServer",  _options.EnableHangfireServer.ToString());
         builder.UseSetting("Features:EnableRecurringJobs",  _options.EnableRecurringJobs.ToString());
         builder.UseSetting("Features:EnableHangfireStorage", _options.EnableHangfireStorage.ToString());
+        builder.UseSetting("Features:EnableRateLimitMiddleware", _options.EnableRateLimitMiddleware.ToString());
         builder.UseSetting("Features:EnableExternalHealthChecks", _options.EnableExternalHealthChecks.ToString());
         builder.UseSetting("Jwt:Key", "72017c9e26c060901a0fd6acfbdeb938");
         builder.UseSetting("Jwt:Issuer", "TestIssuer");

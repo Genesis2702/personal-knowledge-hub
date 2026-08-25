@@ -47,12 +47,14 @@ public class RateLimitingTests
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
         
-        HttpRequestMessage finalRequest = new HttpRequestMessage(HttpMethod.Get, "/tags");
+        using HttpRequestMessage finalRequest = new HttpRequestMessage(HttpMethod.Get, "/tags");
         finalRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         
-        HttpResponseMessage finalResponse = await _fixture.Client!.SendAsync(finalRequest);
+        using HttpResponseMessage finalResponse = await _fixture.Client!.SendAsync(finalRequest);
         
         Assert.Equal(HttpStatusCode.TooManyRequests, finalResponse.StatusCode);
         Assert.NotNull(finalResponse.Headers.RetryAfter);
+        Assert.True(finalResponse.Headers.RetryAfter.Delta.HasValue);
+        Assert.InRange(finalResponse.Headers.RetryAfter.Delta.Value.TotalSeconds, 0, 60);
     }
 }

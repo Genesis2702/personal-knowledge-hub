@@ -7,7 +7,8 @@ using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
 using PersonalKnowledgeHub.Mapper;
 using Hangfire;
-using PersonalKnowledgeHub.Observability;
+using PersonalKnowledgeHub.Observability.Implementations;
+using PersonalKnowledgeHub.Observability.Interfaces;
 
 namespace PersonalKnowledgeHub.Services.Implementations
 {
@@ -20,12 +21,16 @@ namespace PersonalKnowledgeHub.Services.Implementations
         private readonly IVerificationTokenService _verificationTokenService;
         private readonly IBackgroundJobClient _backgroundJobClient;
         private readonly ILogger<AuthService> _logger;
-        private readonly AppMetrics _metrics;
+        private readonly IAppMetrics _metrics;
+        
+        private sealed record RefreshTransactionResult(
+            AuthResponseDto? Response,
+            UnauthorizedException? UnauthorizedException);
 
         public AuthService(IUserRepository userRepository, ITokenService tokenService, 
             IUnitOfWorkRepository unitOfWorkRepository, IMailFactoryService mailFactoryService, 
             IVerificationTokenService verificationTokenService, IBackgroundJobClient backgroundJobClient,
-            ILogger<AuthService> logger, AppMetrics metrics)
+            ILogger<AuthService> logger, IAppMetrics metrics)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
@@ -142,32 +147,35 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<AuthResponseDto> RefreshUser(RefreshRequestDto refreshRequest, CancellationToken cancellationToken)
         {
-            await using var transaction = await _unitOfWorkRepository.BeginTransactionAsync(cancellationToken);
-            try
+            RefreshTransactionResult result = await _unitOfWorkRepository.ExecuteInTransactionAsync(
+                async transactionCancellationToken =>
             {
-                RefreshToken refreshToken = await _tokenService.ValidateRefreshToken(refreshRequest.RefreshToken, cancellationToken);
-                string newRefreshTokenString = await _tokenService.GenerateRefreshToken(refreshToken.UserId, refreshToken.FamilyId, cancellationToken);
-                RefreshToken newRefreshToken = await _tokenService.GetRefreshToken(newRefreshTokenString, cancellationToken);
-                await _tokenService.RevokeRefreshToken(refreshToken.Token, newRefreshToken.Id, cancellationToken);
-                string accessToken = await _tokenService.GenerateAccessToken(refreshToken.UserId, cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                return AuthMapper.ToAuthResponseDto(newRefreshTokenString, accessToken);
-            }
-            catch (NotFoundException ex)
+                try
+                {
+                    RefreshToken refreshToken =
+                        await _tokenService.ValidateRefreshToken(refreshRequest.RefreshToken, transactionCancellationToken);
+                    string newRefreshTokenString = await _tokenService.GenerateRefreshToken(refreshToken.UserId,
+                        refreshToken.FamilyId, transactionCancellationToken);
+                    RefreshToken newRefreshToken =
+                        await _tokenService.GetRefreshToken(newRefreshTokenString, transactionCancellationToken);
+                    await _tokenService.RevokeRefreshToken(refreshToken.Token, newRefreshToken.Id, transactionCancellationToken);
+                    string accessToken =
+                        await _tokenService.GenerateAccessToken(refreshToken.UserId, transactionCancellationToken);
+                    var response = AuthMapper.ToAuthResponseDto(newRefreshTokenString, accessToken);
+                    return new RefreshTransactionResult(response, null);
+                }
+                catch (UnauthorizedException ex)
+                {
+                    return new RefreshTransactionResult(null, ex);
+                }
+            }, cancellationToken);
+
+            if (result.UnauthorizedException is not null)
             {
-                await transaction.RollbackAsync(cancellationToken);
-                throw new NotFoundException(ex.Message);
+                throw result.UnauthorizedException;
             }
-            catch (UnauthorizedException ex)
-            {
-                await transaction.CommitAsync(cancellationToken);
-                throw new UnauthorizedException(ex.Message);
-            }
-            catch
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
-            }
+
+            return result.Response!;
         }
 
         public async Task LogoutUser(LogoutRequestDto logoutRequest, int userId, CancellationToken cancellationToken)

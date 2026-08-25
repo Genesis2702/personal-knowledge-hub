@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Sockets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -24,10 +25,12 @@ using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using PersonalKnowledgeHub.Observability;
+using PersonalKnowledgeHub.Observability.Implementations;
+using PersonalKnowledgeHub.Observability.Interfaces;
 using Serilog;
 using Serilog.Events;
 using Serilog.Context;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,12 +64,16 @@ builder.Services.AddTransient<IMailService, MailService>();
 builder.Services.AddScoped<IMailFactoryService, MailFactoryService>();
 builder.Services.AddScoped<IVerificationTokenService, VerificationTokenService>();
 
+// Redis connection
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+    ConnectionMultiplexer.Connect(builder.Configuration["RedisCacheSettings:ConnectionString"]!));
+
 // Policies
 builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerOrAdminHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TagOwnerOrAdminHandler>();
 
 // Metrics 
-builder.Services.AddSingleton<AppMetrics>();
+builder.Services.AddSingleton<IAppMetrics, AppMetrics>();
 
 builder.Services.Configure<HostOptions>(option =>
 {
@@ -183,30 +190,40 @@ builder.Services.AddAuthorization(options =>
         policy => policy.RequireClaim("status", "Banned"));
     options.AddPolicy("InactiveAccount",
         policy => policy.RequireClaim("status", "Inactive"));
+    options.AddPolicy("PendingOrActiveAccount", 
+        policy => policy.RequireClaim("status", "Pending", "Active"));
     options.AddPolicy("ResourceOwnerOrAdmin", policy => policy.AddRequirements(new ResourceOwnerOrAdminRequirement()));
     options.AddPolicy("TagOwnerOrAdmin", policy => policy.AddRequirements(new TagOwnerOrAdminRequirement()));
 });
 
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
-builder.Services.AddHangfire(configuration =>
+var enableHangfireStorage = builder.Configuration.GetValue<bool?>("Features:EnableHangfireStorage") ?? true;
+if (enableHangfireStorage) 
 {
-    configuration.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-        .UseSimpleAssemblyNameTypeSerializer()
-        .UseRecommendedSerializerSettings()
-        .UsePostgreSqlStorage(
-            options =>
-            {
-                options.UseNpgsqlConnection(
-                    builder.Configuration.GetConnectionString("DefaultConnection"));
-            },
-            new PostgreSqlStorageOptions
-            {
-                SchemaName = "hangfire"
-            });
-});
+    builder.Services.AddHangfire(configuration =>
+    {
+        configuration.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(
+                options =>
+                {
+                    options.UseNpgsqlConnection(
+                        builder.Configuration.GetConnectionString("DefaultConnection"));
+                },
+                new PostgreSqlStorageOptions
+                {
+                    SchemaName = "hangfire"
+                });
+    });
+}
 
-builder.Services.AddHangfireServer();
+var enableHangfireServer = builder.Configuration.GetValue<bool?>("Features:EnableHangfireServer") ?? true;
+if (enableHangfireServer)
+{
+    builder.Services.AddHangfireServer();
+}
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -223,22 +240,24 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-builder.Services.AddHealthChecks()
-    .AddNpgSql(
-        builder.Configuration.GetConnectionString("DefaultConnection")!,
-        name: "postgresql",
-        tags: new[] {"ready"})
-    .AddRedis(
-        builder.Configuration["RedisCacheSettings:ConnectionString"]!,
-        name: "redis",
-        tags: new[] {"ready"})
-    .AddHangfire(
-        options =>
-        {
-            options.MinimumAvailableServers = 1;
-        },
-        name: "hangfire",
-        tags: new[] {"ready"});
+var healthCheck = builder.Services.AddHealthChecks();
+var enableExternalHealthChecks = builder.Configuration.GetValue<bool?>("Features:EnableExternalHealthChecks") ?? true;
+if (enableExternalHealthChecks)
+{
+    healthCheck
+        .AddNpgSql(
+            builder.Configuration.GetConnectionString("DefaultConnection")!,
+            name: "postgresql",
+            tags: new[] { "ready" })
+        .AddRedis(
+            builder.Configuration["RedisCacheSettings:ConnectionString"]!,
+            name: "redis",
+            tags: new[] { "ready" })
+        .AddHangfire(
+            options => { options.MinimumAvailableServers = 1; },
+            name: "hangfire",
+            tags: new[] { "ready" });
+}
 
 builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics =>
@@ -314,7 +333,20 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.UseMiddleware<RateLimitMiddleware>();
+if (app.Environment.IsEnvironment("IntegrationTesting"))
+{
+    app.Use(async (context, next) =>
+    {
+        context.Connection.RemoteIpAddress ??= IPAddress.Loopback;
+        await next();
+    });
+}
+
+var enableRateLimitMiddleware = builder.Configuration.GetValue<bool?>("Features:EnableRateLimitMiddleware") ?? true;
+if (enableRateLimitMiddleware)
+{
+    app.UseMiddleware<RateLimitMiddleware>();
+}
 
 app.MapHealthChecks("/health");
 
@@ -332,6 +364,12 @@ app.MapPrometheusScrapingEndpoint("/metrics");
 
 app.MapControllers();
 
-app.RegisterRecurringJobs();
+var enableRecurringJobs = builder.Configuration.GetValue<bool?>("Features:EnableRecurringJobs") ?? true;
+if (enableRecurringJobs)
+{
+    app.RegisterRecurringJobs();
+}
 
 app.Run();
+
+public partial class Program { }

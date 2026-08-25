@@ -10,6 +10,7 @@ namespace PersonalKnowledgeHub.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize(Roles = "ADMIN")]
+    [Authorize(Policy = "ActiveAccount")]
     public class PermissionsController : ControllerBase
     {
         private readonly IPermissionService _permissionService;

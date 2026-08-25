@@ -1,8 +1,9 @@
 ﻿using System.Diagnostics.Metrics;
+using PersonalKnowledgeHub.Observability.Interfaces;
 
-namespace PersonalKnowledgeHub.Observability;
+namespace PersonalKnowledgeHub.Observability.Implementations;
 
-public class AppMetrics
+public class AppMetrics : IAppMetrics
 {
     private readonly Counter<int> _emailSendFailureCounter;
     private readonly Counter<int> _loginFailureCounter;

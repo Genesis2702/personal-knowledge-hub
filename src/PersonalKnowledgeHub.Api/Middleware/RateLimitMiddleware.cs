@@ -1,68 +1,77 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
-using System.Security.Claims;
+﻿using System.Security.Claims;
+using StackExchange.Redis;
 
 namespace PersonalKnowledgeHub.Middleware
 {
-    public class RateLimitMiddleware
+    public sealed class RateLimitMiddleware
     {
-        private readonly IDistributedCache _distributedCache;
-        private readonly RequestDelegate _next;
-        private readonly int _requestPerMinute = 10;
+        private const int RequestLimit = 10;
+        private const int WindowMilliseconds = 60_000;
 
-        public RateLimitMiddleware(IDistributedCache distributedCache, RequestDelegate next)
+        private const string IncrementScript = """
+           local count = redis.call('INCR', KEYS[1])
+
+           if count == 1 then 
+                redis.call('PEXPIRE', KEYS[1], ARGV[1])
+           end
+
+           local ttl = redis.call('PTTL', KEYS[1])
+           return { count, ttl }
+           """;
+
+        private readonly IDatabase _redis;
+        private readonly RequestDelegate _next;
+
+        public RateLimitMiddleware(IConnectionMultiplexer connection, RequestDelegate next)
         {
-            _distributedCache = distributedCache;
+            _redis = connection.GetDatabase();
             _next = next;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
-            string rateLimitKey;
-            if (context.User.Identity!.IsAuthenticated)
+            string key = "ratelimit:";
+
+            string identity;
+
+            if (context.User.Identity?.IsAuthenticated == true)
             {
-                string userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-                rateLimitKey = $"ratelimit:{userId}";
+                identity = "user:" + context.User.FindFirstValue(ClaimTypes.NameIdentifier);
             }
             else
             {
-                string ip;
-                if (context.Connection.RemoteIpAddress == null)
+                if (context.Connection.RemoteIpAddress != null)
                 {
-                    context.Response.StatusCode = 400;
-                    await context.Response.WriteAsync("Connection is invalid");
-                    return;
-                }
-                ip = context.Connection.RemoteIpAddress.ToString();
-                rateLimitKey = $"ratelimit:{ip}";
-            }
-            string? cachedCounter = await _distributedCache.GetStringAsync(rateLimitKey);
-            if (cachedCounter == null)
-            {
-                DistributedCacheEntryOptions cacheEntryOption = new DistributedCacheEntryOptions
-                {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
-                };
-                DateTime expiry = DateTime.UtcNow.AddSeconds(60);
-                await _distributedCache.SetStringAsync(rateLimitKey, $"1|{expiry}", cacheEntryOption);
-                await _next(context);
-            }
-            else
-            {
-                string[] splitCounter = cachedCounter.Split('|');
-                int counter = int.Parse(splitCounter[0]);
-                DateTime expiry = DateTime.Parse(splitCounter[1]);
-                if (counter >= _requestPerMinute)
-                {
-                    context.Response.Headers.RetryAfter = (expiry - DateTime.UtcNow).ToString();
-                    context.Response.StatusCode = 429;
-                    await context.Response.WriteAsync("Please try again later");
+                    identity = "ip:" + context.Connection.RemoteIpAddress;
                 }
                 else
                 {
-                    await _distributedCache.SetStringAsync(rateLimitKey, $"{counter + 1}|{expiry}");
-                    await _next(context);
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    await context.Response.WriteAsync("Invalid connection.");
+                    return;
                 }
             }
+
+            key += identity;
+
+            RedisResult result = await _redis.ScriptEvaluateAsync(
+                IncrementScript,
+                [ key ],
+                [ WindowMilliseconds ]);
+            
+            RedisResult[] values = (RedisResult[])result!;
+            long count = (long)values[0];
+            long ttlMilliseconds = Math.Max(0, (long)values[1]);
+
+            if (count > RequestLimit)
+            {
+                context.Response.Headers.RetryAfter = Math.Max(1, (int)Math.Ceiling(ttlMilliseconds / 1000d)).ToString();
+                context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                await context.Response.WriteAsync("Please try again later.");
+                return;
+            }
+            
+            await _next(context);
         }
     }
 }

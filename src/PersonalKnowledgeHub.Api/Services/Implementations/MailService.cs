@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using PersonalKnowledgeHub.Configuration;
 using PersonalKnowledgeHub.DTOs.Requests;
-using PersonalKnowledgeHub.Observability;
+using PersonalKnowledgeHub.Observability.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
 using Polly.Registry;
 
@@ -14,10 +14,10 @@ public class MailService : IMailService
     private readonly MailSettings _mailSettings;
     private readonly ResiliencePipelineProvider<string> _pipelineProvider;
     private readonly ILogger<MailService> _logger;
-    private readonly AppMetrics _metrics;
+    private readonly IAppMetrics _metrics;
 
     public MailService(IOptions<MailSettings> options, ResiliencePipelineProvider<string> pipeline, 
-        ILogger<MailService> logger, AppMetrics metrics)
+        ILogger<MailService> logger, IAppMetrics metrics)
     {
         _mailSettings = options.Value;
         _pipelineProvider = pipeline;

@@ -60,4 +60,9 @@ public class RoleRepository : IRoleRepository
         _dbContext.RolePermissions.Remove(rolePermission);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<RolePermission?> GetRolePermissionAsync(int roleId, int permissionId, CancellationToken cancellationToken)
+    {
+        return await _dbContext.RolePermissions.SingleOrDefaultAsync(rolePermission => rolePermission.RoleId == roleId && rolePermission.PermissionId == permissionId, cancellationToken);
+    }
 }

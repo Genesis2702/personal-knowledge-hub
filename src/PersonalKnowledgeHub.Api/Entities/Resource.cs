@@ -16,6 +16,7 @@
         public int? DeletedBy { get; set; }
         public long Version { get; set; }
         public ICollection<ResourceTag> ResourceTags { get; set; } = new List<ResourceTag>();
+        public StoredFile? StoredFile { get; set; }
     }
 
     public enum ResourceType

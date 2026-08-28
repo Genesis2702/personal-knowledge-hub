@@ -27,6 +27,9 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using PersonalKnowledgeHub.Observability.Implementations;
 using PersonalKnowledgeHub.Observability.Interfaces;
+using PersonalKnowledgeHub.Storage.Implementations;
+using PersonalKnowledgeHub.Storage.Interfaces;
+using PersonalKnowledgeHub.Storage.Options;
 using Serilog;
 using Serilog.Events;
 using Serilog.Context;
@@ -63,6 +66,9 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddTransient<IMailService, MailService>();
 builder.Services.AddScoped<IMailFactoryService, MailFactoryService>();
 builder.Services.AddScoped<IVerificationTokenService, VerificationTokenService>();
+
+// Storage
+builder.Services.AddScoped<IFileStorage, LocalFileStorage>();
 
 // Redis connection
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
@@ -284,6 +290,16 @@ builder.Services.AddOpenTelemetry()
             .AddSource(AppTracing.ServiceName)
             .AddConsoleExporter();
     });
+
+builder.Services.AddOptions<FileStorageOptions>()
+    .BindConfiguration(FileStorageOptions.Options)
+    .Validate(
+        options => !String.IsNullOrWhiteSpace(options.FileDirectory),
+        "FileStorageOptions:FileDirectory is required")
+    .Validate(
+        options => options.FileMaxSizeLimit > 0,
+        "FileStorageOptions:FileMaxSizeLimit must be greater than zero")
+    .ValidateOnStart();
 
 var app = builder.Build();
 

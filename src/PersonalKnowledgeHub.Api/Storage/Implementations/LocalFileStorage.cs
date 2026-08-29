@@ -6,9 +6,9 @@ namespace PersonalKnowledgeHub.Storage.Implementations;
 
 public class LocalFileStorage : IFileStorage
 {
-    private readonly FileStorageOptions _options;
+    private readonly LocalFileStorageOptions _options;
 
-    public LocalFileStorage(IOptions<FileStorageOptions> options)
+    public LocalFileStorage(IOptions<LocalFileStorageOptions> options)
     {
         _options = options.Value;
     }

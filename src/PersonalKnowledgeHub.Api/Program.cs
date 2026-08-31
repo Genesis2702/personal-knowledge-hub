@@ -305,6 +305,9 @@ if (builder.Environment.IsDevelopment())
             options => !String.IsNullOrWhiteSpace(options.StorageDirectory),
             "LocalFileStorageOptions:StorageDirectory is required")
         .Validate(
+            options => !String.IsNullOrWhiteSpace(options.TempStorageDirectory),
+            "LocalFileStorageOptions:TempStorageDirectory is required")
+        .Validate(
             options => options.MaxStoredFileSizeInBytes > 0 && options.MaxStoredFileSizeInBytes <= 20971520,
             "LocalFileStorageOptions:MaxStoredFileSizeInBytes must be between 1 and 20971520 bytes")
         .ValidateOnStart();

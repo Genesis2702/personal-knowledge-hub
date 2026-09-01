@@ -42,6 +42,11 @@ namespace PersonalKnowledgeHub.Middleware
                 context.Response.StatusCode = 409;
                 await context.Response.WriteAsync(ex.Message);
             }
+            catch (FileSizeLimitExceededException ex)
+            {
+                context.Response.StatusCode = 413;
+                await context.Response.WriteAsync(ex.Message);
+            }
             catch (Exception ex)
             {
                 context.Response.StatusCode = 500;

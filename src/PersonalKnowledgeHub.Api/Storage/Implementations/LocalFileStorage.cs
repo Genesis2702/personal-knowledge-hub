@@ -84,7 +84,7 @@ public class LocalFileStorage : IFileStorage
         return storedKey;
     }
 
-    public async Task<Stream> OpenFile(string storedKey, int userId, CancellationToken cancellationToken)
+    public Task<Stream> OpenFile(string storedKey, int userId, CancellationToken cancellationToken)
     {
         if (!IsStoredKeyValid(storedKey, userId))
         {
@@ -103,11 +103,13 @@ public class LocalFileStorage : IFileStorage
         {
             throw new FileNotFoundException("The requested file does not exist");
         }
-        
-        return new FileStream(normalizedPath, FileMode.Open, FileAccess.Read);
+
+        Stream result = new FileStream(normalizedPath, FileMode.Open, FileAccess.Read);
+
+        return Task.FromResult(result);
     }
 
-    public async Task DeleteFile(string storedKey, int userId, CancellationToken cancellationToken)
+    public Task DeleteFile(string storedKey, int userId, CancellationToken cancellationToken)
     {
         if (!IsStoredKeyValid(storedKey, userId))
         {
@@ -128,6 +130,8 @@ public class LocalFileStorage : IFileStorage
         }
 
         File.Delete(normalizedPath);
+
+        return Task.CompletedTask;
     }
 
     private bool IsStoredKeyValid(string storedKey, int userId)

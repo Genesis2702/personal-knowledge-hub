@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using PersonalKnowledgeHub.Entities;
+using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Storage.Interfaces;
 using PersonalKnowledgeHub.Storage.Options;
 
@@ -52,11 +53,14 @@ public class LocalFileStorage : IFileStorage
                 while (true)
                 {
                     int bytesRead = await fileStream.ReadAsync(buffer, cancellationToken);
+
+                    if (bytesRead == 0) break;
+                    
                     totalBytesRead += bytesRead;
 
                     if (totalBytesRead > _uploadOptions.MaxFileSizeInBytes)
                     {
-                        
+                        throw new FileSizeLimitExceededException("The requested file is too large");
                     }
 
                     await tempStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);

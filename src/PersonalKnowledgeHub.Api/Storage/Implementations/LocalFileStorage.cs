@@ -9,14 +9,12 @@ namespace PersonalKnowledgeHub.Storage.Implementations;
 public class LocalFileStorage : IFileStorage
 {
     private readonly LocalFileStorageOptions _storageOptions;
-    private readonly FileUploadOptions _uploadOptions;
     private string _targetFolder;
     private string _tempoparyFolder;
 
     public LocalFileStorage(IOptions<LocalFileStorageOptions> storageOptions, IOptions<FileUploadOptions> uploadOptions,  IWebHostEnvironment env)
     {
         _storageOptions = storageOptions.Value;
-        _uploadOptions = uploadOptions.Value;
         
         _targetFolder = Path.Combine(env.ContentRootPath, _storageOptions.StorageDirectory);
         _targetFolder = Path.GetFullPath(_targetFolder);
@@ -32,6 +30,12 @@ public class LocalFileStorage : IFileStorage
         string extension = Path.GetExtension(fileName);
         string guid = Guid.NewGuid().ToString("N");
         string date = DateTime.UtcNow.ToString("yyyy/MM");
+
+        if (extension != FileFormat.Pdf.ToString("G").ToLower() &&
+            extension != FileFormat.Png.ToString("G").ToLower() && extension != FileFormat.Mp4.ToString("G").ToLower())
+        {
+            throw new UnsupportedMediaTypeException("This file format is not supported");
+        }
 
         string storedKey = $"{userId}/{date}/{guid}{extension}";
         
@@ -58,7 +62,7 @@ public class LocalFileStorage : IFileStorage
                     
                     totalBytesRead += bytesRead;
 
-                    if (totalBytesRead > _uploadOptions.MaxFileSizeInBytes)
+                    if (totalBytesRead > _storageOptions.MaxStoredFileSizeInBytes)
                     {
                         throw new FileSizeLimitExceededException("The requested file is too large");
                     }

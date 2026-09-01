@@ -7,15 +7,23 @@ namespace PersonalKnowledgeHub.Storage.Implementations;
 
 public class LocalFileStorage : IFileStorage
 {
-    private readonly LocalFileStorageOptions _options;
+    private readonly LocalFileStorageOptions _storageOptions;
+    private readonly FileUploadOptions _uploadOptions;
     private string _targetFolder;
+    private string _tempoparyFolder;
 
-    public LocalFileStorage(IOptions<LocalFileStorageOptions> options, IWebHostEnvironment env)
+    public LocalFileStorage(IOptions<LocalFileStorageOptions> storageOptions, IOptions<FileUploadOptions> uploadOptions,  IWebHostEnvironment env)
     {
-        _options = options.Value;
-        _targetFolder = Path.Combine(env.ContentRootPath, _options.StorageDirectory);
+        _storageOptions = storageOptions.Value;
+        _uploadOptions = uploadOptions.Value;
+        
+        _targetFolder = Path.Combine(env.ContentRootPath, _storageOptions.StorageDirectory);
         _targetFolder = Path.GetFullPath(_targetFolder);
         Directory.CreateDirectory(_targetFolder);
+
+        _tempoparyFolder = Path.Combine(env.ContentRootPath, _storageOptions.TempStorageDirectory);
+        _tempoparyFolder = Path.GetFullPath(_tempoparyFolder);
+        Directory.CreateDirectory(_tempoparyFolder);
     }
     
     public async Task<string> SaveFile(Stream fileStream, string fileName, int userId, CancellationToken cancellationToken)
@@ -26,17 +34,43 @@ public class LocalFileStorage : IFileStorage
 
         string storedKey = $"{userId}/{date}/{guid}{extension}";
         
-        string physicalPath = Path.Combine(_targetFolder, storedKey);
+        string targetPath = Path.Combine(_targetFolder, storedKey);
+        string temporaryPath = Path.Combine(_tempoparyFolder, storedKey);
 
-        string directoryPath = Path.GetDirectoryName(physicalPath)!;
-        if (!Directory.Exists(directoryPath))
+        string targetDirectoryPath = Path.GetDirectoryName(targetPath)!;
+        string tempDirectoryPath = Path.GetDirectoryName(temporaryPath)!;
+
+        Directory.CreateDirectory(targetDirectoryPath);
+        Directory.CreateDirectory(tempDirectoryPath);
+
+        long totalBytesRead = 0;
+        try
         {
-            Directory.CreateDirectory(directoryPath);
+            await using (var tempStream = File.Create(temporaryPath))
+            {
+                byte[] buffer = new byte[8192];
+                while (true)
+                {
+                    int bytesRead = await fileStream.ReadAsync(buffer, cancellationToken);
+                    totalBytesRead += bytesRead;
+
+                    if (totalBytesRead > _uploadOptions.MaxFileSizeInBytes)
+                    {
+                        
+                    }
+
+                    await tempStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+                }
+            }
+            
+            File.Move(temporaryPath, targetPath);
         }
-
-        await using (var targetStream = File.Create(physicalPath))
+        finally
         {
-            await fileStream.CopyToAsync(targetStream, cancellationToken);
+            if (File.Exists(temporaryPath))
+            {
+                File.Delete(temporaryPath);
+            }
         }
 
         return storedKey;

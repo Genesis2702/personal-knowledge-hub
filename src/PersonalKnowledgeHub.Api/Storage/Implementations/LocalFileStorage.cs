@@ -3,6 +3,7 @@ using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Storage.Interfaces;
 using PersonalKnowledgeHub.Storage.Options;
+using PersonalKnowledgeHub.Storage.Validators;
 
 namespace PersonalKnowledgeHub.Storage.Implementations;
 
@@ -93,7 +94,7 @@ public class LocalFileStorage : IFileStorage
 
     public Task<Stream> OpenFile(string storedKey, int userId, CancellationToken cancellationToken)
     {
-        if (!IsStoredKeyValid(storedKey, userId))
+        if (!LocalFileStorageValidators.IsStoredKeyValid(storedKey, userId, _allowedExtensions))
         {
             throw new ArgumentException("The requested path is invalid");
         }
@@ -101,7 +102,7 @@ public class LocalFileStorage : IFileStorage
         string physicalPath = Path.Combine(_targetFolder, storedKey);
         string normalizedPath = Path.GetFullPath(physicalPath);
 
-        if (!IsFullPathValid(normalizedPath))
+        if (!LocalFileStorageValidators.IsFullPathValid(normalizedPath, _targetFolder))
         {
             throw new ArgumentException("The requested path is invalid");
         }
@@ -118,7 +119,7 @@ public class LocalFileStorage : IFileStorage
 
     public Task DeleteFile(string storedKey, int userId, CancellationToken cancellationToken)
     {
-        if (!IsStoredKeyValid(storedKey, userId))
+        if (!LocalFileStorageValidators.IsStoredKeyValid(storedKey, userId, _allowedExtensions))
         {
             throw new ArgumentException("The requested path is invalid");
         }
@@ -126,7 +127,7 @@ public class LocalFileStorage : IFileStorage
         string physicalPath = Path.Combine(_targetFolder, storedKey);
         string normalizedPath = Path.GetFullPath(physicalPath);
 
-        if (!IsFullPathValid(normalizedPath))
+        if (!LocalFileStorageValidators.IsFullPathValid(normalizedPath, _targetFolder))
         {
             throw new ArgumentException("The requested path is invalid");
         }
@@ -139,66 +140,5 @@ public class LocalFileStorage : IFileStorage
         File.Delete(normalizedPath);
 
         return Task.CompletedTask;
-    }
-
-    private bool IsStoredKeyValid(string storedKey, int userId)
-    {
-        if (String.IsNullOrEmpty(storedKey)) return false;
-        
-        char[] separators =
-        {
-            Path.DirectorySeparatorChar,
-            Path.AltDirectorySeparatorChar
-        };
-
-        string[] segments = storedKey.Split(separators);
-
-        if (segments.Length != 4) return false;
-        
-        string userIdSegment = segments[0];
-        string yearSegment = segments[1];
-        string monthSegment = segments[2];
-        
-        string[] fileSegments = segments[3].Split('.');
-
-        if (fileSegments.Length != 2) return false;
-
-        string fileName = fileSegments[0];
-        string fileExtension = fileSegments[1];
-
-        if (Int32.TryParse(userIdSegment, out int id))
-        {
-            if (id != userId) return false;
-        }
-        else return false;
-
-        if (Int32.TryParse(yearSegment, out int year))
-        {
-            if (year > DateTime.UtcNow.Year) return false;
-        }
-        else return false;
-
-        if (Int32.TryParse(monthSegment, out int month))
-        {
-            if (year < DateTime.UtcNow.Year && (month < 1 || month > 12)) return false;
-            if (year == DateTime.UtcNow.Year && (month > DateTime.UtcNow.Month || month < 1)) return false;
-        }
-        else return false;
-        
-        if (!Guid.TryParse(fileName, out Guid guid)) return false;
-
-        fileExtension = fileExtension.ToLower();
-        if (_allowedExtensions.Contains(fileExtension)) return false;
-
-        return true;
-    }
-
-    private bool IsFullPathValid(string normalizedPath)
-    {
-        StringComparison comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        string explicitTargetFolder = _targetFolder.EndsWith(Path.DirectorySeparatorChar)
-            ? _targetFolder
-            : _targetFolder + Path.DirectorySeparatorChar;
-        return normalizedPath.StartsWith(explicitTargetFolder, comparison);
     }
 }

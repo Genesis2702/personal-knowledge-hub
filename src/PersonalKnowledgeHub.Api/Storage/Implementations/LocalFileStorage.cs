@@ -40,7 +40,7 @@ public class LocalFileStorage : IFileStorage
         string guid = Guid.NewGuid().ToString("N");
         string date = DateTime.UtcNow.ToString("yyyy/MM");
 
-        if (!_allowedExtensions.Contains(extension))
+        if (!_allowedExtensions.Contains(extension.TrimStart('.')))
         {
             throw new UnsupportedMediaTypeException("This file format is not supported");
         }
@@ -57,6 +57,7 @@ public class LocalFileStorage : IFileStorage
         Directory.CreateDirectory(tempDirectoryPath);
 
         long totalBytesRead = 0;
+        bool signatureValidated = false;
         try
         {
             await using (var tempStream = File.Create(temporaryPath))
@@ -65,6 +66,15 @@ public class LocalFileStorage : IFileStorage
                 while (true)
                 {
                     int bytesRead = await fileStream.ReadAsync(buffer, cancellationToken);
+                    
+                    if (bytesRead > 0 && !signatureValidated)
+                    {
+                        if (LocalFileStorageValidators.IsFileSignatureValid(extension.TrimStart('.'), buffer.AsSpan(0, 12)))
+                        {
+                            signatureValidated = true;
+                        }
+                        else throw new UnsupportedMediaTypeException("This file format is not supported");
+                    }
 
                     if (bytesRead == 0) break;
                     

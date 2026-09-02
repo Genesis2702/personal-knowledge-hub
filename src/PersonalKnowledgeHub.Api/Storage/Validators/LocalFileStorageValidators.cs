@@ -5,21 +5,6 @@ namespace PersonalKnowledgeHub.Storage.Validators;
 
 public static class LocalFileStorageValidators
 {
-    private static readonly Dictionary<string, (byte[] Signature, int Offset)> FileSignature = new Dictionary<string, (byte[], int)>()
-    {
-        { "pdf", (new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2d }, 0) },
-        { "png", (new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }, 0) },
-        { "mp4", (new byte[] { 0x66, 0x74, 0x79, 0x70 }, 4) },
-    };
-    
-    private static readonly HashSet<string> AllowedMp4Brands =
-    [
-        "isom",
-        "mp41",
-        "mp42",
-        "avc1"
-    ];
-    
     public static bool IsStoredKeyValid(string storedKey, int userId, HashSet<string> allowedExtensions)
     {
         if (String.IsNullOrEmpty(storedKey)) return false;
@@ -83,7 +68,7 @@ public static class LocalFileStorageValidators
 
     public static bool IsFileSignatureValid(string extension, ReadOnlySpan<byte> bytes)
     {
-        if (!FileSignature.TryGetValue(extension, out var rule))
+        if (!FileSignatures.FileSignature.TryGetValue(extension, out var rule))
         {
             return false;
         }
@@ -105,7 +90,7 @@ public static class LocalFileStorageValidators
         
         ReadOnlySpan<byte> brandBytes = bytes.Slice(8, 4);
         string brand = Encoding.ASCII.GetString(brandBytes);
-        bool brandValidation = AllowedMp4Brands.Contains(brand);
+        bool brandValidation = FileSignatures.AllowedMp4Brands.Contains(brand);
 
         return signatureValidation && brandValidation;
     }

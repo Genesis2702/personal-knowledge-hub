@@ -9,12 +9,20 @@ namespace PersonalKnowledgeHub.Storage.Implementations;
 public class LocalFileStorage : IFileStorage
 {
     private readonly LocalFileStorageOptions _storageOptions;
+    private readonly HashSet<string> _allowedExtensions;
     private string _targetFolder;
     private string _tempoparyFolder;
 
     public LocalFileStorage(IOptions<LocalFileStorageOptions> storageOptions, IOptions<FileUploadOptions> uploadOptions,  IWebHostEnvironment env)
     {
         _storageOptions = storageOptions.Value;
+
+        _allowedExtensions = new()
+        {
+            FileFormat.Pdf.ToString("G").ToLower(),
+            FileFormat.Png.ToString("G").ToLower(),
+            FileFormat.Mp4.ToString("G").ToLower(),
+        };
         
         _targetFolder = Path.Combine(env.ContentRootPath, _storageOptions.StorageDirectory);
         _targetFolder = Path.GetFullPath(_targetFolder);
@@ -31,8 +39,7 @@ public class LocalFileStorage : IFileStorage
         string guid = Guid.NewGuid().ToString("N");
         string date = DateTime.UtcNow.ToString("yyyy/MM");
 
-        if (extension != FileFormat.Pdf.ToString("G").ToLower() &&
-            extension != FileFormat.Png.ToString("G").ToLower() && extension != FileFormat.Mp4.ToString("G").ToLower())
+        if (!_allowedExtensions.Contains(extension))
         {
             throw new UnsupportedMediaTypeException("This file format is not supported");
         }
@@ -181,7 +188,7 @@ public class LocalFileStorage : IFileStorage
         if (!Guid.TryParse(fileName, out Guid guid)) return false;
 
         fileExtension = fileExtension.ToLower();
-        if (fileExtension != FileFormat.Pdf.ToString("G").ToLower() && fileExtension != FileFormat.Png.ToString("G").ToLower() && fileExtension != FileFormat.Mp4.ToString("G").ToLower()) return false;
+        if (_allowedExtensions.Contains(fileExtension)) return false;
 
         return true;
     }

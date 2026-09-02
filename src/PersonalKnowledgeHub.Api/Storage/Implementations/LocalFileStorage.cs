@@ -56,27 +56,37 @@ public class LocalFileStorage : IFileStorage
         Directory.CreateDirectory(targetDirectoryPath);
         Directory.CreateDirectory(tempDirectoryPath);
 
+        FileSignatures.FileSignature.TryGetValue(extension.TrimStart('.'), out var rule);
+        int signatureOffset = rule.Offset;
+        int signatureBytesLength = rule.Signature.Length;
+
         long totalBytesRead = 0;
+        int signatureBytesCollected = 0;
         bool signatureValidated = false;
         try
         {
             await using (var tempStream = File.Create(temporaryPath))
             {
                 byte[] buffer = new byte[8192];
+                byte[] signatureBuffer = new byte[signatureOffset + signatureBytesLength];
                 while (true)
                 {
                     int bytesRead = await fileStream.ReadAsync(buffer, cancellationToken);
-                    
-                    if (bytesRead > 0 && !signatureValidated)
-                    {
-                        if (LocalFileStorageValidators.IsFileSignatureValid(extension.TrimStart('.'), buffer.AsSpan(0, 12)))
-                        {
-                            signatureValidated = true;
-                        }
-                        else throw new UnsupportedMediaTypeException("This file format is not supported");
-                    }
 
                     if (bytesRead == 0) break;
+
+                    int bytesToCopy = Math.Min(bytesRead, signatureBuffer.Length - signatureBytesCollected);
+                    buffer.AsSpan(0, bytesToCopy).CopyTo(signatureBuffer.AsSpan(signatureBytesCollected));
+                    signatureBytesCollected += bytesToCopy;
+
+                    if (!signatureValidated && signatureBytesCollected == signatureBuffer.Length)
+                    {
+                        if (!LocalFileStorageValidators.IsFileSignatureValid(extension.TrimStart('.'), signatureBuffer))
+                        {
+                            throw new UnsupportedMediaTypeException("This file format is not supported");
+                        }
+                        signatureValidated = true;
+                    }
                     
                     totalBytesRead += bytesRead;
 
@@ -87,6 +97,11 @@ public class LocalFileStorage : IFileStorage
 
                     await tempStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
                 }
+            }
+
+            if (!signatureValidated)
+            {
+                throw new UnsupportedMediaTypeException("This file format is not supported");
             }
             
             File.Move(temporaryPath, targetPath);

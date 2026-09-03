@@ -8,6 +8,13 @@ public static class FileSignatures
         { "png", (new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }, 0) },
         { "mp4", (new byte[] { 0x66, 0x74, 0x79, 0x70 }, 4) },
     };
+
+    public static readonly Dictionary<string, int> FileBrandBytes = new()
+    {
+        { "pdf", 0 },
+        { "png", 0 },
+        { "mp4", 4 },
+    };
     
     public static readonly HashSet<string> AllowedMp4Brands =
     [

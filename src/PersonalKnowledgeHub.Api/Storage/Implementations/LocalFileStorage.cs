@@ -40,7 +40,9 @@ public class LocalFileStorage : IFileStorage
         string guid = Guid.NewGuid().ToString("N");
         string date = DateTime.UtcNow.ToString("yyyy/MM");
 
-        if (!_allowedExtensions.Contains(extension.TrimStart('.')))
+        string trimmedExtension = extension.TrimStart('.');
+
+        if (!_allowedExtensions.Contains(trimmedExtension))
         {
             throw new UnsupportedMediaTypeException("This file format is not supported");
         }
@@ -56,7 +58,8 @@ public class LocalFileStorage : IFileStorage
         Directory.CreateDirectory(targetDirectoryPath);
         Directory.CreateDirectory(tempDirectoryPath);
 
-        FileSignatures.FileSignature.TryGetValue(extension.TrimStart('.'), out var rule);
+        FileSignatures.FileSignature.TryGetValue(trimmedExtension, out var rule);
+        FileSignatures.FileBrandBytes.TryGetValue(trimmedExtension, out int signatureBrandBytes);
         int signatureOffset = rule.Offset;
         int signatureBytesLength = rule.Signature.Length;
 
@@ -68,7 +71,7 @@ public class LocalFileStorage : IFileStorage
             await using (var tempStream = File.Create(temporaryPath))
             {
                 byte[] buffer = new byte[8192];
-                byte[] signatureBuffer = new byte[signatureOffset + signatureBytesLength];
+                byte[] signatureBuffer = new byte[signatureOffset + signatureBytesLength + signatureBrandBytes];
                 while (true)
                 {
                     int bytesRead = await fileStream.ReadAsync(buffer, cancellationToken);
@@ -81,7 +84,7 @@ public class LocalFileStorage : IFileStorage
 
                     if (!signatureValidated && signatureBytesCollected == signatureBuffer.Length)
                     {
-                        if (!LocalFileStorageValidators.IsFileSignatureValid(extension.TrimStart('.'), signatureBuffer))
+                        if (!LocalFileStorageValidators.IsFileSignatureValid(trimmedExtension, signatureBuffer))
                         {
                             throw new UnsupportedMediaTypeException("This file format is not supported");
                         }

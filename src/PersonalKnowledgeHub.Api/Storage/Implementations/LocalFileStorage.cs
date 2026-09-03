@@ -14,7 +14,7 @@ public class LocalFileStorage : IFileStorage
     private string _targetFolder;
     private string _tempoparyFolder;
 
-    public LocalFileStorage(IOptions<LocalFileStorageOptions> storageOptions, IOptions<FileUploadOptions> uploadOptions,  IWebHostEnvironment env)
+    public LocalFileStorage(IOptions<LocalFileStorageOptions> storageOptions,  IWebHostEnvironment env)
     {
         _storageOptions = storageOptions.Value;
 
@@ -134,15 +134,20 @@ public class LocalFileStorage : IFileStorage
         {
             throw new ArgumentException("The requested path is invalid");
         }
-        
-        if (!File.Exists(normalizedPath))
+
+        try
+        {
+            Stream result = new FileStream(normalizedPath, FileMode.Open, FileAccess.Read);
+            return Task.FromResult(result);
+        }
+        catch (FileNotFoundException)
         {
             throw new FileNotFoundException("The requested file does not exist");
         }
-
-        Stream result = new FileStream(normalizedPath, FileMode.Open, FileAccess.Read);
-
-        return Task.FromResult(result);
+        catch (DirectoryNotFoundException)
+        {
+            throw new DirectoryNotFoundException("The requested directory does not exist");
+        }
     }
 
     public Task DeleteFile(string storedKey, int userId, CancellationToken cancellationToken)
@@ -158,11 +163,6 @@ public class LocalFileStorage : IFileStorage
         if (!LocalFileStorageValidators.IsFullPathValid(normalizedPath, _targetFolder))
         {
             throw new ArgumentException("The requested path is invalid");
-        }
-
-        if (!File.Exists(normalizedPath))
-        {
-            throw new FileNotFoundException("The requested file does not exist");
         }
 
         File.Delete(normalizedPath);

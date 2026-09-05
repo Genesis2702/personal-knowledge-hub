@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
+using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Storage.Interfaces;
 using PersonalKnowledgeHub.Storage.Options;
 using PersonalKnowledgeHub.Storage.Validators;
@@ -11,6 +12,7 @@ public class LocalFileStorage : IFileStorage
 {
     private readonly LocalFileStorageOptions _storageOptions;
     private readonly HashSet<string> _allowedExtensions;
+    private readonly Dictionary<string, string> _contentTypes;
     private string _targetFolder;
     private string _tempoparyFolder;
 
@@ -24,6 +26,13 @@ public class LocalFileStorage : IFileStorage
             FileFormat.Png.ToString("G").ToLower(),
             FileFormat.Mp4.ToString("G").ToLower(),
         };
+
+        _contentTypes = new()
+        {
+            { "pdf", "application/pdf" },
+            { "png", "image/png" },
+            { "mp4", "video/mp4" },
+        };
         
         _targetFolder = Path.Combine(env.ContentRootPath, _storageOptions.StorageDirectory);
         _targetFolder = Path.GetFullPath(_targetFolder);
@@ -34,7 +43,8 @@ public class LocalFileStorage : IFileStorage
         Directory.CreateDirectory(_tempoparyFolder);
     }
     
-    public async Task<string> SaveFile(Stream fileStream, string fileName, int userId, CancellationToken cancellationToken)
+    public async Task<FileResult> SaveFile(Stream fileStream, string fileName, int userId,
+        CancellationToken cancellationToken)
     {
         string extension = Path.GetExtension(fileName);
         string guid = Guid.NewGuid().ToString("N");
@@ -117,7 +127,14 @@ public class LocalFileStorage : IFileStorage
             }
         }
 
-        return storedKey;
+        _contentTypes.TryGetValue(trimmedExtension, out var contentType);
+        
+        return new FileResult
+        {
+            StoredKey = storedKey,
+            SizeInBytes = totalBytesRead,
+            ContentType = contentType!
+        };
     }
 
     public Task<Stream> OpenFile(string storedKey, int userId, CancellationToken cancellationToken)

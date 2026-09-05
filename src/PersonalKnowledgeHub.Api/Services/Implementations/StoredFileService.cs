@@ -26,7 +26,7 @@ public class StoredFileService : IStoredFileService
     
     public async Task<StoredFile> GetStoredFileByResourceId(int resourceId, CancellationToken cancellationToken)
     {
-        StoredFile? storedFile = await _storedFileRepository.GetStoredFileByResourceId(resourceId, cancellationToken);
+        StoredFile? storedFile = await _storedFileRepository.GetStoredFileByResourceIdAsync(resourceId, cancellationToken);
         if (storedFile == null)
         {
             throw new NotFoundException("Stored file not found");
@@ -36,7 +36,7 @@ public class StoredFileService : IStoredFileService
 
     public async Task<StoredFile> GetStoredFileByStoredKey(string storedKey, CancellationToken cancellationToken)
     {
-        StoredFile? storedFile = await _storedFileRepository.GetStoredFileByStoredKey(storedKey, cancellationToken);
+        StoredFile? storedFile = await _storedFileRepository.GetStoredFileByStoredKeyAsync(storedKey, cancellationToken);
         if (storedFile == null)
         {
             throw new NotFoundException("Stored file not found");
@@ -46,7 +46,7 @@ public class StoredFileService : IStoredFileService
 
     public async Task<StoredFile> GetStoredFileById(int id, CancellationToken cancellationToken)
     {
-        StoredFile? storedFile = await _storedFileRepository.GetStoredFileById(id, cancellationToken);
+        StoredFile? storedFile = await _storedFileRepository.GetStoredFileByIdAsync(id, cancellationToken);
         if (storedFile == null)
         {
             throw new NotFoundException("Stored file not found");
@@ -88,17 +88,17 @@ public class StoredFileService : IStoredFileService
             FileFormat = result.FileFormat
         };
         
-        await _storedFileRepository.AddStoredFile(storedFile, cancellationToken);
+        await _storedFileRepository.AddStoredFileAsync(storedFile, cancellationToken);
         
         return storedFile;
     }
 
     public async Task DeleteStoredFileByStoredKey(string storedKey, CancellationToken cancellationToken)
     {
-        if (await _storedFileRepository.GetStoredFileByStoredKey(storedKey, cancellationToken) == null)
+        if (await _storedFileRepository.GetStoredFileByStoredKeyAsync(storedKey, cancellationToken) == null)
         {
             throw new NotFoundException("Stored file not found");
         }
-        await _storedFileRepository.DeleteStoredFileByStoredKey(storedKey, cancellationToken);
+        await _storedFileRepository.DeleteStoredFileByStoredKeyAsync(storedKey, cancellationToken);
     }
 }

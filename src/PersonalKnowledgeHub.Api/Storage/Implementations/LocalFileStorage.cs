@@ -128,12 +128,27 @@ public class LocalFileStorage : IFileStorage
         }
 
         _contentTypes.TryGetValue(trimmedExtension, out var contentType);
+
+        FileFormat fileFormat = FileFormat.Pdf;
+        if (_allowedExtensions.ToList().IndexOf(trimmedExtension) == 0)
+        {
+            fileFormat = FileFormat.Pdf;
+        }
+        else if (_allowedExtensions.ToList().IndexOf(trimmedExtension) == 1)
+        {
+            fileFormat = FileFormat.Png;
+        }
+        else if (_allowedExtensions.ToList().IndexOf(trimmedExtension) == 2)
+        {
+            fileFormat = FileFormat.Mp4;
+        }
         
         return new FileResult
         {
             StoredKey = storedKey,
             SizeInBytes = totalBytesRead,
-            ContentType = contentType!
+            ContentType = contentType!,
+            FileFormat = fileFormat
         };
     }
 

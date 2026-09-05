@@ -1,11 +1,11 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PersonalKnowledgeHub.Common;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Mapper;
+using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Services.Interfaces;
 
 namespace PersonalKnowledgeHub.Controllers

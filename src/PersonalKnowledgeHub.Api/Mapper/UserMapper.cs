@@ -1,7 +1,7 @@
-﻿using PersonalKnowledgeHub.Common;
-using PersonalKnowledgeHub.DTOs.Requests;
+﻿using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
+using PersonalKnowledgeHub.Models;
 
 namespace PersonalKnowledgeHub.Mapper;
 

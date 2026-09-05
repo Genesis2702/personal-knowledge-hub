@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
-using PersonalKnowledgeHub.Common;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.Entities;
+using PersonalKnowledgeHub.Models;
 
 namespace PersonalKnowledgeHub.Services.Interfaces
 {

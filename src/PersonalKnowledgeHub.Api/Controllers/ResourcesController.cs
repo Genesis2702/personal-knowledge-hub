@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
-using PersonalKnowledgeHub.Common;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
@@ -9,6 +8,7 @@ using PersonalKnowledgeHub.Services.Interfaces;
 using System.Security.Claims;
 using System.Text.Json;
 using PersonalKnowledgeHub.Mapper;
+using PersonalKnowledgeHub.Models;
 
 namespace PersonalKnowledgeHub.Controllers
 {

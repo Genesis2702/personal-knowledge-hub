@@ -1,13 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using PersonalKnowledgeHub.Common;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
 using PersonalKnowledgeHub.Mapper;
+using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Observability.Implementations;
 
 namespace PersonalKnowledgeHub.Services.Implementations

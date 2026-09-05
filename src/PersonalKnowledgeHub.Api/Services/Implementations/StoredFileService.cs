@@ -1,17 +1,21 @@
 ﻿using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
+using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
+using PersonalKnowledgeHub.Storage.Interfaces;
 
 namespace PersonalKnowledgeHub.Services.Implementations;
 
 public class StoredFileService : IStoredFileService
 {
     private readonly IStoredFileRepository _storedFileRepository;
+    private readonly IFileStorage _fileStorage;
 
-    public StoredFileService(IStoredFileRepository storedFileRepository)
+    public StoredFileService(IStoredFileRepository storedFileRepository, IFileStorage fileStorage)
     {
         _storedFileRepository = storedFileRepository;
+        _fileStorage = fileStorage;
     }
     
     public async Task<StoredFile> GetStoredFileByResourceId(int resourceId, CancellationToken cancellationToken)
@@ -44,7 +48,8 @@ public class StoredFileService : IStoredFileService
         return storedFile;
     }
 
-    public Task<StoredFile> AddStoredFile(CancellationToken cancellationToken)
+    public async Task<StoredFile> AddStoredFile(IFormFile formFile, int userId, int resourceId,
+        CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }

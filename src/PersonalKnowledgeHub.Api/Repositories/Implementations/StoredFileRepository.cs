@@ -14,31 +14,31 @@ public class StoredFileRepository : IStoredFileRepository
         _dbContext = dbContext;
     }
     
-    public async Task<StoredFile?> GetStoredFileByResourceId(int resourceId)
+    public async Task<StoredFile?> GetStoredFileByResourceId(int resourceId, CancellationToken cancellationToken)
     {
-        return await _dbContext.StoredFiles.AsNoTracking().SingleOrDefaultAsync(f => f.ResourceId == resourceId);
+        return await _dbContext.StoredFiles.AsNoTracking().SingleOrDefaultAsync(f => f.ResourceId == resourceId, cancellationToken);
     }
 
-    public async Task<StoredFile?> GetStoredFileByStoredKey(string storedKey)
+    public async Task<StoredFile?> GetStoredFileByStoredKey(string storedKey, CancellationToken cancellationToken)
     {
-        return await _dbContext.StoredFiles.AsNoTracking().SingleOrDefaultAsync(f => f.StoredKey == storedKey);
+        return await _dbContext.StoredFiles.AsNoTracking().SingleOrDefaultAsync(f => f.StoredKey == storedKey, cancellationToken);
     }
 
-    public async Task<StoredFile?> GetStoredFileById(int id)
+    public async Task<StoredFile?> GetStoredFileById(int id, CancellationToken cancellationToken)
     {
-        return await _dbContext.StoredFiles.AsNoTracking().SingleOrDefaultAsync(f => f.Id == id); 
+        return await _dbContext.StoredFiles.AsNoTracking().SingleOrDefaultAsync(f => f.Id == id, cancellationToken); 
     }
 
-    public async Task<StoredFile> AddStoredFile(StoredFile storedFile)
+    public async Task<StoredFile> AddStoredFile(StoredFile storedFile, CancellationToken cancellationToken)
     {
-        await _dbContext.StoredFiles.AddAsync(storedFile);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.StoredFiles.AddAsync(storedFile, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
         return storedFile;
     }
 
-    public async Task DeleteStoredFileByStoredKey(string storedKey)
+    public async Task DeleteStoredFileByStoredKey(string storedKey, CancellationToken cancellationToken)
     {
-        await _dbContext.StoredFiles.Where(f => f.StoredKey == storedKey).ExecuteDeleteAsync();
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.StoredFiles.Where(f => f.StoredKey == storedKey).ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

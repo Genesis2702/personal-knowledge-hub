@@ -77,28 +77,45 @@ public class StoredFileService : IStoredFileService
         await using var fileStream = formFile.OpenReadStream();
         string fileName = formFile.FileName;
 
-        FileResult result = await _fileStorage.SaveFile(fileStream, fileName, userId, cancellationToken);
+        FileResult? result = null;
 
-        StoredFile storedFile = new StoredFile
+        try
         {
-            StoredKey = result.StoredKey,
-            SizeInBytes = result.SizeInBytes,
-            ContentType = result.ContentType,
-            ResourceId = resourceId,
-            FileFormat = result.FileFormat
-        };
-        
-        await _storedFileRepository.AddStoredFileAsync(storedFile, cancellationToken);
-        
-        return storedFile;
+            result = await _fileStorage.SaveFile(fileStream, fileName, userId, cancellationToken);
+
+            StoredFile storedFile = new StoredFile
+            {
+                StoredKey = result.StoredKey,
+                SizeInBytes = result.SizeInBytes,
+                ContentType = result.ContentType,
+                ResourceId = resourceId,
+                FileFormat = result.FileFormat
+            };
+
+            await _storedFileRepository.AddStoredFileAsync(storedFile, cancellationToken);
+
+            return storedFile;
+        }
+        catch
+        {
+            if (result is not null)
+            {
+                await _fileStorage.DeleteFile(result.StoredKey, userId, CancellationToken.None);
+            }
+
+            throw;
+        }
     }
 
-    public async Task DeleteStoredFileByStoredKey(string storedKey, CancellationToken cancellationToken)
+    public async Task DeleteStoredFileByStoredKey(string storedKey, int userId, CancellationToken cancellationToken)
     {
         if (await _storedFileRepository.GetStoredFileByStoredKeyAsync(storedKey, cancellationToken) == null)
         {
             throw new NotFoundException("Stored file not found");
         }
+
+        await _fileStorage.DeleteFile(storedKey, userId, cancellationToken);
+        
         await _storedFileRepository.DeleteStoredFileByStoredKeyAsync(storedKey, cancellationToken);
     }
 }

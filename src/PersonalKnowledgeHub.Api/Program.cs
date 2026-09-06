@@ -53,6 +53,7 @@ builder.Services.AddScoped<IResourceTagRepository, ResourceTagRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 builder.Services.AddScoped<IVerificationTokenRepository, VerificationTokenRepository>();
+builder.Services.AddScoped<IStoredFileRepository, StoredFileRepository>();
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -66,6 +67,7 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddTransient<IMailService, MailService>();
 builder.Services.AddScoped<IMailFactoryService, MailFactoryService>();
 builder.Services.AddScoped<IVerificationTokenService, VerificationTokenService>();
+builder.Services.AddScoped<IStoredFileService, StoredFileService>();
 
 // Redis connection
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>

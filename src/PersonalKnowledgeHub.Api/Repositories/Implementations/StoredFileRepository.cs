@@ -29,6 +29,11 @@ public class StoredFileRepository : IStoredFileRepository
         return await _dbContext.StoredFiles.AsNoTracking().SingleOrDefaultAsync(f => f.Id == id, cancellationToken); 
     }
 
+    public async Task<StoredFile?> GetStoredFileByStoredKeyForCleanupAsync(string storedKey, CancellationToken cancellationToken)
+    {
+        return await _dbContext.StoredFiles.IgnoreQueryFilters().AsNoTracking().SingleOrDefaultAsync(f => f.StoredKey == storedKey, cancellationToken);
+    }
+
     public async Task<StoredFile> AddStoredFileAsync(StoredFile storedFile, CancellationToken cancellationToken)
     {
         await _dbContext.StoredFiles.AddAsync(storedFile, cancellationToken);
@@ -38,7 +43,6 @@ public class StoredFileRepository : IStoredFileRepository
 
     public async Task DeleteStoredFileByStoredKeyAsync(string storedKey, CancellationToken cancellationToken)
     {
-        await _dbContext.StoredFiles.Where(f => f.StoredKey == storedKey).ExecuteDeleteAsync(cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.StoredFiles.IgnoreQueryFilters().Where(f => f.StoredKey == storedKey).ExecuteDeleteAsync(cancellationToken);
     }
 }

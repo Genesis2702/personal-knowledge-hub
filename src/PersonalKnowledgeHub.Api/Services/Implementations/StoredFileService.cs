@@ -15,13 +15,15 @@ public class StoredFileService : IStoredFileService
     private readonly IResourceRepository _resourceRepository;
     private readonly IFileStorage _fileStorage;
     private readonly FileUploadOptions _uploadOptions;
+    private readonly ILogger<StoredFileService> _logger;
 
-    public StoredFileService(IStoredFileRepository storedFileRepository, IFileStorage fileStorage, IOptions<FileUploadOptions> uploadOptions, IResourceRepository resourceRepository)
+    public StoredFileService(IStoredFileRepository storedFileRepository, IFileStorage fileStorage, IOptions<FileUploadOptions> uploadOptions, IResourceRepository resourceRepository, ILogger<StoredFileService> logger)
     {
         _storedFileRepository = storedFileRepository;
         _resourceRepository = resourceRepository;
         _fileStorage = fileStorage;
         _uploadOptions = uploadOptions.Value;
+        _logger = logger;
     }
     
     public async Task<StoredFile> GetStoredFileByResourceId(int resourceId, CancellationToken cancellationToken)
@@ -100,7 +102,16 @@ public class StoredFileService : IStoredFileService
         {
             if (result is not null)
             {
-                await _fileStorage.DeleteFile(result.StoredKey, userId, CancellationToken.None);
+                try
+                {
+                    await _fileStorage.DeleteFile(result.StoredKey, userId, CancellationToken.None);
+                }
+                catch (Exception cleanupException)
+                {
+                    _logger.LogError(cleanupException,
+                        "Failed to remove orphaned file {StoredKey} after saving its database record failed",
+                        result.StoredKey);
+                }
             }
 
             throw;
@@ -109,7 +120,7 @@ public class StoredFileService : IStoredFileService
 
     public async Task DeleteStoredFileByStoredKey(string storedKey, int userId, CancellationToken cancellationToken)
     {
-        if (await _storedFileRepository.GetStoredFileByStoredKeyAsync(storedKey, cancellationToken) == null)
+        if (await _storedFileRepository.GetStoredFileByStoredKeyForCleanupAsync(storedKey, cancellationToken) == null)
         {
             throw new NotFoundException("Stored file not found");
         }

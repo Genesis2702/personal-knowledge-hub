@@ -14,5 +14,6 @@ namespace PersonalKnowledgeHub.DTOs.Responses
         public DateTime CreatedAt { get; set; }
         public DateTime LastModified { get; set; }
         public ICollection<string> Tags { get; set; } = new List<string>();
+        public StoredFileResponseDto? StoredFileResponse { get; set; }
     }
 }

@@ -87,6 +87,7 @@ public class StoredFileService : IStoredFileService
 
             StoredFile storedFile = new StoredFile
             {
+                FileName = fileName,
                 StoredKey = result.StoredKey,
                 SizeInBytes = result.SizeInBytes,
                 ContentType = result.ContentType,

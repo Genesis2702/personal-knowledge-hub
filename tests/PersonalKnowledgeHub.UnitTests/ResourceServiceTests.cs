@@ -497,14 +497,6 @@ public class ResourceServiceTests
     }
 
     [Fact]
-    public async Task CleanUpResources_WhenCalled_CallsRepository()
-    {
-        await _resourceService.CleanUpResources(CancellationToken.None);
-        
-        _resourceRepository.Verify(x => x.CleanUpResourcesAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
     public async Task RestoreResourceById_WhenResourceExists_ReturnsRestoredResource()
     {
         int resourceId = 1;

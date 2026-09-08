@@ -123,24 +123,43 @@ public class FileResourceService : IFileResourceService
         return result;
     }
 
-    public async Task DeleteFileResourcePermanently(int resourceId, int userId, CancellationToken cancellationToken)
+    public async Task DeleteFileResourcePermanently(CancellationToken cancellationToken)
     {
-        Resource? resource = await _resourceRepository.GetResourceByIdForPermanentDeleteAsync(resourceId, cancellationToken);
-        if (resource is null)
+        const int batchSize = 100;
+        int lastResourceId = -1;
+        DateTime expirationDate = DateTime.UtcNow.AddDays(-30);
+        
+        _logger.LogInformation("Resources cleaning up started");
+
+        while (true)
         {
-            return;
-        }
-        if (resource.UserId != userId)
-        {
-            throw new ForbiddenException("You are not authorized to delete this resource");
+            List<Resource> resources =
+                await _resourceRepository.GetExpiredResourcesByBatchAsync(batchSize, lastResourceId, expirationDate,
+                    cancellationToken);
+            if (resources.Count <= 0) break;
+
+            foreach (Resource resource in resources)
+            {
+                lastResourceId = resource.Id;
+                try
+                {
+                    if (resource.StoredFile is not null)
+                    {
+                        await _fileStorage.DeleteFile(resource.StoredFile.StoredKey, resource.UserId,
+                            cancellationToken);
+                        await _storedFileRepository.DeleteStoredFileByStoredKeyAsync(resource.StoredFile.StoredKey,
+                            cancellationToken);
+                    }
+
+                    await _resourceRepository.CleanUpResourceByIdAsync(resource.Id, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to cleanup resource {ResourceId}", resource.Id);
+                }
+            }
         }
 
-        if (resource.StoredFile is not null)
-        {
-            await _fileStorage.DeleteFile(resource.StoredFile.StoredKey, userId, cancellationToken);
-            await _storedFileRepository.DeleteStoredFileByStoredKeyAsync(resource.StoredFile.StoredKey, cancellationToken);
-        }
-        
-        await _resourceRepository.CleanUpResourceByIdAsync(resourceId, cancellationToken);
+        _logger.LogInformation("Resources cleaned up successfully");
     }
 }

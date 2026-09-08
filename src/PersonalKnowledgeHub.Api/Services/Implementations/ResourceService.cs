@@ -136,21 +136,6 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _logger.LogInformation("Resource {ResourceId} deleted successfully for user {UserId}", resource.Id, userId);
         }
 
-        public async Task CleanUpResources(CancellationToken cancellationToken)
-        {
-            _logger.LogInformation("Resources cleaning up started");
-            try
-            {
-                await _resourceRepository.CleanUpResourcesAsync(cancellationToken);
-                _logger.LogInformation("Resources cleaned up successfully");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Resources cleaning up failed");
-                throw;
-            }
-        }
-
         public async Task<Resource> RestoreResourceById(ClaimsPrincipal user, int resourceId, CancellationToken cancellationToken)
         {
             Resource? resource = await _resourceRepository.GetResourceByIdForRestoreAsync(resourceId, cancellationToken);

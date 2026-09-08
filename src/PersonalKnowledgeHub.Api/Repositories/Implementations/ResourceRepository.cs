@@ -57,14 +57,21 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                 .SingleOrDefaultAsync(resource => resource.Id == resourceId, cancellationToken);
         }
 
-        public async Task<Resource?> GetResourceByIdForPermanentDeleteAsync(int resourceId, CancellationToken cancellationToken)
+        public async Task<List<Resource>> GetExpiredResourcesByBatchAsync(int batchSize, int lastResourceId, DateTime expirationDate, CancellationToken cancellationToken)
         {
             return await _dbContext.Resources
                 .IgnoreQueryFilters()
+                .AsNoTracking()
                 .Include(resource => resource.StoredFile)
-                .SingleOrDefaultAsync(resource => resource.Id == resourceId && resource.IsDeleted, cancellationToken);
+                .Where(resource =>
+                    resource.Id > lastResourceId &&
+                    resource.IsDeleted &&
+                    resource.DeletedAt < expirationDate)
+                .OrderBy(resource => resource.Id)
+                .Take(batchSize)
+                .ToListAsync(cancellationToken);
         }
-
+        
         public async Task<Resource> AddResourceAsync(Resource resource, CancellationToken cancellationToken)
         {
             await _dbContext.Resources.AddAsync(resource, cancellationToken);
@@ -102,14 +109,6 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             resource.DeletedBy = null;
             await _dbContext.SaveChangesAsync(cancellationToken);
             return resource;
-        }
-
-        public async Task CleanUpResourcesAsync(CancellationToken cancellationToken)
-        {
-            await _dbContext.Resources
-                .IgnoreQueryFilters()
-                .Where(resource => resource.IsDeleted)
-                .ExecuteDeleteAsync(cancellationToken);
         }
 
         public async Task CleanUpResourceByIdAsync(int resourceId, CancellationToken cancellationToken)

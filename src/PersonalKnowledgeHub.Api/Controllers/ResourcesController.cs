@@ -18,11 +18,13 @@ namespace PersonalKnowledgeHub.Controllers
     public class ResourcesController : ControllerBase
     {
         private readonly IResourceService _resourceService;
+        private readonly IStoredFileService _storedFileService;
         private readonly IDistributedCache _distributedCache;
 
-        public ResourcesController(IResourceService resourceService, IDistributedCache distributedCache)
+        public ResourcesController(IResourceService resourceService, IStoredFileService storedFileService, IDistributedCache distributedCache)
         {
             _resourceService = resourceService;
+            _storedFileService = storedFileService;
             _distributedCache = distributedCache;
         }
 
@@ -109,6 +111,20 @@ namespace PersonalKnowledgeHub.Controllers
             Resource resource = await _resourceService.RestoreResourceById(User, id, cancellationToken);
             ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
             return Ok(resourceResponse);
+        }
+
+        [HttpPost("files")]
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<ResourceResponseDto>> UploadFile([FromForm] FileUploadRequestDto fileUploadRequest,
+            CancellationToken cancellationToken)
+        {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            Resource resource =
+                await _resourceService.AddFileResource(fileUploadRequest.FormFile.FileName, userId, cancellationToken);
+            StoredFile storedFile = await _storedFileService.AddStoredFile(fileUploadRequest.FormFile, userId,
+                resource.Id, cancellationToken);
+            StoredFileResponseDto storedFileResponse = StoredFileMapper.ToStoredFileResponseDto(storedFile);
+            return Ok(storedFileResponse);
         }
     }
 }

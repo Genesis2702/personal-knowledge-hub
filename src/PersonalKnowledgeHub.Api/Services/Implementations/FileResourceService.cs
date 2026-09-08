@@ -94,9 +94,31 @@ public class FileResourceService : IFileResourceService
         }
     }
 
-    public Task<FileDownloadResult> OpenFileResource(int resourceId, int userId, CancellationToken cancellationToken)
+    public async Task<FileDownloadResult> OpenFileResource(int resourceId, int userId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId, cancellationToken);
+        if (resource is null)
+        {
+            throw new NotFoundException("Resource not found");
+        }
+        if (resource.UserId != userId)
+        {
+            throw new ForbiddenException("You are not authorized to view this resource");
+        }
+        if (resource.StoredFile is null)
+        {
+            throw new NotFoundException("This resource does not contain a file");
+        }
+
+        Stream content = await _fileStorage.OpenFile(resource.StoredFile.StoredKey, userId, cancellationToken);
+        FileDownloadResult result = new FileDownloadResult
+        {
+            Content = content,
+            ContentType = resource.StoredFile.ContentType,
+            FileName = resource.StoredFile.FileName
+        };
+
+        return result;
     }
 
     public Task DeleteFileResourcePermanently(int resourceId, int userId, CancellationToken cancellationToken)

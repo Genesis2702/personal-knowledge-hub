@@ -35,7 +35,8 @@ public class ResourceMapper
             ResourceType = resource.ResourceType,
             CreatedAt = resource.CreatedAt,
             LastModified = resource.LastModified,
-            Tags = resource.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
+            Tags = resource.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList(),
+            StoredFileResponse = resource.StoredFile is not null? StoredFileMapper.ToStoredFileResponseDto(resource.StoredFile) : null
         };
     }
 
@@ -62,7 +63,8 @@ public class ResourceMapper
                 ResourceType = item.ResourceType,
                 CreatedAt = item.CreatedAt,
                 LastModified = item.LastModified,
-                Tags = item.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
+                Tags = item.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList(),
+                StoredFileResponse = item.StoredFile is not null ? StoredFileMapper.ToStoredFileResponseDto(item.StoredFile) : null
             }).ToList(),
             PageIndex = resourcesPageResult.PageIndex,
             PageSize = resourcesPageResult.PageSize,

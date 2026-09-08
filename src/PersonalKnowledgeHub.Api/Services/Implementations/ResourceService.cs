@@ -50,7 +50,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 if (tag.UserId != userId)
                 {
                     activity?.SetTag("tag.owned_by_current_user", false);
-                    throw new ForbiddenException("Tag found doesn't belong to current user");
+                    throw new ForbiddenException("You are not authorized to view this resource");
                 }
                 activity?.SetTag("tag.owned_by_current_user", true);
             }
@@ -80,7 +80,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             if (resource.UserId != userId)
             {
-                throw new ForbiddenException("Resource found doesn't belong to current user");
+                throw new ForbiddenException("You are not authorized to view this resource");
             }
             return resource;
         }

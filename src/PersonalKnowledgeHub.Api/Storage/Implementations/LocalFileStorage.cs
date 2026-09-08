@@ -156,7 +156,7 @@ public class LocalFileStorage : IFileStorage
 
         try
         {
-            Stream result = new FileStream(normalizedPath, FileMode.Open, FileAccess.Read);
+            Stream result = new FileStream(normalizedPath, FileMode.Open, FileAccess.Read, FileShare.Read);
             return Task.FromResult(result);
         }
         catch (FileNotFoundException)

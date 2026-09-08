@@ -35,6 +35,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                 .OrderBy(resource => resource.Id)
                 .Include(resource => resource.ResourceTags)
                 .ThenInclude(resourceTag => resourceTag.Tag)
+                .Include(resource => resource.StoredFile)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
@@ -46,6 +47,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.Resources
                 .Include(resource => resource.ResourceTags)
                 .ThenInclude(resourceTag => resourceTag.Tag)
+                .Include(resource => resource.StoredFile)
                 .SingleOrDefaultAsync(resource => resource.Id == resourceId, cancellationToken);
         }
 

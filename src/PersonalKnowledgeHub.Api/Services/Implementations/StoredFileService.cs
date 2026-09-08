@@ -1,29 +1,19 @@
-﻿using Microsoft.Extensions.Options;
-using PersonalKnowledgeHub.Entities;
+﻿using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
+using PersonalKnowledgeHub.Mapper;
 using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
-using PersonalKnowledgeHub.Storage.Interfaces;
-using PersonalKnowledgeHub.Storage.Options;
 
 namespace PersonalKnowledgeHub.Services.Implementations;
 
 public class StoredFileService : IStoredFileService
 {
     private readonly IStoredFileRepository _storedFileRepository;
-    private readonly IResourceRepository _resourceRepository;
-    private readonly IFileStorage _fileStorage;
-    private readonly FileUploadOptions _uploadOptions;
-    private readonly ILogger<StoredFileService> _logger;
 
-    public StoredFileService(IStoredFileRepository storedFileRepository, IFileStorage fileStorage, IOptions<FileUploadOptions> uploadOptions, IResourceRepository resourceRepository, ILogger<StoredFileService> logger)
+    public StoredFileService(IStoredFileRepository storedFileRepository)
     {
         _storedFileRepository = storedFileRepository;
-        _resourceRepository = resourceRepository;
-        _fileStorage = fileStorage;
-        _uploadOptions = uploadOptions.Value;
-        _logger = logger;
     }
     
     public async Task<StoredFile> GetStoredFileByResourceId(int resourceId, CancellationToken cancellationToken)
@@ -56,78 +46,20 @@ public class StoredFileService : IStoredFileService
         return storedFile;
     }
 
-    public async Task<StoredFile> AddStoredFile(IFormFile formFile, int userId, int resourceId,
+    public async Task<StoredFile> AddStoredFile(string fileName, FileResult fileResult, int resourceId,
         CancellationToken cancellationToken)
     {
-        if (formFile.Length > _uploadOptions.MaxFileSizeInBytes)
-        {
-            throw new FileSizeLimitExceededException("The requested file is too large");
-        }
-
-        Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId, cancellationToken);
-
-        if (resource == null)
-        {
-            throw new NotFoundException("Resource not found");
-        }
-
-        if (resource.UserId != userId)
-        {
-            throw new ForbiddenException("You are not authorized to use this resource");
-        }
-        
-        await using var fileStream = formFile.OpenReadStream();
-        string fileName = formFile.FileName;
-
-        FileResult? result = null;
-
-        try
-        {
-            result = await _fileStorage.SaveFile(fileStream, fileName, userId, cancellationToken);
-
-            StoredFile storedFile = new StoredFile
-            {
-                FileName = fileName,
-                StoredKey = result.StoredKey,
-                SizeInBytes = result.SizeInBytes,
-                ContentType = result.ContentType,
-                ResourceId = resourceId,
-                FileFormat = result.FileFormat
-            };
-
-            await _storedFileRepository.AddStoredFileAsync(storedFile, cancellationToken);
-
-            return storedFile;
-        }
-        catch
-        {
-            if (result is not null)
-            {
-                try
-                {
-                    await _fileStorage.DeleteFile(result.StoredKey, userId, CancellationToken.None);
-                }
-                catch (Exception cleanupException)
-                {
-                    _logger.LogError(cleanupException,
-                        "Failed to remove orphaned file {StoredKey} after saving its database record failed",
-                        result.StoredKey);
-                }
-            }
-
-            throw;
-        }
+        StoredFile storedFile = StoredFileMapper.ToStoredFile(fileName, fileResult, resourceId);
+        StoredFile addedStoredFile = await _storedFileRepository.AddStoredFileAsync(storedFile, cancellationToken);
+        return addedStoredFile;
     }
 
-    public async Task DeleteStoredFileByStoredKey(string storedKey, int userId, CancellationToken cancellationToken)
+    public async Task DeleteStoredFileByStoredKey(string storedKey, CancellationToken cancellationToken)
     {
         if (await _storedFileRepository.GetStoredFileByStoredKeyForCleanupAsync(storedKey, cancellationToken) == null)
         {
             throw new NotFoundException("Stored file not found");
         }
-
-        await _fileStorage.DeleteFile(storedKey, userId, cancellationToken);
-        
         await _storedFileRepository.DeleteStoredFileByStoredKeyAsync(storedKey, cancellationToken);
     }
 }

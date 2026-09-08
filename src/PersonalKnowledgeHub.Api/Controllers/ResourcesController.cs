@@ -112,19 +112,5 @@ namespace PersonalKnowledgeHub.Controllers
             ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
             return Ok(resourceResponse);
         }
-
-        [HttpPost("files")]
-        [Consumes("multipart/form-data")]
-        public async Task<ActionResult<ResourceResponseDto>> UploadFile([FromForm] FileUploadRequestDto fileUploadRequest,
-            CancellationToken cancellationToken)
-        {
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            Resource resource =
-                await _resourceService.AddFileResource(fileUploadRequest.FormFile.FileName, userId, cancellationToken);
-            StoredFile storedFile = await _storedFileService.AddStoredFile(fileUploadRequest.FormFile, userId,
-                resource.Id, cancellationToken);
-            StoredFileResponseDto storedFileResponse = StoredFileMapper.ToStoredFileResponseDto(storedFile);
-            return Ok(storedFileResponse);
-        }
     }
 }

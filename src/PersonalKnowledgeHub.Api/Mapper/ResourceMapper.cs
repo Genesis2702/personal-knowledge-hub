@@ -25,24 +25,6 @@ public class ResourceMapper
         };
     }
 
-    public static Resource ToFileResource(string fileName, int userId)
-    {
-        return new Resource
-        {
-            Title = fileName,
-            Url = null,
-            Description = null,
-            ResourceType = ResourceType.File,
-            UserId = userId,
-            CreatedAt = DateTime.UtcNow,
-            LastModified = DateTime.UtcNow,
-            IsDeleted = false,
-            DeletedAt = null,
-            DeletedBy = null,
-            Version = 0
-        };
-    }
-
     public static ResourceResponseDto ToResourceResponseDto(Resource resource)
     {
         return new ResourceResponseDto

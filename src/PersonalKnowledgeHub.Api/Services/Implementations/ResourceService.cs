@@ -98,19 +98,6 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return addedResource;
         }
 
-        public async Task<Resource> AddFileResource(string fileName, int userId, CancellationToken cancellationToken)
-        {
-            if (await _resourceRepository.IsTitleExistAsync(fileName, userId, cancellationToken))
-            {
-                throw new ConflictException("Title already existed");
-            }
-            Resource resource = ResourceMapper.ToFileResource(fileName, userId);
-            Resource addedResource = await _resourceRepository.AddResourceAsync(resource, cancellationToken);
-            _logger.LogInformation("Resource {ResourceId} added successfully for user {UserId}", 
-                addedResource.Id, userId);
-            return addedResource;
-        }
-
         public async Task UpdateResourceById(ClaimsPrincipal user, int resourceId, ResourceUpdateRequestDto resourceUpdateRequest, CancellationToken cancellationToken)
         {
             Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId, cancellationToken);

@@ -12,14 +12,16 @@ namespace PersonalKnowledgeHub.Services.Implementations;
 public class FileResourceService : IFileResourceService
 {
     private readonly IResourceRepository _resourceRepository;
+    private readonly IStoredFileRepository _storedFileRepository;
     private readonly IFileStorage _fileStorage;
     private readonly FileUploadOptions _options;
     private readonly ILogger<FileResourceService> _logger;
 
     public FileResourceService(IOptions<FileUploadOptions> options,
-        IResourceRepository resourceRepository, IFileStorage fileStorage, ILogger<FileResourceService> logger)
+        IResourceRepository resourceRepository, IStoredFileRepository storedFileRepository, IFileStorage fileStorage, ILogger<FileResourceService> logger)
     {
         _resourceRepository = resourceRepository;
+        _storedFileRepository = storedFileRepository;
         _fileStorage = fileStorage;
         _options = options.Value;
         _logger = logger;
@@ -121,8 +123,24 @@ public class FileResourceService : IFileResourceService
         return result;
     }
 
-    public Task DeleteFileResourcePermanently(int resourceId, int userId, CancellationToken cancellationToken)
+    public async Task DeleteFileResourcePermanently(int resourceId, int userId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        Resource? resource = await _resourceRepository.GetResourceByIdForPermanentDeleteAsync(resourceId, cancellationToken);
+        if (resource is null)
+        {
+            return;
+        }
+        if (resource.UserId != userId)
+        {
+            throw new ForbiddenException("You are not authorized to delete this resource");
+        }
+
+        if (resource.StoredFile is not null)
+        {
+            await _fileStorage.DeleteFile(resource.StoredFile.StoredKey, userId, cancellationToken);
+            await _storedFileRepository.DeleteStoredFileByStoredKeyAsync(resource.StoredFile.StoredKey, cancellationToken);
+        }
+        
+        await _resourceRepository.CleanUpResourceByIdAsync(resourceId, cancellationToken);
     }
 }

@@ -57,6 +57,14 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                 .SingleOrDefaultAsync(resource => resource.Id == resourceId, cancellationToken);
         }
 
+        public async Task<Resource?> GetResourceByIdForPermanentDeleteAsync(int resourceId, CancellationToken cancellationToken)
+        {
+            return await _dbContext.Resources
+                .IgnoreQueryFilters()
+                .Include(resource => resource.StoredFile)
+                .SingleOrDefaultAsync(resource => resource.Id == resourceId && resource.IsDeleted, cancellationToken);
+        }
+
         public async Task<Resource> AddResourceAsync(Resource resource, CancellationToken cancellationToken)
         {
             await _dbContext.Resources.AddAsync(resource, cancellationToken);
@@ -98,7 +106,18 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
 
         public async Task CleanUpResourcesAsync(CancellationToken cancellationToken)
         {
-            await _dbContext.Resources.Where(resource => resource.IsDeleted).ExecuteDeleteAsync(cancellationToken);
+            await _dbContext.Resources
+                .IgnoreQueryFilters()
+                .Where(resource => resource.IsDeleted)
+                .ExecuteDeleteAsync(cancellationToken);
+        }
+
+        public async Task CleanUpResourceByIdAsync(int resourceId, CancellationToken cancellationToken)
+        {
+            await _dbContext.Resources
+                .IgnoreQueryFilters()
+                .Where(resource => resource.Id == resourceId && resource.IsDeleted)
+                .ExecuteDeleteAsync(cancellationToken);
         }
 
         public async Task<bool> IsTitleExistAsync(string resourceTitle, int userId, CancellationToken cancellationToken)

@@ -18,14 +18,14 @@ namespace PersonalKnowledgeHub.Controllers
     public class ResourcesController : ControllerBase
     {
         private readonly IResourceService _resourceService;
-        private readonly IStoredFileService _storedFileService;
+        private readonly IFileResourceService _fileResourceService;
         private readonly IDistributedCache _distributedCache;
 
-        public ResourcesController(IResourceService resourceService, IStoredFileService storedFileService, IDistributedCache distributedCache)
+        public ResourcesController(IResourceService resourceService, IDistributedCache distributedCache, IFileResourceService fileResourceService)
         {
             _resourceService = resourceService;
-            _storedFileService = storedFileService;
             _distributedCache = distributedCache;
+            _fileResourceService = fileResourceService;
         }
 
         [HttpGet]
@@ -111,6 +111,26 @@ namespace PersonalKnowledgeHub.Controllers
             Resource resource = await _resourceService.RestoreResourceById(User, id, cancellationToken);
             ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
             return Ok(resourceResponse);
+        }
+
+        [HttpPost("files")]
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<ResourceResponseDto>> UploadFile([FromForm] FileUploadRequestDto fileUploadRequest,
+            CancellationToken cancellationToken)
+        {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            Resource resource =
+                await _fileResourceService.CreateFileResource(fileUploadRequest.FormFile, userId, cancellationToken);
+            ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
+            return CreatedAtAction(nameof(GetResourceById), new { id = resource.Id }, resourceResponse);
+        }
+
+        [HttpGet("{id}/file")]
+        public async Task<IActionResult> OpenFile(int id, CancellationToken cancellationToken)
+        {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            FileDownloadResult result = await _fileResourceService.OpenFileResource(id, userId, cancellationToken);
+            return File(result.Content, result.ContentType, result.FileName);
         }
     }
 }

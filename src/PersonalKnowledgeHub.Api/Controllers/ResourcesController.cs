@@ -130,7 +130,7 @@ namespace PersonalKnowledgeHub.Controllers
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             FileDownloadResult result = await _fileResourceService.OpenFileResource(id, userId, cancellationToken);
-            return File(result.Content, result.ContentType);
+            return File(result.Content, result.ContentType, enableRangeProcessing: true);
         }
 
         [HttpGet("{id}/file/download")]
@@ -138,7 +138,7 @@ namespace PersonalKnowledgeHub.Controllers
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             FileDownloadResult result = await _fileResourceService.OpenFileResource(id, userId, cancellationToken);
-            return File(result.Content, result.ContentType, result.FileName);
+            return File(result.Content, result.ContentType, result.FileName, enableRangeProcessing: true);
         }
     }
 }

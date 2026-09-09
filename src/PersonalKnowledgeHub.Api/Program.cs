@@ -67,7 +67,6 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddTransient<IMailService, MailService>();
 builder.Services.AddScoped<IMailFactoryService, MailFactoryService>();
 builder.Services.AddScoped<IVerificationTokenService, VerificationTokenService>();
-builder.Services.AddScoped<IStoredFileService, StoredFileService>();
 builder.Services.AddScoped<IFileResourceService, FileResourceService>();
 
 // Redis connection

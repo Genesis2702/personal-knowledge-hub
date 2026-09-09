@@ -126,7 +126,15 @@ namespace PersonalKnowledgeHub.Controllers
         }
 
         [HttpGet("{id}/file")]
-        public async Task<IActionResult> OpenFile(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> PreviewFile(int id, CancellationToken cancellationToken)
+        {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            FileDownloadResult result = await _fileResourceService.OpenFileResource(id, userId, cancellationToken);
+            return File(result.Content, result.ContentType);
+        }
+
+        [HttpGet("{id}/file/download")]
+        public async Task<IActionResult> DownloadFile(int id, CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             FileDownloadResult result = await _fileResourceService.OpenFileResource(id, userId, cancellationToken);

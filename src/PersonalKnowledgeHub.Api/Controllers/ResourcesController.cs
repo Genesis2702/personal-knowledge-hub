@@ -38,17 +38,17 @@ namespace PersonalKnowledgeHub.Controllers
                 string? cachedResources = await _distributedCache.GetStringAsync(cacheKey, cancellationToken);
                 if (string.IsNullOrEmpty(cachedResources))
                 {
-                    PageResult<Resource> databaseResourcesPageResult = await _resourceService.GetResources(userId, resourceQueryRequest, cancellationToken);
-                    cachedResources = JsonSerializer.Serialize(databaseResourcesPageResult);
+                    PageResult<Resource> resourcesPageResult = await _resourceService.GetResources(userId, resourceQueryRequest, cancellationToken);
+                    PageResult<ResourceResponseDto> resourceResponsesPageResult = ResourceMapper.ToResourceResponsesPageResult(resourcesPageResult);
+                    cachedResources = JsonSerializer.Serialize(resourceResponsesPageResult);
                     DistributedCacheEntryOptions cacheEntryOption = new DistributedCacheEntryOptions
                     {
                         SlidingExpiration = TimeSpan.FromMinutes(1)
                     };
                     await _distributedCache.SetStringAsync(cacheKey, cachedResources, cacheEntryOption, cancellationToken);
                 }
-                PageResult<Resource> resourcesPageResult = JsonSerializer.Deserialize<PageResult<Resource>>(cachedResources)!;
-                PageResult<ResourceResponseDto> resourceResponsesPageResult = ResourceMapper.ToResourceResponsesPageResult(resourcesPageResult);
-                return Ok(resourceResponsesPageResult);
+                PageResult<ResourceResponseDto> response = JsonSerializer.Deserialize<PageResult<ResourceResponseDto>>(cachedResources)!;
+                return Ok(response);
             }
             else
             {
@@ -66,17 +66,17 @@ namespace PersonalKnowledgeHub.Controllers
             string? cachedResource = await _distributedCache.GetStringAsync(cacheKey, cancellationToken);
             if (string.IsNullOrEmpty(cachedResource))
             {
-                Resource databaseResource = await _resourceService.GetResourceById(id, userId, cancellationToken);
-                cachedResource = JsonSerializer.Serialize(databaseResource);
+                Resource resource = await _resourceService.GetResourceById(id, userId, cancellationToken);
+                ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
+                cachedResource = JsonSerializer.Serialize(resourceResponse);
                 DistributedCacheEntryOptions cacheEntryOption = new DistributedCacheEntryOptions
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3)
                 };
                 await _distributedCache.SetStringAsync(cacheKey, cachedResource, cacheEntryOption, cancellationToken);
             }
-            Resource resource = JsonSerializer.Deserialize<Resource>(cachedResource)!;
-            ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
-            return Ok(resourceResponse);
+            ResourceResponseDto response = JsonSerializer.Deserialize<ResourceResponseDto>(cachedResource)!;
+            return Ok(response);
         }
 
         [HttpPost]

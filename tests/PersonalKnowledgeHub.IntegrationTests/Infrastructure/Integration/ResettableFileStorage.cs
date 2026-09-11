@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
-using MimeKit;
 using PersonalKnowledgeHub.Entities;
+using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Storage.Interfaces;
 
@@ -8,7 +8,7 @@ namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.Integration;
 
 public class ResettableFileStorage : IFileStorage, IResettableFileStorage
 {
-    private sealed record StoredFileData(byte[] content, string ContentType, FileFormat fileFormat);
+    private sealed record StoredFileData(byte[] Content, string ContentType, FileFormat FileFormat);
     private readonly ConcurrentDictionary<(int UserId, string StoredKey), StoredFileData> _files = new();
     
     public async Task<FileResult> SaveFile(Stream fileStream, string fileName, int userId, CancellationToken cancellationToken)
@@ -23,24 +23,24 @@ public class ResettableFileStorage : IFileStorage, IResettableFileStorage
             .TrimStart('.')
             .ToLowerInvariant();
 
-        (string ContentType, FileFormat format) = extension switch
+        (string contentType, FileFormat format) = extension switch
         {
             "pdf" => ("application/pdf", FileFormat.Pdf),
             "png" => ("image/png", FileFormat.Png),
             "mp4" => ("video/mp4", FileFormat.Mp4),
-            _ => throw new InvalidOperationException(
+            _ => throw new UnsupportedMediaTypeException(
                 $"Unexpected test file extension: {extension}")
         };
 
         string storedKey = $"{userId}/{DateTime.UtcNow:yyyy/MM}/{Guid.NewGuid():N}.{extension}";
 
-        _files[(userId, storedKey)] = new StoredFileData(content, ContentType, format);
+        _files[(userId, storedKey)] = new StoredFileData(content, contentType, format);
 
         return new FileResult
         {
             StoredKey = storedKey,
             SizeInBytes = content.LongLength,
-            ContentType = ContentType,
+            ContentType = contentType,
             FileFormat = format
         };
     }
@@ -52,7 +52,7 @@ public class ResettableFileStorage : IFileStorage, IResettableFileStorage
             throw new FileNotFoundException("The requested test file does not exist");
         }
 
-        Stream stream = new MemoryStream(file.content, writable: false);
+        Stream stream = new MemoryStream(file.Content, writable: false);
 
         return Task.FromResult(stream);
     }
@@ -63,7 +63,7 @@ public class ResettableFileStorage : IFileStorage, IResettableFileStorage
         return Task.CompletedTask;
     }
 
-    public void Reset(CancellationToken cancellationToken = default)
+    public void Reset()
     {
         _files.Clear();
     }

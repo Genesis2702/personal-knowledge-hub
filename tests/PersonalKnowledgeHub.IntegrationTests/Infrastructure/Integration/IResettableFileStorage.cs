@@ -2,5 +2,5 @@
 
 public interface IResettableFileStorage
 {
-    void Reset(CancellationToken cancellationToken = default);
+    void Reset();
 }

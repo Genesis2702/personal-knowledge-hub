@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using PersonalKnowledgeHub.Data;
 using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Integration;
 using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Options;
+using PersonalKnowledgeHub.Storage.Interfaces;
+using PersonalKnowledgeHub.Storage.Options;
 
 namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;
 
@@ -16,6 +18,11 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
     private readonly string _postgresConnectionString;
     private readonly string? _redisConnectionString;
     private readonly FactoryOptions _options;
+
+    private readonly string _storageRoot = Path.Combine(Path.GetTempPath(), "PersonalKnowledgeHubIntegrationTests",
+        Guid.NewGuid().ToString("N"));
+    public string StorageDirectory => Path.Combine(_storageRoot, "files");
+    public string TempStorageDirectory => Path.Combine(_storageRoot, "temp");
 
     public PersonalKnowledgeHubWebApplicationFactory(string postgresConnectionString, string? redisConnectionString, FactoryOptions options)
     {
@@ -40,6 +47,10 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
         builder.UseSetting("Jwt:Issuer", "TestIssuer");
         builder.UseSetting("Jwt:Audience", "TestAudience");
         builder.UseSetting("ConnectionStrings:DefaultConnection", _postgresConnectionString);
+        builder.UseSetting("LocalFileStorageOptions:StorageDirectory", StorageDirectory);
+        builder.UseSetting("LocalFileStorageOptions:TempStorageDirectory", TempStorageDirectory);
+        builder.UseSetting("LocalFileStorageOptions:MaxStoredFileSizeInBytes", (20 * 1024 * 1024).ToString());
+        builder.UseSetting("FileUploadOptions:MaxFileSizeInBytes", (10 * 1024 * 1024).ToString());
 
         if (_redisConnectionString is not null)
         {
@@ -69,6 +80,15 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
             
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(_postgresConnectionString));
+
+            services.AddOptions<LocalFileStorageOptions>()
+                .BindConfiguration(LocalFileStorageOptions.Options);
+            services.RemoveAll<IFileStorage>();
+            services.AddSingleton<ResettableFileStorage>();
+            services.AddSingleton<IFileStorage>(provider =>
+                provider.GetRequiredService<ResettableFileStorage>());
+            services.AddSingleton<IResettableFileStorage>(provider =>
+                provider.GetRequiredService<ResettableFileStorage>());
 
             if (_options.EnableRedisWrapper)
             {

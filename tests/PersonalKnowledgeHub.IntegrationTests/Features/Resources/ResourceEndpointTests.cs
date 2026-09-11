@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using PersonalKnowledgeHub.Data;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
@@ -12,6 +13,7 @@ using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Integration;
 using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Services.Interfaces;
+using PersonalKnowledgeHub.Storage.Options;
 
 namespace PersonalKnowledgeHub.IntegrationTests.Features.Resources;
 
@@ -1119,5 +1121,194 @@ public class ResourceEndpointTests : IntegrationTestBase
         Assert.NotNull(restoredResource.DeletedAt);
         Assert.NotNull(restoredResource.DeletedBy);
         Assert.Equal(anotherUser.Id, restoredResource.UserId);
+    }
+
+    [Fact]
+    public async Task UploadFile_WhenUserIsActive_ReturnsCreated()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+        var uploadOptions = scope.ServiceProvider.GetRequiredService<IOptions<FileUploadOptions>>().Value;
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+
+        int fileSize = checked((int)uploadOptions.MaxFileSizeInBytes);
+        byte[] fileBytes = new byte[fileSize];
+        
+        using var fileContent = new ByteArrayContent(fileBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+
+        using var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/resources/files");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = multipartContent;
+
+        using var response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        
+        Resource? fileResource = await dbContext.Resources
+            .AsNoTracking()
+            .Include(fr => fr.StoredFile)
+            .SingleOrDefaultAsync(fr => fr.UserId == user.Id);
+
+        Assert.NotNull(fileResource);
+        Assert.NotNull(fileResource.StoredFile);
+    }
+
+    [Fact]
+    public async Task UploadFile_WhenUserIsNotActive_ReturnsForbidden()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+        var uploadOptions = scope.ServiceProvider.GetRequiredService<IOptions<FileUploadOptions>>().Value;
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Inactive
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+
+        int fileSize = checked((int)uploadOptions.MaxFileSizeInBytes);
+        byte[] fileBytes = new byte[fileSize];
+        
+        using var fileContent = new ByteArrayContent(fileBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+
+        using var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/resources/files");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = multipartContent;
+
+        using var response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        
+        Resource? fileResource = await dbContext.Resources
+            .AsNoTracking()
+            .SingleOrDefaultAsync(fr => fr.UserId == user.Id);
+
+        Assert.Null(fileResource);
+    }
+
+    [Fact]
+    public async Task UploadFile_WhenFileSizeIsExceeded_ReturnsFileSizeLimitExceeded()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+        var uploadOptions = scope.ServiceProvider.GetRequiredService<IOptions<FileUploadOptions>>().Value;
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+
+        int fileSize = checked((int)uploadOptions.MaxFileSizeInBytes + 1);
+        byte[] fileBytes = new byte[fileSize];
+        
+        using var fileContent = new ByteArrayContent(fileBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+
+        using var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/resources/files");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = multipartContent;
+
+        using var response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.RequestEntityTooLarge, response.StatusCode);
+        
+        Resource? fileResource = await dbContext.Resources
+            .AsNoTracking()
+            .SingleOrDefaultAsync(fr => fr.UserId == user.Id);
+
+        Assert.Null(fileResource);
+    }
+
+    [Fact]
+    public async Task UploadFile_WhenResourceAlreadyExists_ReturnsConflict()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+        var uploadOptions = scope.ServiceProvider.GetRequiredService<IOptions<FileUploadOptions>>().Value;
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        Resource resource = new Resource
+        {
+            Title = "note.pdf",
+            ResourceType = ResourceType.File,
+            UserId = user.Id
+        };
+
+        dbContext.Resources.Add(resource);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+
+        int fileSize = checked((int)uploadOptions.MaxFileSizeInBytes);
+        byte[] fileBytes = new byte[fileSize];
+        
+        using var fileContent = new ByteArrayContent(fileBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+
+        using var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/resources/files");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = multipartContent;
+
+        using var response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+
+        List<Resource> fileResource = await dbContext.Resources
+            .AsNoTracking()
+            .Where(fr => fr.UserId == user.Id)
+            .ToListAsync();
+
+        Assert.Single(fileResource);
     }
 }

@@ -784,16 +784,16 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         
-        Resource? updatedResource = await dbContext.Resources
+        Resource? deletedResource = await dbContext.Resources
             .AsNoTracking()
             .IgnoreQueryFilters()
             .SingleOrDefaultAsync(r => r.Id == resource.Id);
         
-        Assert.NotNull(updatedResource);
-        Assert.True(updatedResource.IsDeleted);
-        Assert.NotNull(updatedResource.DeletedAt);
-        Assert.NotNull(updatedResource.DeletedBy);
-        Assert.Equal(user.Id, updatedResource.DeletedBy);
+        Assert.NotNull(deletedResource);
+        Assert.True(deletedResource.IsDeleted);
+        Assert.NotNull(deletedResource.DeletedAt);
+        Assert.NotNull(deletedResource.DeletedBy);
+        Assert.Equal(user.Id, deletedResource.DeletedBy);
     }
 
     [Fact]
@@ -835,15 +835,15 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         
-        Resource? updatedResource = await dbContext.Resources
+        Resource? deletedResource = await dbContext.Resources
             .AsNoTracking()
             .IgnoreQueryFilters()
             .SingleOrDefaultAsync(r => r.Id == resource.Id);
         
-        Assert.NotNull(updatedResource);
-        Assert.False(updatedResource.IsDeleted);
-        Assert.Null(updatedResource.DeletedAt);
-        Assert.Null(updatedResource.DeletedBy);
+        Assert.NotNull(deletedResource);
+        Assert.False(deletedResource.IsDeleted);
+        Assert.Null(deletedResource.DeletedAt);
+        Assert.Null(deletedResource.DeletedBy);
     }
 
     [Fact]
@@ -922,14 +922,202 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         
-        Resource? updatedResource = await dbContext.Resources
+        Resource? deletedResource = await dbContext.Resources
             .AsNoTracking()
             .IgnoreQueryFilters()
             .SingleOrDefaultAsync(r => r.Id == resource.Id);
         
-        Assert.NotNull(updatedResource);
-        Assert.False(updatedResource.IsDeleted);
-        Assert.Null(updatedResource.DeletedAt);
-        Assert.Null(updatedResource.DeletedBy);
+        Assert.NotNull(deletedResource);
+        Assert.False(deletedResource.IsDeleted);
+        Assert.Null(deletedResource.DeletedAt);
+        Assert.Null(deletedResource.DeletedBy);
+    }
+
+    [Fact]
+    public async Task RestoreResourceById_WhenUserIsActive_ReturnsOk()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active,
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        Resource resource = new Resource
+        {
+            Title = "math",
+            ResourceType = ResourceType.Book,
+            UserId = user.Id,
+            IsDeleted = true,
+            DeletedAt = DateTime.UtcNow,
+            DeletedBy = user.Id
+        };
+        
+        dbContext.Resources.Add(resource);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"/resources/{resource.Id}/restore");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        
+        HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        
+        Resource? restoredResource = await dbContext.Resources
+            .AsNoTracking()
+            .SingleOrDefaultAsync(r => r.Id == resource.Id);
+        
+        Assert.NotNull(restoredResource);
+        Assert.False(restoredResource.IsDeleted);
+        Assert.Null(restoredResource.DeletedAt);
+        Assert.Null(restoredResource.DeletedBy);
+    }
+
+    [Fact]
+    public async Task RestoreResourceById_WhenUserIsNotActive_ReturnsForbidden()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Inactive,
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        Resource resource = new Resource
+        {
+            Title = "math",
+            ResourceType = ResourceType.Book,
+            UserId = user.Id,
+            IsDeleted = true,
+            DeletedAt = DateTime.UtcNow,
+            DeletedBy = user.Id
+        };
+        
+        dbContext.Resources.Add(resource);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"/resources/{resource.Id}/restore");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        
+        HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        
+        Resource? restoredResource = await dbContext.Resources
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .SingleOrDefaultAsync(r => r.Id == resource.Id);
+        
+        Assert.NotNull(restoredResource);
+        Assert.True(restoredResource.IsDeleted);
+        Assert.NotNull(restoredResource.DeletedAt);
+        Assert.NotNull(restoredResource.DeletedBy);
+        Assert.Equal(user.Id, restoredResource.UserId);
+    }
+
+    [Fact]
+    public async Task RestoreResourceById_WhenResourceDoesNotExist_ReturnsNotFound()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active,
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"/resources/{int.MaxValue}/restore");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        
+        HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RestoreResourceById_WhenUserDoesNotOwnResource_ReturnsForbidden()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active,
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        User anotherUser = new User
+        {
+            Email = "anotheruser@gmail.com",
+            PasswordHash = "another user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(anotherUser);
+        await dbContext.SaveChangesAsync();
+
+        Resource resource = new Resource
+        {
+            Title = "math",
+            ResourceType = ResourceType.Book,
+            UserId = anotherUser.Id,
+            IsDeleted = true,
+            DeletedAt = DateTime.UtcNow,
+            DeletedBy = anotherUser.Id
+        };
+        
+        dbContext.Resources.Add(resource);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"/resources/{resource.Id}/restore");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        
+        HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        
+        Resource? restoredResource = await dbContext.Resources
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .SingleOrDefaultAsync(r => r.Id == resource.Id);
+        
+        Assert.NotNull(restoredResource);
+        Assert.True(restoredResource.IsDeleted);
+        Assert.NotNull(restoredResource.DeletedAt);
+        Assert.NotNull(restoredResource.DeletedBy);
+        Assert.Equal(anotherUser.Id, restoredResource.UserId);
     }
 }

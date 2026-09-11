@@ -1311,4 +1311,183 @@ public class ResourceEndpointTests : IntegrationTestBase
 
         Assert.Single(fileResource);
     }
+
+    [Fact]
+    public async Task PreviewFile_WhenUserIsActive_ReturnsInlineFile()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+        
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+
+        byte[] expectedBytes = "%PDF-preview file content"u8.ToArray();
+
+        var fileContent = new ByteArrayContent(expectedBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        
+        var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        var uploadRequest = new HttpRequestMessage(HttpMethod.Post, "resources/files");
+        uploadRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        uploadRequest.Content = multipartContent;
+
+        using HttpResponseMessage uploadResponse = await Fixture.Client!.SendAsync(uploadRequest);
+        
+        Assert.Equal(HttpStatusCode.Created, uploadResponse.StatusCode);
+
+        Resource? resource = await dbContext.Resources
+            .AsNoTracking()
+            .SingleOrDefaultAsync(r => r.UserId == user.Id && r.Title == "note.pdf");
+        
+        Assert.NotNull(resource);
+        
+        using var previewRequest = new HttpRequestMessage(HttpMethod.Get, $"/resources/{resource.Id}/file");
+        previewRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using HttpResponseMessage previewResponse = await Fixture.Client!.SendAsync(previewRequest);
+        
+        Assert.Equal(HttpStatusCode.OK, previewResponse.StatusCode);
+        
+        Assert.Equal("application/pdf", previewResponse.Content.Headers.ContentType?.MediaType);
+        Assert.Null(previewResponse.Content.Headers.ContentDisposition);
+        
+        byte[] actualBytes = await previewResponse.Content.ReadAsByteArrayAsync();
+        Assert.Equal(expectedBytes, actualBytes);
+    }
+
+    [Fact]
+    public async Task PreviewFile_WhenResourceDoesNotExist_ReturnsNotFound()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+        
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        
+        using var previewRequest = new HttpRequestMessage(HttpMethod.Get, $"/resources/{int.MaxValue}/file");
+        previewRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using HttpResponseMessage previewResponse = await Fixture.Client!.SendAsync(previewRequest);
+        
+        Assert.Equal(HttpStatusCode.NotFound, previewResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task PreviewFile_WhenUserDoesNotOwnResource_ReturnsForbidden()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        User anotherUser = new User
+        {
+            Email = "anotheruser@gmail.com",
+            PasswordHash = "another user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(anotherUser);
+        await dbContext.SaveChangesAsync();
+        
+        string userAccessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        string anotherUserAccessToken = await tokenService.GenerateAccessToken(anotherUser.Id, CancellationToken.None);
+
+        byte[] expectedBytes = "%PDF-preview file content"u8.ToArray();
+
+        var fileContent = new ByteArrayContent(expectedBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        
+        var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        var uploadRequest = new HttpRequestMessage(HttpMethod.Post, "resources/files");
+        uploadRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", anotherUserAccessToken);
+        uploadRequest.Content = multipartContent;
+
+        using HttpResponseMessage uploadResponse = await Fixture.Client!.SendAsync(uploadRequest);
+        
+        Assert.Equal(HttpStatusCode.Created, uploadResponse.StatusCode);
+
+        Resource? resource = await dbContext.Resources
+            .AsNoTracking()
+            .SingleOrDefaultAsync(r => r.Title == "note.pdf");
+        
+        Assert.NotNull(resource);
+        
+        using var previewRequest = new HttpRequestMessage(HttpMethod.Get, $"/resources/{resource.Id}/file");
+        previewRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", userAccessToken);
+
+        using HttpResponseMessage previewResponse = await Fixture.Client!.SendAsync(previewRequest);
+        
+        Assert.Equal(HttpStatusCode.Forbidden, previewResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task PreviewFile_WhenResourceDoesNotContainAFile_ReturnsNotFound()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        Resource resource = new Resource
+        {
+            Title = "note.pdf",
+            ResourceType = ResourceType.File,
+            UserId = user.Id
+        };
+        
+        dbContext.Resources.Add(resource);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        
+        using var previewRequest = new HttpRequestMessage(HttpMethod.Get, $"/resources/{resource.Id}/file");
+        previewRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using HttpResponseMessage previewResponse = await Fixture.Client!.SendAsync(previewRequest);
+        
+        Assert.Equal(HttpStatusCode.NotFound, previewResponse.StatusCode);
+    }
 }

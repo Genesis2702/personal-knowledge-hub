@@ -1490,4 +1490,68 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.NotFound, previewResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task DownloadFile_WhenUserIsActive_ReturnsFileAsAttachment()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+        
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+
+        byte[] expectedBytes = "%PDF-preview file content"u8.ToArray();
+
+        var fileContent = new ByteArrayContent(expectedBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        
+        var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        var uploadRequest = new HttpRequestMessage(HttpMethod.Post, "resources/files");
+        uploadRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        uploadRequest.Content = multipartContent;
+
+        using HttpResponseMessage uploadResponse = await Fixture.Client!.SendAsync(uploadRequest);
+        
+        Assert.Equal(HttpStatusCode.Created, uploadResponse.StatusCode);
+
+        Resource? resource = await dbContext.Resources
+            .AsNoTracking()
+            .SingleOrDefaultAsync(r => r.UserId == user.Id && r.Title == "note.pdf");
+        
+        Assert.NotNull(resource);
+        
+        using var downloadRequest = new HttpRequestMessage(HttpMethod.Get, $"/resources/{resource.Id}/file/download");
+        downloadRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using HttpResponseMessage downloadResponse = await Fixture.Client!.SendAsync(downloadRequest);
+        
+        Assert.Equal(HttpStatusCode.OK, downloadResponse.StatusCode);
+        
+        Assert.Equal("application/pdf", downloadResponse.Content.Headers.ContentType?.MediaType);
+        
+        ContentDispositionHeaderValue? disposition =
+            downloadResponse.Content.Headers.ContentDisposition;
+        Assert.NotNull(disposition);
+        Assert.Equal("attachment", disposition.DispositionType);
+        
+        string? returnedFileName =
+            disposition.FileNameStar ??
+            disposition.FileName?.Trim('"');
+        Assert.Equal("note.pdf", returnedFileName);
+        
+        byte[] actualBytes = await downloadResponse.Content.ReadAsByteArrayAsync();
+        Assert.Equal(expectedBytes, actualBytes);
+    }
 }

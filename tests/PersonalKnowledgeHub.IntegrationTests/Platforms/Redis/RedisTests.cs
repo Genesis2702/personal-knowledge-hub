@@ -42,7 +42,7 @@ public class RedisTests
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         

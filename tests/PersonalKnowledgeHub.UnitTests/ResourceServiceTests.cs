@@ -43,14 +43,14 @@ public class ResourceServiceTests
             {
                 Id = 1,
                 Title = "test1",
-                ResourceType = ResourceType.Article,
+                ResourceType = ResourceType.Note,
                 UserId = userId
             },
             new Resource
             {
                 Id = 2,
                 Title = "test2",
-                ResourceType = ResourceType.Video,
+                ResourceType = ResourceType.Note,
                 UserId = userId
             },
             new Resource
@@ -66,7 +66,7 @@ public class ResourceServiceTests
         {
             PageIndex = pageIndex,
             PageSize = pageSize,
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             Search = "test",
             TagId = null,
         };
@@ -113,7 +113,7 @@ public class ResourceServiceTests
         {
             PageIndex = pageIndex,
             PageSize = pageSize,
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             Search = null,
             TagId = null,
         };
@@ -151,7 +151,7 @@ public class ResourceServiceTests
         {
             Id = resourceId,
             Title = "test",
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             UserId = userId
         };
         
@@ -162,7 +162,7 @@ public class ResourceServiceTests
         
         Assert.Equal(resourceId, result.Id);
         Assert.Equal("test", result.Title);
-        Assert.Equal(ResourceType.Article, result.ResourceType);
+        Assert.Equal(ResourceType.Note, result.ResourceType);
         Assert.Equal(userId, result.UserId);
         
         _resourceRepository.Verify(x => x.GetResourceByIdAsync(resourceId, It.IsAny<CancellationToken>()), Times.Once);
@@ -194,7 +194,7 @@ public class ResourceServiceTests
         {
             Id = resourceId,
             Title = "test",
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             UserId = 20
         };
 
@@ -219,7 +219,7 @@ public class ResourceServiceTests
             Title = "test title",
             Url = "test url",
             Description = "test description",
-            ResourceType = ResourceType.Article
+            ResourceType = ResourceType.Note
         };
 
         _resourceRepository
@@ -262,7 +262,7 @@ public class ResourceServiceTests
             Title = "test title",
             Url = "test url",
             Description = "test description",
-            ResourceType = ResourceType.Article
+            ResourceType = ResourceType.Note
         };
         
         _resourceRepository
@@ -287,7 +287,7 @@ public class ResourceServiceTests
         {
             Id = resourceId,
             Title = "test",
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             UserId = userId
         };
 
@@ -364,7 +364,7 @@ public class ResourceServiceTests
         {
             Id = resourceId,
             Title = "test",
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             UserId = 20
         };
 
@@ -402,7 +402,7 @@ public class ResourceServiceTests
         {
             Id = resourceId,
             Title = "test",
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             UserId = userId,
             IsDeleted = false,
             DeletedAt = null,
@@ -470,7 +470,7 @@ public class ResourceServiceTests
         {
             Id = resourceId,
             Title = "test",
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             UserId = 20,
             IsDeleted = false,
             DeletedAt = null,
@@ -506,7 +506,7 @@ public class ResourceServiceTests
         {
             Id = resourceId,
             Title = "test",
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             UserId = userId,
             IsDeleted = true,
             DeletedAt = DateTime.UtcNow,
@@ -575,7 +575,7 @@ public class ResourceServiceTests
         {
             Id = resourceId,
             Title = "test",
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             UserId = 20,
             IsDeleted = false,
             DeletedAt = null,

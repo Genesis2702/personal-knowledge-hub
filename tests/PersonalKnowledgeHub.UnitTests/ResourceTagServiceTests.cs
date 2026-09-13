@@ -38,7 +38,7 @@ public class ResourceTagServiceTests
         Resource resource = new Resource
         {
             Title = "test",
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             UserId = userId,
             ResourceTags = new List<ResourceTag>()
         };
@@ -155,7 +155,7 @@ public class ResourceTagServiceTests
         Resource resource = new Resource
         {
             Title = "test",
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             UserId = 20
         };
 
@@ -222,7 +222,7 @@ public class ResourceTagServiceTests
         Resource resource = new Resource
         {
             Title = "test",
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             UserId = userId
         };
 
@@ -277,7 +277,7 @@ public class ResourceTagServiceTests
         Resource resource = new Resource
         {
             Title = "test",
-            ResourceType = ResourceType.Article,
+            ResourceType = ResourceType.Note,
             UserId = 20
         };
 

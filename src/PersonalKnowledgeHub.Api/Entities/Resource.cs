@@ -21,9 +21,8 @@
 
     public enum ResourceType
     {
-        Video,
-        Article,
-        Book,
-        File
+        Note, 
+        File,
+        Link
     }
 }

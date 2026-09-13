@@ -256,7 +256,7 @@ public class FileResourceServiceTests
             new Resource
             {
                 Title = "resource2",
-                ResourceType = ResourceType.Video,
+                ResourceType = ResourceType.Note,
                 UserId = userId,
                 IsDeleted = true,
                 DeletedAt = DateTime.UtcNow

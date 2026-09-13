@@ -42,7 +42,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource1 = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -52,7 +52,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource2 = new Resource
         {
             Title = "english",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -62,7 +62,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource3 = new Resource
         {
             Title = "literature",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -110,7 +110,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource1 = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -120,7 +120,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource2 = new Resource
         {
             Title = "english",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -130,7 +130,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource3 = new Resource
         {
             Title = "literature",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -167,7 +167,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource1 = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -177,7 +177,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource2 = new Resource
         {
             Title = "english",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -187,7 +187,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource3 = new Resource
         {
             Title = "literature",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -224,7 +224,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -269,7 +269,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -343,7 +343,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = anotherUser.Id
         };
         
@@ -384,7 +384,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         request.Content = JsonContent.Create(new ResourceRequestDto
         {
             Title = "math",
-            ResourceType = ResourceType.Book
+            ResourceType = ResourceType.Note
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -397,7 +397,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.NotNull(body);
         Assert.Equal("math", body.Title);
-        Assert.Equal(ResourceType.Book, body.ResourceType);
+        Assert.Equal(ResourceType.Note, body.ResourceType);
         
         Resource? addedResource = await dbContext.Resources.AsNoTracking().SingleOrDefaultAsync(r => r.Title == "math");
         
@@ -428,7 +428,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         request.Content = JsonContent.Create(new ResourceRequestDto
         {
             Title = "",
-            ResourceType = ResourceType.Book
+            ResourceType = ResourceType.Note
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -464,7 +464,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         request.Content = JsonContent.Create(new ResourceRequestDto
         {
             Title = "math",
-            ResourceType = ResourceType.Book
+            ResourceType = ResourceType.Note
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -496,7 +496,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -510,7 +510,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         request.Content = JsonContent.Create(new ResourceRequestDto
         {
             Title = "math",
-            ResourceType = ResourceType.Book
+            ResourceType = ResourceType.Note
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -542,7 +542,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -588,7 +588,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -634,7 +634,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -721,7 +721,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = anotherUser.Id
         };
         
@@ -767,7 +767,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id,
             IsDeleted = false,
             DeletedAt = null,
@@ -818,7 +818,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id,
             IsDeleted = false,
             DeletedAt = null,
@@ -905,7 +905,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = anotherUser.Id,
             IsDeleted = false,
             DeletedAt = null,
@@ -955,7 +955,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id,
             IsDeleted = true,
             DeletedAt = DateTime.UtcNow,
@@ -1004,7 +1004,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id,
             IsDeleted = true,
             DeletedAt = DateTime.UtcNow,
@@ -1092,7 +1092,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = anotherUser.Id,
             IsDeleted = true,
             DeletedAt = DateTime.UtcNow,

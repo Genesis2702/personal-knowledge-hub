@@ -29,6 +29,7 @@ public class ResourceMapper
     {
         return new ResourceResponseDto
         {
+            Id = resource.Id,
             Title = resource.Title,
             Url = resource.Url,
             Description = resource.Description,
@@ -57,6 +58,7 @@ public class ResourceMapper
         { 
             Items = resourcesPageResult.Items.Select(item => new ResourceResponseDto
             {
+                Id = item.Id,
                 Title = item.Title,
                 Url = item.Url,
                 Description = item.Description,

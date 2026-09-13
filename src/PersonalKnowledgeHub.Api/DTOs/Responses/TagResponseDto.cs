@@ -5,6 +5,7 @@ namespace PersonalKnowledgeHub.DTOs.Responses
     public class TagResponseDto
     {
         [Required]
+        public required int Id { get; set; }
         public required string Name { get; set; }
         public DateTime LastModified { get; set; }
     }

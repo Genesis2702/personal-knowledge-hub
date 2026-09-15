@@ -5,4 +5,5 @@ public class FileUploadOptions
     public const string Options = "FileUploadOptions";
     
     public long MaxFileSizeInBytes { get; init; }
+    public long MaxStoredFileSizeInBytes { get; init; }
 }

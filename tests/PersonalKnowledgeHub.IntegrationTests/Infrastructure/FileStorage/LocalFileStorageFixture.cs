@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
-using PersonalKnowledgeHub.Storage.Implementations;
+using PersonalKnowledgeHub.Storage.Implementations.Local;
 using PersonalKnowledgeHub.Storage.Interfaces;
 using PersonalKnowledgeHub.Storage.Options;
+using PersonalKnowledgeHub.Storage.Validators;
 
 namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.FileStorage;
 
@@ -32,17 +33,26 @@ public sealed class LocalFileStorageFixture : IAsyncLifetime
             ContentRootPath = _rootDirectory
         };
 
-        var options = Microsoft.Extensions.Options.Options.Create(
+        var storageOptions = Microsoft.Extensions.Options.Options.Create(
             new LocalFileStorageOptions
             {
                 StorageDirectory = "files",
                 TempStorageDirectory = "temp",
+            });
+        
+        var fileOptions = Microsoft.Extensions.Options.Options.Create(
+            new FileUploadOptions
+            {
+                MaxFileSizeInBytes = 1024,
                 MaxStoredFileSizeInBytes = 1024
             });
 
+        IFileValidator validator = new FileValidator(fileOptions);
+        IFileProcessor processor = new FileProcessor(validator);
+
         Storage = new LocalFileStorage(
-            options,
-            environment);
+            storageOptions,
+            environment, processor);
 
         return Task.CompletedTask;
     }

@@ -27,9 +27,10 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using PersonalKnowledgeHub.Observability.Implementations;
 using PersonalKnowledgeHub.Observability.Interfaces;
-using PersonalKnowledgeHub.Storage.Implementations;
+using PersonalKnowledgeHub.Storage.Implementations.Local;
 using PersonalKnowledgeHub.Storage.Interfaces;
 using PersonalKnowledgeHub.Storage.Options;
+using PersonalKnowledgeHub.Storage.Validators;
 using Serilog;
 using Serilog.Events;
 using Serilog.Context;
@@ -294,25 +295,27 @@ builder.Services.AddOptions<FileUploadOptions>()
     .BindConfiguration(FileUploadOptions.Options)
     .Validate(
         options => options.MaxFileSizeInBytes > 0 && options.MaxFileSizeInBytes <= 10485760,
-        "FileUploadOptions:MaxFileSizeInBytes must be between 1 and 10485760 bytes")
+        $"{FileUploadOptions.Options}:MaxFileSizeInBytes must be between 1 and 10485760 bytes")
+    .Validate(
+        options => options.MaxStoredFileSizeInBytes > 0 && options.MaxStoredFileSizeInBytes <= 20971520,
+        $"{FileUploadOptions.Options}:MaxStoredFileSizeInBytes must be between 1 and 20971520 bytes")
     .ValidateOnStart();
 
 if (builder.Environment.IsDevelopment())
 {
-    builder.Services.AddScoped<IFileStorage, LocalFileStorage>();
-    
     builder.Services.AddOptions<LocalFileStorageOptions>()
         .BindConfiguration(LocalFileStorageOptions.Options)
         .Validate(
             options => !String.IsNullOrWhiteSpace(options.StorageDirectory),
-            "LocalFileStorageOptions:StorageDirectory is required")
+            $"{LocalFileStorageOptions.Options}:StorageDirectory is required")
         .Validate(
             options => !String.IsNullOrWhiteSpace(options.TempStorageDirectory),
-            "LocalFileStorageOptions:TempStorageDirectory is required")
-        .Validate(
-            options => options.MaxStoredFileSizeInBytes > 0 && options.MaxStoredFileSizeInBytes <= 20971520,
-            "LocalFileStorageOptions:MaxStoredFileSizeInBytes must be between 1 and 20971520 bytes")
+            $"{LocalFileStorageOptions.Options}:TempStorageDirectory is required")
         .ValidateOnStart();
+    
+    builder.Services.AddScoped<IFileValidator, FileValidator>();
+    builder.Services.AddScoped<IFileProcessor, FileProcessor>();
+    builder.Services.AddScoped<IFileStorage, LocalFileStorage>();
 }
 else if (builder.Environment.IsProduction())
 {

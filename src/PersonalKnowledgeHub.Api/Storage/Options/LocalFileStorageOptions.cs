@@ -6,5 +6,4 @@ public class LocalFileStorageOptions
 
     public string StorageDirectory { get; init; } = String.Empty;
     public string TempStorageDirectory { get; init; } = String.Empty;
-    public long MaxStoredFileSizeInBytes { get; init; }
 }

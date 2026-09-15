@@ -1,11 +1,11 @@
-﻿using System.Text;
-using PersonalKnowledgeHub.Entities;
+﻿using PersonalKnowledgeHub.Entities;
+using PersonalKnowledgeHub.Storage.Validators;
 
-namespace PersonalKnowledgeHub.Storage.Validators;
+namespace PersonalKnowledgeHub.Storage.Implementations.Local;
 
-public static class LocalFileStorageValidators
+public static class LocalFileStorageValidator
 {
-    public static bool IsStoredKeyValid(string storedKey, int userId, HashSet<string> allowedExtensions)
+    public static bool IsStoredKeyValid(string storedKey, int userId)
     {
         if (String.IsNullOrEmpty(storedKey)) return false;
         
@@ -51,8 +51,8 @@ public static class LocalFileStorageValidators
         
         if (!Guid.TryParse(fileName, out Guid guid)) return false;
 
-        fileExtension = fileExtension.ToLower();
-        if (!allowedExtensions.Contains(fileExtension)) return false;
+        fileExtension = fileExtension.ToLowerInvariant();
+        FileTypeRegistry.GetRequired(fileExtension);
 
         return true;
     }
@@ -64,34 +64,5 @@ public static class LocalFileStorageValidators
             ? targetFolder
             : targetFolder + Path.DirectorySeparatorChar;
         return normalizedPath.StartsWith(explicitTargetFolder, comparison);
-    }
-
-    public static bool IsFileSignatureValid(string extension, ReadOnlySpan<byte> bytes)
-    {
-        if (!FileSignatures.FileSignature.TryGetValue(extension, out var rule))
-        {
-            return false;
-        }
-
-        byte[] signature = rule.Signature;
-        int offset = rule.Offset;
-
-        if (bytes.Length < offset + signature.Length)
-        {
-            return false;
-        }
-
-        bool signatureValidation = bytes.Slice(offset, signature.Length).SequenceEqual(signature);
-
-        if (extension != FileFormat.Mp4.ToString("G").ToLower())
-        {
-            return signatureValidation;
-        }
-        
-        ReadOnlySpan<byte> brandBytes = bytes.Slice(8, 4);
-        string brand = Encoding.ASCII.GetString(brandBytes);
-        bool brandValidation = FileSignatures.AllowedMp4Brands.Contains(brand);
-
-        return signatureValidation && brandValidation;
     }
 }

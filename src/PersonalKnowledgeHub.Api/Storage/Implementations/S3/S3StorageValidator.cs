@@ -1,21 +1,16 @@
-﻿using PersonalKnowledgeHub.Entities;
-using PersonalKnowledgeHub.Storage.Validators;
+﻿using PersonalKnowledgeHub.Storage.Validators;
 
-namespace PersonalKnowledgeHub.Storage.Implementations.Local;
+namespace PersonalKnowledgeHub.Storage.Implementations.S3;
 
-public static class LocalFileStorageValidator
+public static class S3StorageValidator
 {
     public static bool IsStoredKeyValid(string storedKey, int userId)
     {
         if (String.IsNullOrEmpty(storedKey)) return false;
-        
-        char[] separators =
-        {
-            Path.DirectorySeparatorChar,
-            Path.AltDirectorySeparatorChar
-        };
 
-        string[] segments = storedKey.Split(separators);
+        char separator = '/';
+
+        string[] segments = storedKey.Split(separator);
 
         if (segments.Length != 4) return false;
         
@@ -60,14 +55,5 @@ public static class LocalFileStorageValidator
         if (!FileTypeRegistry.TryGet(fileExtension, out _)) return false;
 
         return true;
-    }
-
-    public static bool IsFullPathValid(string normalizedPath, string targetFolder)
-    {
-        StringComparison comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        string explicitTargetFolder = targetFolder.EndsWith(Path.DirectorySeparatorChar)
-            ? targetFolder
-            : targetFolder + Path.DirectorySeparatorChar;
-        return normalizedPath.StartsWith(explicitTargetFolder, comparison);
     }
 }

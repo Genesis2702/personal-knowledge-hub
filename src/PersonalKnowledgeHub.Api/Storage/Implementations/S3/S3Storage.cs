@@ -1,6 +1,5 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
-using Amazon.S3.Transfer;
 using Microsoft.Extensions.Options;
 using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Storage.Interfaces;
@@ -32,67 +31,62 @@ public class S3Storage : IFileStorage
 
         string storedKey = $"{userId}/{date}/{guid}.{validatedFile.Extension}";
         string key = $"{_options.KeyPrefix}/{storedKey}";
-        
-        try
-        {
-            var fileTransferUtility = new TransferUtility(_s3Client);
 
-            await fileTransferUtility.UploadAsync(validatedFile.Content, _options.BucketName, key,
-                cancellationToken);
-            
-            return new FileResult
-            {
-                StoredKey = storedKey,
-                SizeInBytes = validatedFile.SizeInBytes,
-                ContentType = validatedFile.ContentType,
-                FileFormat = validatedFile.FileFormat
-            };
-        }
-        catch (AmazonS3Exception e)
+        PutObjectRequest objectRequest = new PutObjectRequest
         {
-            throw new AmazonS3Exception($"Error encountered on server. Message:'{e.Message}' when writing an object");
-        }
-        catch (Exception e)
+            BucketName = _options.BucketName,
+            ContentType = validatedFile.ContentType,
+            InputStream = validatedFile.Content,
+            Key = key,
+        };
+
+        await _s3Client.PutObjectAsync(objectRequest, cancellationToken);
+
+        return new FileResult
         {
-            throw new Exception($"Unknown encountered on server. Message:'{e.Message}' when writing an object");
-        }
+            StoredKey = storedKey,
+            SizeInBytes = validatedFile.SizeInBytes,
+            ContentType = validatedFile.ContentType,
+            FileFormat = validatedFile.FileFormat
+        };
     }
 
     public async Task<Stream> OpenFile(string storedKey, int userId, CancellationToken cancellationToken)
     {
-        string key = $"{_options.KeyPrefix}/{storedKey}";
+        if (!S3StorageValidator.IsStoredKeyValid(storedKey, userId))
+        {
+            throw new ArgumentException("The requested path is invalid");
+        }
         
+        string key = $"{_options.KeyPrefix}/{storedKey}";
+        Stream fileStream = new MemoryStream();
+
         try
         {
-            GetObjectResponse response = await _s3Client.GetObjectAsync(_options.BucketName, key, cancellationToken);
+            using GetObjectResponse response =
+                await _s3Client.GetObjectAsync(_options.BucketName, key, cancellationToken);
 
-            return response.ResponseStream;
+            await response.ResponseStream.CopyToAsync(fileStream, cancellationToken);
+            fileStream.Position = 0;
+
+            return fileStream;
         }
-        catch (AmazonS3Exception e)
+        catch
         {
-            throw new AmazonS3Exception($"Error encountered on server. Message:'{e.Message}' when opening an object");
-        }
-        catch (Exception e)
-        {
-            throw new Exception($"Unknown encountered on server. Message:'{e.Message}' when opening an object");
+            await fileStream.DisposeAsync();
+            throw;
         }
     }
 
     public async Task DeleteFile(string storedKey, int userId, CancellationToken cancellationToken)
     {
+        if (!S3StorageValidator.IsStoredKeyValid(storedKey, userId))
+        {
+            throw new ArgumentException("The requested path is invalid");
+        }
+        
         string key = $"{_options.KeyPrefix}/{storedKey}";
 
-        try
-        {
-            await _s3Client.DeleteObjectAsync(_options.BucketName, key, cancellationToken);
-        }
-        catch (AmazonS3Exception e)
-        {
-            throw new AmazonS3Exception($"Error encountered on server. Message:'{e.Message}' when deleting an object");
-        }
-        catch (Exception e)
-        {
-            throw new Exception($"Unknown encountered on server. Message:'{e.Message}' when deleting an object");
-        }
+        await _s3Client.DeleteObjectAsync(_options.BucketName, key, cancellationToken);
     }
 }

@@ -14,6 +14,8 @@ public static class LocalFileStorageValidator
             Path.DirectorySeparatorChar,
             Path.AltDirectorySeparatorChar
         };
+        int thisYear = DateTime.UtcNow.Year;
+        int thisMonth = DateTime.UtcNow.Month;
 
         string[] segments = storedKey.Split(separators);
 
@@ -42,19 +44,19 @@ public static class LocalFileStorageValidator
 
         if (Int32.TryParse(yearSegment, out int year))
         {
-            if (year > DateTime.UtcNow.Year) return false;
+            if (year > thisYear) return false;
             if (year < 0) return false;
         }
         else return false;
 
         if (Int32.TryParse(monthSegment, out int month))
         {
-            if (year < DateTime.UtcNow.Year && (month < 1 || month > 12)) return false;
-            if (year == DateTime.UtcNow.Year && (month > DateTime.UtcNow.Month || month < 1)) return false;
+            if (year < thisYear && (month < 1 || month > 12)) return false;
+            if (year == thisYear && (month > thisMonth || month < 1)) return false;
         }
         else return false;
         
-        if (!Guid.TryParse(fileName, out _)) return false;
+        if (!Guid.TryParseExact(fileName, "N", out _)) return false;
 
         fileExtension = fileExtension.ToLowerInvariant();
         if (!FileTypeRegistry.TryGet(fileExtension, out _)) return false;

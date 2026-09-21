@@ -1,6 +1,8 @@
-﻿using Amazon.S3;
+﻿using System.Net;
+using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
+using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Storage.Interfaces;
 using PersonalKnowledgeHub.Storage.Options;
@@ -13,12 +15,14 @@ public class S3Storage : IFileStorage
     private readonly S3StorageOptions _options;
     private readonly IAmazonS3 _s3Client;
     private readonly IFileProcessor _fileProcessor;
+    private readonly ILogger<S3Storage> _logger;
 
-    public S3Storage(IOptions<S3StorageOptions> options, IAmazonS3 s3Client, IFileProcessor fileProcessor)
+    public S3Storage(IOptions<S3StorageOptions> options, IAmazonS3 s3Client, IFileProcessor fileProcessor, ILogger<S3Storage> logger)
     {
         _options = options.Value;
         _s3Client = s3Client;
         _fileProcessor = fileProcessor;
+        _logger = logger;
     }
     
     public async Task<FileResult> SaveFile(Stream fileStream, string fileName, int userId, CancellationToken cancellationToken)
@@ -59,22 +63,30 @@ public class S3Storage : IFileStorage
         }
         
         string key = $"{_options.KeyPrefix}/{storedKey}";
-        Stream fileStream = new MemoryStream();
 
         try
         {
             using GetObjectResponse response =
                 await _s3Client.GetObjectAsync(_options.BucketName, key, cancellationToken);
+            
+            Stream fileStream = new MemoryStream();
+            try
+            {
+                await response.ResponseStream.CopyToAsync(fileStream, cancellationToken);
+                fileStream.Position = 0;
 
-            await response.ResponseStream.CopyToAsync(fileStream, cancellationToken);
-            fileStream.Position = 0;
-
-            return fileStream;
+                return fileStream;
+            }
+            catch
+            {
+                await fileStream.DisposeAsync();
+                throw;
+            }
         }
-        catch
+        catch (AmazonS3Exception ex) when (ex.StatusCode == HttpStatusCode.NotFound && ex.ErrorCode == "NoSuchKey")
         {
-            await fileStream.DisposeAsync();
-            throw;
+            _logger.LogWarning(ex, "S3 object {ObjectKey} was not found in bucket {BucketName}", key, _options.BucketName);
+            throw new NotFoundException("The requested file does not exist");
         }
     }
 

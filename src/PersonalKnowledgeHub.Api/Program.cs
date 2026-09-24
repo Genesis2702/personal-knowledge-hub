@@ -11,7 +11,6 @@ using PersonalKnowledgeHub.Services.Implementations;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Text;
 using System.Threading.RateLimiting;
-using Amazon.S3;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Authorization;
 using PersonalKnowledgeHub.BackgroundTasks;
@@ -29,7 +28,6 @@ using OpenTelemetry.Trace;
 using PersonalKnowledgeHub.Observability.Implementations;
 using PersonalKnowledgeHub.Observability.Interfaces;
 using PersonalKnowledgeHub.Storage.Implementations.Local;
-using PersonalKnowledgeHub.Storage.Implementations.S3;
 using PersonalKnowledgeHub.Storage.Interfaces;
 using PersonalKnowledgeHub.Storage.Options;
 using PersonalKnowledgeHub.Storage.Validators;
@@ -323,19 +321,6 @@ if (builder.Environment.IsDevelopment())
 }
 else if (builder.Environment.IsProduction())
 {
-    builder.Services.AddOptions<S3StorageOptions>()
-        .BindConfiguration(S3StorageOptions.Options)
-        .Validate(
-            options => !String.IsNullOrWhiteSpace(options.BucketName),
-            $"{S3StorageOptions.Options}:BucketName is required")
-        .Validate(
-            options => !String.IsNullOrWhiteSpace(options.KeyPrefix),
-            $"{S3StorageOptions.Options}:KeyPrefix is required")
-        .ValidateOnStart();
-
-    builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
-    builder.Services.AddAWSService<IAmazonS3>();
-    builder.Services.AddScoped<IFileStorage, S3Storage>();
 }
 
 var app = builder.Build();

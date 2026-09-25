@@ -170,14 +170,14 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = builder.Configuration["RedisCacheSettings:ConnectionString"];
 });
 
-string url = builder.Configuration["Supabase:Url"] ??
-             throw new InvalidOperationException("Supabase url is not configured");
-string key = builder.Configuration["Supabase:Key"] ??
-             throw new InvalidOperationException("Supabase key is not configured");
-
-var supabase = new Supabase.Client(url, key);
-await supabase.InitializeAsync();
-builder.Services.AddSingleton(supabase);
+builder.Services.AddSingleton<Supabase.Client>(_ =>
+    {
+        string url = builder.Configuration["Supabase:Url"] ??
+                     throw new InvalidOperationException("Supabase url is not configured");
+        string key = builder.Configuration["Supabase:Key"] ??
+                     throw new InvalidOperationException("Supabase key is not configured");
+        return new Supabase.Client(url, key);
+    });
 
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];

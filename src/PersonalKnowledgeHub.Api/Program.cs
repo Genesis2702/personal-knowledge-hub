@@ -28,6 +28,7 @@ using OpenTelemetry.Trace;
 using PersonalKnowledgeHub.Observability.Implementations;
 using PersonalKnowledgeHub.Observability.Interfaces;
 using PersonalKnowledgeHub.Storage.Implementations.Local;
+using PersonalKnowledgeHub.Storage.Implementations.Supabase;
 using PersonalKnowledgeHub.Storage.Interfaces;
 using PersonalKnowledgeHub.Storage.Options;
 using PersonalKnowledgeHub.Storage.Validators;
@@ -331,6 +332,14 @@ if (builder.Environment.IsDevelopment())
 }
 else if (builder.Environment.IsProduction())
 {
+    builder.Services.AddOptions<SupabaseStorageOptions>()
+        .BindConfiguration(SupabaseStorageOptions.Options)
+        .Validate(
+            options => !String.IsNullOrWhiteSpace(options.BucketName),
+            $"{SupabaseStorageOptions.Options}:BucketName is required")
+        .ValidateOnStart();
+    
+    builder.Services.AddScoped<IFileStorage, SupabaseStorage>();
 }
 
 var app = builder.Build();

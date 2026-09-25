@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.Options;
+using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Storage.Interfaces;
 using PersonalKnowledgeHub.Storage.Options;
 using PersonalKnowledgeHub.Storage.Validators;
+using Supabase.Storage.Exceptions;
 using FileOptions = Supabase.Storage.FileOptions;
 
 namespace PersonalKnowledgeHub.Storage.Implementations.Supabase;
@@ -22,17 +24,15 @@ public class SupabaseStorage : IFileStorage
     
     public async Task<FileResult> SaveFile(Stream fileStream, string fileName, int userId, CancellationToken cancellationToken)
     {
-        ValidatedFile validatedFile =
+        await using ValidatedFile validatedFile =
             await _fileProcessor.ValidateAndStageAsync(fileStream, fileName, cancellationToken);
         
         string guid = Guid.NewGuid().ToString("N");
         string date = DateTime.UtcNow.ToString("yyyy/MM");
 
         string storedKey = $"{userId}/{date}/{guid}.{validatedFile.Extension}";
-
-        MemoryStream stream = new MemoryStream();
-        await validatedFile.Content.CopyToAsync(stream, cancellationToken);
-        byte[] data = stream.ToArray();
+        
+        byte[] data = validatedFile.Content.ToArray();
 
         await _client.Storage.From(_options.BucketName).Upload(data, storedKey, new FileOptions
         {
@@ -56,10 +56,17 @@ public class SupabaseStorage : IFileStorage
             throw new ArgumentException("The requested path is invalid");
         }
 
-        byte[] data = await _client.Storage.From(_options.BucketName)
-            .Download(storedKey, null, cancellationToken: cancellationToken, null);
+        try
+        {
+            byte[] data = await _client.Storage.From(_options.BucketName)
+                .Download(storedKey, null, cancellationToken: cancellationToken, null);
 
-        return new MemoryStream(data);
+            return new MemoryStream(data);
+        }
+        catch (SupabaseStorageException ex) when (FailureHint.DetectReason(ex) == FailureHint.Reason.NotFound)
+        {
+            throw new NotFoundException("The requested file does not exist");
+        }
     }
 
     public async Task DeleteFile(string storedKey, int userId, CancellationToken cancellationToken)

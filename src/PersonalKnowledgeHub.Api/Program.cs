@@ -171,15 +171,6 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = builder.Configuration["RedisCacheSettings:ConnectionString"];
 });
 
-builder.Services.AddSingleton<Supabase.Client>(_ =>
-    {
-        string url = builder.Configuration["Supabase:Url"] ??
-                     throw new InvalidOperationException("Supabase url is not configured");
-        string key = builder.Configuration["Supabase:Key"] ??
-                     throw new InvalidOperationException("Supabase key is not configured");
-        return new Supabase.Client(url, key);
-    });
-
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
@@ -318,20 +309,56 @@ builder.Services.AddOptions<FileUploadOptions>()
 
 if (builder.Environment.IsDevelopment())
 {
-    builder.Services.AddOptions<LocalFileStorageOptions>()
-        .BindConfiguration(LocalFileStorageOptions.Options)
-        .Validate(
-            options => !String.IsNullOrWhiteSpace(options.StorageDirectory),
-            $"{LocalFileStorageOptions.Options}:StorageDirectory is required")
-        .Validate(
-            options => !String.IsNullOrWhiteSpace(options.TempStorageDirectory),
-            $"{LocalFileStorageOptions.Options}:TempStorageDirectory is required")
-        .ValidateOnStart();
-    
-    builder.Services.AddScoped<IFileStorage, LocalFileStorage>();
+    string provider = builder.Configuration["FileStorage:Provider"] ??
+                      throw new InvalidOperationException("FileStorage:Provider is required");
+
+    if (provider.Equals("Local", StringComparison.OrdinalIgnoreCase))
+    {
+        builder.Services.AddOptions<LocalFileStorageOptions>()
+            .BindConfiguration(LocalFileStorageOptions.Options)
+            .Validate(
+                options => !String.IsNullOrWhiteSpace(options.StorageDirectory),
+                $"{LocalFileStorageOptions.Options}:StorageDirectory is required")
+            .Validate(
+                options => !String.IsNullOrWhiteSpace(options.TempStorageDirectory),
+                $"{LocalFileStorageOptions.Options}:TempStorageDirectory is required")
+            .ValidateOnStart();
+
+        builder.Services.AddScoped<IFileStorage, LocalFileStorage>();
+    }
+    else if (provider.Equals("Supabase", StringComparison.OrdinalIgnoreCase))
+    {
+        builder.Services.AddSingleton<Supabase.Client>(_ =>
+        {
+            string url = builder.Configuration["Supabase:Url"] ??
+                         throw new InvalidOperationException("Supabase url is not configured");
+            string key = builder.Configuration["Supabase:Key"] ??
+                         throw new InvalidOperationException("Supabase key is not configured");
+            return new Supabase.Client(url, key);
+        });
+
+        builder.Services.AddOptions<SupabaseStorageOptions>()
+            .BindConfiguration(SupabaseStorageOptions.Options)
+            .Validate(
+                options => !String.IsNullOrWhiteSpace(options.BucketName),
+                $"{SupabaseStorageOptions.Options}:BucketName is required")
+            .ValidateOnStart();
+
+        builder.Services.AddScoped<IFileStorage, SupabaseStorage>();
+    }
+    else throw new InvalidOperationException("No provider is configured");
 }
 else if (builder.Environment.IsProduction())
 {
+    builder.Services.AddSingleton<Supabase.Client>(_ =>
+    {
+        string url = builder.Configuration["Supabase:Url"] ??
+                     throw new InvalidOperationException("Supabase url is not configured");
+        string key = builder.Configuration["Supabase:Key"] ??
+                     throw new InvalidOperationException("Supabase key is not configured");
+        return new Supabase.Client(url, key);
+    });
+    
     builder.Services.AddOptions<SupabaseStorageOptions>()
         .BindConfiguration(SupabaseStorageOptions.Options)
         .Validate(

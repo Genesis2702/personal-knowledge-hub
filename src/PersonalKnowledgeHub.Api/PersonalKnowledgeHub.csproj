@@ -43,6 +43,7 @@
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="8.0.0-nblumhardt-02322" />
+    <PackageReference Include="Supabase" Version="8.1.1" />
   </ItemGroup>
 
 </Project>

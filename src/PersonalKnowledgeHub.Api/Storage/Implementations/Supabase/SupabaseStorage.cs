@@ -3,6 +3,7 @@ using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Storage.Interfaces;
 using PersonalKnowledgeHub.Storage.Options;
 using PersonalKnowledgeHub.Storage.Validators;
+using FileOptions = Supabase.Storage.FileOptions;
 
 namespace PersonalKnowledgeHub.Storage.Implementations.Supabase;
 
@@ -19,18 +20,55 @@ public class SupabaseStorage : IFileStorage
         _options = options.Value;
     }
     
-    public Task<FileResult> SaveFile(Stream fileStream, string fileName, int userId, CancellationToken cancellationToken)
+    public async Task<FileResult> SaveFile(Stream fileStream, string fileName, int userId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        ValidatedFile validatedFile =
+            await _fileProcessor.ValidateAndStageAsync(fileStream, fileName, cancellationToken);
+        
+        string guid = Guid.NewGuid().ToString("N");
+        string date = DateTime.UtcNow.ToString("yyyy/MM");
+
+        string storedKey = $"{userId}/{date}/{guid}.{validatedFile.Extension}";
+
+        MemoryStream stream = new MemoryStream();
+        await validatedFile.Content.CopyToAsync(stream, cancellationToken);
+        byte[] data = stream.ToArray();
+
+        await _client.Storage.From(_options.BucketName).Upload(data, storedKey, new FileOptions
+        {
+            ContentType = validatedFile.ContentType,
+            Upsert = false
+        }, cancellationToken: cancellationToken);
+
+        return new FileResult
+        {
+            StoredKey = storedKey,
+            SizeInBytes = validatedFile.SizeInBytes,
+            ContentType = validatedFile.ContentType,
+            FileFormat = validatedFile.FileFormat
+        };
     }
 
-    public Task<Stream> OpenFile(string storedKey, int userId, CancellationToken cancellationToken)
+    public async Task<Stream> OpenFile(string storedKey, int userId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (!SupabaseStorageValidator.IsStoredKeyValid(storedKey, userId))
+        {
+            throw new ArgumentException("The requested path is invalid");
+        }
+
+        byte[] data = await _client.Storage.From(_options.BucketName)
+            .Download(storedKey, null, cancellationToken: cancellationToken, null);
+
+        return new MemoryStream(data);
     }
 
-    public Task DeleteFile(string storedKey, int userId, CancellationToken cancellationToken)
+    public async Task DeleteFile(string storedKey, int userId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (!SupabaseStorageValidator.IsStoredKeyValid(storedKey, userId))
+        {
+            throw new ArgumentException("The requested path is invalid");
+        }
+        
+        await _client.Storage.From(_options.BucketName).Remove(storedKey);
     }
 }

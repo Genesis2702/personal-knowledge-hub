@@ -45,7 +45,7 @@ public static class LocalFileStorageValidator
         if (Int32.TryParse(yearSegment, out int year))
         {
             if (year > thisYear) return false;
-            if (year < 0) return false;
+            if (year < 1) return false;
         }
         else return false;
 

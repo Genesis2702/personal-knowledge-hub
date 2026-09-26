@@ -3,12 +3,16 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using PersonalKnowledgeHub.Data;
 using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Integration;
 using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Options;
+using PersonalKnowledgeHub.Storage.Implementations.Supabase;
 using PersonalKnowledgeHub.Storage.Interfaces;
+using PersonalKnowledgeHub.Storage.Options;
 
 namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;
 
@@ -63,27 +67,64 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
                 "MailSettings:UseSsl",
                 _options.Mail.UseSsl.ToString());
         }
+
+        builder.ConfigureAppConfiguration((_, configuration) =>
+        {
+            configuration.AddUserSecrets<Program>(optional: _options.Provider != StorageProvider.Supabase);
+        });
         
-        builder.ConfigureServices(services =>
+        builder.ConfigureServices((context, services) =>
         {
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.RemoveAll<AppDbContext>();
             
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(_postgresConnectionString));
-            
-            services.RemoveAll<IFileStorage>();
-            services.AddSingleton<ResettableFileStorage>();
-            services.AddSingleton<IFileStorage>(provider =>
-                provider.GetRequiredService<ResettableFileStorage>());
-            services.AddSingleton<IResettableFileStorage>(provider =>
-                provider.GetRequiredService<ResettableFileStorage>());
+
+            switch (_options.Provider)
+            {
+                case StorageProvider.Resettable:
+                    services.RemoveAll<IFileStorage>();
+                    
+                    services.AddSingleton<ResettableFileStorage>();
+                    
+                    services.AddSingleton<IFileStorage>(provider =>
+                        provider.GetRequiredService<ResettableFileStorage>());
+                    services.AddSingleton<IResettableFileStorage>(provider =>
+                        provider.GetRequiredService<ResettableFileStorage>());
+                    break;
+                
+                case StorageProvider.Supabase:
+                    services.RemoveAll<IFileStorage>();
+                    services.RemoveAll<Supabase.Client>();
+                    services.RemoveAll<IOptions<SupabaseStorageOptions>>();
+                    
+                    string url = context.Configuration["Supabase:Url"] ??
+                                 throw new InvalidOperationException("Supabase url is not configured");
+                    string key = context.Configuration["Supabase:Key"] ??
+                                 throw new InvalidOperationException("Supabase key is not configured");
+                    services.AddSingleton(new Supabase.Client(url, key));
+
+                    services.AddSingleton<IOptions<SupabaseStorageOptions>>(Microsoft.Extensions.Options.Options.Create(
+                        new SupabaseStorageOptions
+                        {
+                            BucketName = "personal-knowledge-hub-test"
+                        }));
+
+                    services.AddScoped<IFileStorage, SupabaseStorage>();
+                    break;
+                
+                default:
+                    throw new InvalidOperationException("Not supported storage provider");
+            }
 
             if (_options.EnableRedisWrapper)
             {
                 services.RemoveAll<IDistributedCache>();
+                
                 services.AddSingleton<MemoryDistributedCache>();
                 services.AddSingleton<ResettableCache>();
+                
                 services.AddSingleton<IDistributedCache>(provider => provider.GetRequiredService<ResettableCache>());
                 services.AddSingleton<IResettableCache>(provider => provider.GetRequiredService<ResettableCache>());
             }
@@ -91,7 +132,9 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
             if (_options.EnableHangfireWrapper)
             {
                 services.RemoveAll<IBackgroundJobClient>();
+                
                 services.AddSingleton<RecordingBackgroundJobClient>();
+                
                 services.AddSingleton<IBackgroundJobClient>(provider =>
                     provider.GetRequiredService<RecordingBackgroundJobClient>());
                 services.AddSingleton<IResettableBackgroundJobClient>(provider =>

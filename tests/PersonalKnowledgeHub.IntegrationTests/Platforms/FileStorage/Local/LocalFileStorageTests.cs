@@ -1,10 +1,9 @@
 ﻿using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
-using PersonalKnowledgeHub.IntegrationTests.Infrastructure.FileStorage;
 using PersonalKnowledgeHub.IntegrationTests.Infrastructure.FileStorage.Local;
 using PersonalKnowledgeHub.Models;
 
-namespace PersonalKnowledgeHub.IntegrationTests.Platforms.FileStorage;
+namespace PersonalKnowledgeHub.IntegrationTests.Platforms.FileStorage.Local;
 
 [Collection(nameof(LocalFileStorageCollection))]
 public class LocalFileStorageTests : IAsyncLifetime
@@ -103,7 +102,7 @@ public class LocalFileStorageTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task OpenFile_WhenFileIsValid_OpensFile()
+    public async Task OpenFile_WhenStoredKeyIsValid_OpensFile()
     {
         int userId = 42;
 

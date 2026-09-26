@@ -18,11 +18,11 @@ namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure;
 
 public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<Program>
 {
-    private readonly string _postgresConnectionString;
+    private readonly string? _postgresConnectionString;
     private readonly string? _redisConnectionString;
     private readonly FactoryOptions _options;
 
-    public PersonalKnowledgeHubWebApplicationFactory(string postgresConnectionString, string? redisConnectionString, FactoryOptions options)
+    public PersonalKnowledgeHubWebApplicationFactory(string? postgresConnectionString, string? redisConnectionString, FactoryOptions options)
     {
         _postgresConnectionString = postgresConnectionString;
         if (!string.IsNullOrEmpty(redisConnectionString))

@@ -1,6 +1,7 @@
 ﻿using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.IntegrationTests.Infrastructure.FileStorage;
+using PersonalKnowledgeHub.IntegrationTests.Infrastructure.FileStorage.Local;
 using PersonalKnowledgeHub.Models;
 
 namespace PersonalKnowledgeHub.IntegrationTests.Platforms.FileStorage;

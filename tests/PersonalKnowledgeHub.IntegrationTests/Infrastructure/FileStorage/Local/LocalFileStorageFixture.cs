@@ -5,7 +5,7 @@ using PersonalKnowledgeHub.Storage.Interfaces;
 using PersonalKnowledgeHub.Storage.Options;
 using PersonalKnowledgeHub.Storage.Validators;
 
-namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.FileStorage;
+namespace PersonalKnowledgeHub.IntegrationTests.Infrastructure.FileStorage.Local;
 
 public sealed class LocalFileStorageFixture : IAsyncLifetime
 {

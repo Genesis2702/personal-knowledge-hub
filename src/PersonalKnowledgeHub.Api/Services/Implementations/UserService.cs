@@ -1,8 +1,8 @@
-﻿using PersonalKnowledgeHub.Common;
-using PersonalKnowledgeHub.DTOs.Requests;
+﻿using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Mapper;
+using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
 

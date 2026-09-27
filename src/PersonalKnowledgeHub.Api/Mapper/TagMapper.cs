@@ -24,6 +24,7 @@ public class TagMapper
     {
         return new TagResponseDto
         {
+            Id = tag.Id,
             Name = tag.Name,
             LastModified = tag.LastModified
         };
@@ -33,6 +34,7 @@ public class TagMapper
     {
         return tags.Select(tag => new TagResponseDto
         {
+            Id  = tag.Id,
             Name = tag.Name,
             LastModified = tag.LastModified
         }).ToList();

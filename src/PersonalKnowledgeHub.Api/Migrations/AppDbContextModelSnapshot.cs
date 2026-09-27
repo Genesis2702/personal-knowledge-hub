@@ -17,7 +17,7 @@ namespace PersonalKnowledgeHub.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "10.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -185,6 +185,47 @@ namespace PersonalKnowledgeHub.Migrations
                     b.HasIndex("PermissionId", "RoleId");
 
                     b.ToTable("RolePermissions");
+                });
+
+            modelBuilder.Entity("PersonalKnowledgeHub.Entities.StoredFile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileFormat")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ResourceId")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("SizeInBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StoredKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ResourceId")
+                        .IsUnique();
+
+                    b.HasIndex("StoredKey")
+                        .IsUnique();
+
+                    b.ToTable("StoredFiles");
                 });
 
             modelBuilder.Entity("PersonalKnowledgeHub.Entities.Tag", b =>
@@ -380,6 +421,17 @@ namespace PersonalKnowledgeHub.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("PersonalKnowledgeHub.Entities.StoredFile", b =>
+                {
+                    b.HasOne("PersonalKnowledgeHub.Entities.Resource", "Resource")
+                        .WithOne("StoredFile")
+                        .HasForeignKey("PersonalKnowledgeHub.Entities.StoredFile", "ResourceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Resource");
+                });
+
             modelBuilder.Entity("PersonalKnowledgeHub.Entities.Tag", b =>
                 {
                     b.HasOne("PersonalKnowledgeHub.Entities.User", "User")
@@ -429,6 +481,8 @@ namespace PersonalKnowledgeHub.Migrations
             modelBuilder.Entity("PersonalKnowledgeHub.Entities.Resource", b =>
                 {
                     b.Navigation("ResourceTags");
+
+                    b.Navigation("StoredFile");
                 });
 
             modelBuilder.Entity("PersonalKnowledgeHub.Entities.Role", b =>

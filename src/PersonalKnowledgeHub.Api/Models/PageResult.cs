@@ -1,4 +1,4 @@
-﻿namespace PersonalKnowledgeHub.Common
+﻿namespace PersonalKnowledgeHub.Models
 {
     public class PageResult<T>
     {

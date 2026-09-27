@@ -36,7 +36,7 @@ public class MailTests
 
         while (!timeout.IsCancellationRequested)
         {
-            using HttpResponseMessage mailResponse = await _fixture.MailpitClient.GetAsync("/api/v1/message/latest", timeout.Token);
+            using HttpResponseMessage mailResponse = await _fixture.MailpitClient!.GetAsync("/api/v1/message/latest", timeout.Token);
 
             if (mailResponse.StatusCode == HttpStatusCode.OK)
             {

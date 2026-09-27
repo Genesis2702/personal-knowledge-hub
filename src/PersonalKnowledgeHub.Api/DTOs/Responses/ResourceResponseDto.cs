@@ -6,6 +6,7 @@ namespace PersonalKnowledgeHub.DTOs.Responses
     public class ResourceResponseDto
     {
         [Required]
+        public required int Id { get; set; }
         public required string Title { get; set; }
         public string? Url { get; set; }
         public string? Description { get; set; }
@@ -14,5 +15,6 @@ namespace PersonalKnowledgeHub.DTOs.Responses
         public DateTime CreatedAt { get; set; }
         public DateTime LastModified { get; set; }
         public ICollection<string> Tags { get; set; } = new List<string>();
+        public StoredFileResponseDto? StoredFileResponse { get; set; }
     }
 }

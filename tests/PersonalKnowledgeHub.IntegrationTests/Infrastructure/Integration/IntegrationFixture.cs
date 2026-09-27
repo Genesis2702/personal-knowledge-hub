@@ -78,6 +78,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
         await _respawner!.ResetAsync(_connection!);
         await Factory!.Services.GetRequiredService<IResettableCache>().ResetAsync();
         Factory.Services.GetRequiredService<IResettableBackgroundJobClient>().Reset();
+        Factory.Services.GetRequiredService<IResettableFileStorage>().Reset();
     }
 
     private async Task ApplyMigrationAsync()

@@ -1,7 +1,7 @@
-﻿using PersonalKnowledgeHub.Common;
-using PersonalKnowledgeHub.DTOs.Requests;
+﻿using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
+using PersonalKnowledgeHub.Models;
 
 namespace PersonalKnowledgeHub.Mapper;
 
@@ -29,13 +29,15 @@ public class ResourceMapper
     {
         return new ResourceResponseDto
         {
+            Id = resource.Id,
             Title = resource.Title,
             Url = resource.Url,
             Description = resource.Description,
             ResourceType = resource.ResourceType,
             CreatedAt = resource.CreatedAt,
             LastModified = resource.LastModified,
-            Tags = resource.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
+            Tags = resource.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList(),
+            StoredFileResponse = resource.StoredFile is not null? StoredFileMapper.ToStoredFileResponseDto(resource.StoredFile) : null
         };
     }
 
@@ -56,13 +58,15 @@ public class ResourceMapper
         { 
             Items = resourcesPageResult.Items.Select(item => new ResourceResponseDto
             {
+                Id = item.Id,
                 Title = item.Title,
                 Url = item.Url,
                 Description = item.Description,
                 ResourceType = item.ResourceType,
                 CreatedAt = item.CreatedAt,
                 LastModified = item.LastModified,
-                Tags = item.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList()
+                Tags = item.ResourceTags.Select(resourceTag => resourceTag.Tag.Name).ToList(),
+                StoredFileResponse = item.StoredFile is not null ? StoredFileMapper.ToStoredFileResponseDto(item.StoredFile) : null
             }).ToList(),
             PageIndex = resourcesPageResult.PageIndex,
             PageSize = resourcesPageResult.PageSize,

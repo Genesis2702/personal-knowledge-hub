@@ -39,7 +39,7 @@ public class ResourceTagEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "resource",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -100,7 +100,7 @@ public class ResourceTagEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "resource",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -194,7 +194,7 @@ public class ResourceTagEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "resource",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -245,7 +245,7 @@ public class ResourceTagEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "resource",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = anotherUser.Id
         };
         
@@ -309,7 +309,7 @@ public class ResourceTagEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "resource",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -363,7 +363,7 @@ public class ResourceTagEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "resource",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -424,7 +424,7 @@ public class ResourceTagEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "resource",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -485,7 +485,7 @@ public class ResourceTagEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "resource",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -541,7 +541,7 @@ public class ResourceTagEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "resource",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = anotherUser.Id
         };
         

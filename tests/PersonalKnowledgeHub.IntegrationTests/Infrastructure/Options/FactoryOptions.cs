@@ -10,4 +10,11 @@ public sealed class FactoryOptions
     public bool EnableRedisWrapper { get; init; }
     public bool EnableExternalHealthChecks { get; init; }
     public TestMailOptions? Mail { get; init; }
+    public StorageProvider Provider { get; init; } = StorageProvider.Resettable;
+}
+
+public enum StorageProvider
+{
+    Resettable, 
+    Supabase
 }

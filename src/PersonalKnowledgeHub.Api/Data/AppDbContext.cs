@@ -16,6 +16,7 @@ namespace PersonalKnowledgeHub.Data
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
+        public DbSet<StoredFile> StoredFiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -116,6 +117,20 @@ namespace PersonalKnowledgeHub.Data
                 .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<RolePermission>()
                 .HasIndex(rolePermission => new { rolePermission.PermissionId, rolePermission.RoleId });
+            
+            modelBuilder.Entity<StoredFile>().HasKey(storedFile => storedFile.Id);
+            modelBuilder.Entity<StoredFile>()
+                .HasOne(storedFile => storedFile.Resource)
+                .WithOne(resource => resource.StoredFile)
+                .HasForeignKey<StoredFile>(storedFile => storedFile.ResourceId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<StoredFile>()
+                .Property(storedFile => storedFile.FileFormat)
+                .HasConversion<string>();
+            modelBuilder.Entity<StoredFile>()
+                .HasIndex(storedFile => storedFile.StoredKey)
+                .IsUnique();
+            modelBuilder.Entity<StoredFile>().HasQueryFilter(storedFile => !storedFile.Resource!.IsDeleted);
         }
     }
 }

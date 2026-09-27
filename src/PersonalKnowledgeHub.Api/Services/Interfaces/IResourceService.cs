@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
-using PersonalKnowledgeHub.Common;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.Entities;
+using PersonalKnowledgeHub.Models;
 
 namespace PersonalKnowledgeHub.Services.Interfaces
 {
@@ -12,7 +12,6 @@ namespace PersonalKnowledgeHub.Services.Interfaces
         public Task<Resource> AddResource(ResourceRequestDto resourceRequest, int userId, CancellationToken cancellationToken);
         public Task UpdateResourceById(ClaimsPrincipal user, int resourceId, ResourceUpdateRequestDto resourceUpdateRequest, CancellationToken cancellationToken);
         public Task DeleteResourceById(ClaimsPrincipal user, int resourceId, CancellationToken cancellationToken);
-        public Task CleanUpResources(CancellationToken cancellationToken);
         public Task<Resource> RestoreResourceById(ClaimsPrincipal user, int resourceId, CancellationToken cancellationToken);
     }
 }

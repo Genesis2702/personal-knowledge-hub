@@ -1,13 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using PersonalKnowledgeHub.Common;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Repositories.Interfaces;
 using PersonalKnowledgeHub.Services.Interfaces;
 using PersonalKnowledgeHub.Mapper;
+using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Observability.Implementations;
 
 namespace PersonalKnowledgeHub.Services.Implementations
@@ -50,7 +50,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 if (tag.UserId != userId)
                 {
                     activity?.SetTag("tag.owned_by_current_user", false);
-                    throw new ForbiddenException("Tag found doesn't belong to current user");
+                    throw new ForbiddenException("You are not authorized to view this resource");
                 }
                 activity?.SetTag("tag.owned_by_current_user", true);
             }
@@ -80,7 +80,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             }
             if (resource.UserId != userId)
             {
-                throw new ForbiddenException("Resource found doesn't belong to current user");
+                throw new ForbiddenException("You are not authorized to view this resource");
             }
             return resource;
         }
@@ -134,21 +134,6 @@ namespace PersonalKnowledgeHub.Services.Implementations
             int userId = int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
             await _resourceRepository.DeleteResourceAsync(resource, userId, cancellationToken);
             _logger.LogInformation("Resource {ResourceId} deleted successfully for user {UserId}", resource.Id, userId);
-        }
-
-        public async Task CleanUpResources(CancellationToken cancellationToken)
-        {
-            _logger.LogInformation("Resources cleaning up started");
-            try
-            {
-                await _resourceRepository.CleanUpResourcesAsync(cancellationToken);
-                _logger.LogInformation("Resources cleaned up successfully");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Resources cleaning up failed");
-                throw;
-            }
         }
 
         public async Task<Resource> RestoreResourceById(ClaimsPrincipal user, int resourceId, CancellationToken cancellationToken)

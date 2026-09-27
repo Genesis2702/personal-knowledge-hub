@@ -27,6 +27,11 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using PersonalKnowledgeHub.Observability.Implementations;
 using PersonalKnowledgeHub.Observability.Interfaces;
+using PersonalKnowledgeHub.Storage.Implementations.Local;
+using PersonalKnowledgeHub.Storage.Implementations.Supabase;
+using PersonalKnowledgeHub.Storage.Interfaces;
+using PersonalKnowledgeHub.Storage.Options;
+using PersonalKnowledgeHub.Storage.Validators;
 using Serilog;
 using Serilog.Events;
 using Serilog.Context;
@@ -50,6 +55,7 @@ builder.Services.AddScoped<IResourceTagRepository, ResourceTagRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 builder.Services.AddScoped<IVerificationTokenRepository, VerificationTokenRepository>();
+builder.Services.AddScoped<IStoredFileRepository, StoredFileRepository>();
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -63,6 +69,11 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddTransient<IMailService, MailService>();
 builder.Services.AddScoped<IMailFactoryService, MailFactoryService>();
 builder.Services.AddScoped<IVerificationTokenService, VerificationTokenService>();
+builder.Services.AddScoped<IFileResourceService, FileResourceService>();
+
+// Storage processor & validator
+builder.Services.AddScoped<IFileValidator, FileValidator>();
+builder.Services.AddScoped<IFileProcessor, FileProcessor>();
 
 // Redis connection
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
@@ -153,7 +164,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
             maxRetryDelay: TimeSpan.FromSeconds(5),
             errorCodesToAdd: null);
         }
-));     
+));    
+
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration["RedisCacheSettings:ConnectionString"];
@@ -285,13 +297,85 @@ builder.Services.AddOpenTelemetry()
             .AddConsoleExporter();
     });
 
+builder.Services.AddOptions<FileUploadOptions>()
+    .BindConfiguration(FileUploadOptions.Options)
+    .Validate(
+        options => options.MaxFileSizeInBytes > 0 && options.MaxFileSizeInBytes <= 10485760,
+        $"{FileUploadOptions.Options}:MaxFileSizeInBytes must be between 1 and 10485760 bytes")
+    .Validate(
+        options => options.MaxStoredFileSizeInBytes > 0 && options.MaxStoredFileSizeInBytes <= 20971520,
+        $"{FileUploadOptions.Options}:MaxStoredFileSizeInBytes must be between 1 and 20971520 bytes")
+    .ValidateOnStart();
+
+if (builder.Environment.IsDevelopment())
+{
+    string provider = builder.Configuration["FileStorage:Provider"] ??
+                      throw new InvalidOperationException("FileStorage:Provider is required");
+
+    if (provider.Equals("Local", StringComparison.OrdinalIgnoreCase))
+    {
+        builder.Services.AddOptions<LocalFileStorageOptions>()
+            .BindConfiguration(LocalFileStorageOptions.Options)
+            .Validate(
+                options => !String.IsNullOrWhiteSpace(options.StorageDirectory),
+                $"{LocalFileStorageOptions.Options}:StorageDirectory is required")
+            .Validate(
+                options => !String.IsNullOrWhiteSpace(options.TempStorageDirectory),
+                $"{LocalFileStorageOptions.Options}:TempStorageDirectory is required")
+            .ValidateOnStart();
+
+        builder.Services.AddScoped<IFileStorage, LocalFileStorage>();
+    }
+    else if (provider.Equals("Supabase", StringComparison.OrdinalIgnoreCase))
+    {
+        builder.Services.AddSingleton<Supabase.Client>(_ =>
+        {
+            string url = builder.Configuration["Supabase:Url"] ??
+                         throw new InvalidOperationException("Supabase url is not configured");
+            string key = builder.Configuration["Supabase:Key"] ??
+                         throw new InvalidOperationException("Supabase key is not configured");
+            return new Supabase.Client(url, key);
+        });
+
+        builder.Services.AddOptions<SupabaseStorageOptions>()
+            .BindConfiguration(SupabaseStorageOptions.Options)
+            .Validate(
+                options => !String.IsNullOrWhiteSpace(options.BucketName),
+                $"{SupabaseStorageOptions.Options}:BucketName is required")
+            .ValidateOnStart();
+
+        builder.Services.AddScoped<IFileStorage, SupabaseStorage>();
+    }
+    else throw new InvalidOperationException("No provider is configured");
+}
+else if (builder.Environment.IsProduction())
+{
+    builder.Services.AddSingleton<Supabase.Client>(_ =>
+    {
+        string url = builder.Configuration["Supabase:Url"] ??
+                     throw new InvalidOperationException("Supabase url is not configured");
+        string key = builder.Configuration["Supabase:Key"] ??
+                     throw new InvalidOperationException("Supabase key is not configured");
+        return new Supabase.Client(url, key);
+    });
+    
+    builder.Services.AddOptions<SupabaseStorageOptions>()
+        .BindConfiguration(SupabaseStorageOptions.Options)
+        .Validate(
+            options => !String.IsNullOrWhiteSpace(options.BucketName),
+            $"{SupabaseStorageOptions.Options}:BucketName is required")
+        .ValidateOnStart();
+    
+    builder.Services.AddScoped<IFileStorage, SupabaseStorage>();
+}
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.UseHangfireDashboard("/hangfire");
+    app.UseHangfireDashboard();
 }
 
 app.UseHttpsRedirection();

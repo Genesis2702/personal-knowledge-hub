@@ -17,13 +17,13 @@ public static class RecurringTaskService
             "verification-token-cleanup",
             verificationTokenService => verificationTokenService.CleanUpVerificationTokens(CancellationToken.None),
             Cron.Monthly);
-        recurringJobManager.AddOrUpdate<IResourceService>(
+        recurringJobManager.AddOrUpdate<IFileResourceService>(
             "resource-cleanup",
-            resourceService => resourceService.CleanUpResources(CancellationToken.None),
-            Cron.Monthly);
+            fileResourceService => fileResourceService.DeleteFileResourcePermanently(CancellationToken.None),
+            Cron.Daily);
         recurringJobManager.AddOrUpdate<ITagService>(
             "tag-cleanup",
             tagService => tagService.CleanUpTags(CancellationToken.None),
-            Cron.Monthly);
+            Cron.Daily);
     }
 }

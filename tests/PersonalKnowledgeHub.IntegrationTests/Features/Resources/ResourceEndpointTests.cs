@@ -5,13 +5,15 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using PersonalKnowledgeHub.Common;
+using Microsoft.Extensions.Options;
 using PersonalKnowledgeHub.Data;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Integration;
+using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Services.Interfaces;
+using PersonalKnowledgeHub.Storage.Options;
 
 namespace PersonalKnowledgeHub.IntegrationTests.Features.Resources;
 
@@ -40,7 +42,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource1 = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -50,7 +52,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource2 = new Resource
         {
             Title = "english",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -60,7 +62,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource3 = new Resource
         {
             Title = "literature",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -108,7 +110,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource1 = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -118,7 +120,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource2 = new Resource
         {
             Title = "english",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -128,7 +130,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource3 = new Resource
         {
             Title = "literature",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -165,7 +167,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource1 = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -175,7 +177,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource2 = new Resource
         {
             Title = "english",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -185,7 +187,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource3 = new Resource
         {
             Title = "literature",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -222,7 +224,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -267,7 +269,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -341,7 +343,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = anotherUser.Id
         };
         
@@ -382,7 +384,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         request.Content = JsonContent.Create(new ResourceRequestDto
         {
             Title = "math",
-            ResourceType = ResourceType.Book
+            ResourceType = ResourceType.Note
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -395,7 +397,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.NotNull(body);
         Assert.Equal("math", body.Title);
-        Assert.Equal(ResourceType.Book, body.ResourceType);
+        Assert.Equal(ResourceType.Note, body.ResourceType);
         
         Resource? addedResource = await dbContext.Resources.AsNoTracking().SingleOrDefaultAsync(r => r.Title == "math");
         
@@ -426,7 +428,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         request.Content = JsonContent.Create(new ResourceRequestDto
         {
             Title = "",
-            ResourceType = ResourceType.Book
+            ResourceType = ResourceType.Note
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -462,7 +464,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         request.Content = JsonContent.Create(new ResourceRequestDto
         {
             Title = "math",
-            ResourceType = ResourceType.Book
+            ResourceType = ResourceType.Note
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -494,7 +496,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -508,7 +510,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         request.Content = JsonContent.Create(new ResourceRequestDto
         {
             Title = "math",
-            ResourceType = ResourceType.Book
+            ResourceType = ResourceType.Note
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -540,7 +542,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -586,7 +588,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -632,7 +634,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         
@@ -719,7 +721,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = anotherUser.Id
         };
         
@@ -765,7 +767,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id,
             IsDeleted = false,
             DeletedAt = null,
@@ -784,16 +786,16 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         
-        Resource? updatedResource = await dbContext.Resources
+        Resource? deletedResource = await dbContext.Resources
             .AsNoTracking()
             .IgnoreQueryFilters()
             .SingleOrDefaultAsync(r => r.Id == resource.Id);
         
-        Assert.NotNull(updatedResource);
-        Assert.True(updatedResource.IsDeleted);
-        Assert.NotNull(updatedResource.DeletedAt);
-        Assert.NotNull(updatedResource.DeletedBy);
-        Assert.Equal(user.Id, updatedResource.DeletedBy);
+        Assert.NotNull(deletedResource);
+        Assert.True(deletedResource.IsDeleted);
+        Assert.NotNull(deletedResource.DeletedAt);
+        Assert.NotNull(deletedResource.DeletedBy);
+        Assert.Equal(user.Id, deletedResource.DeletedBy);
     }
 
     [Fact]
@@ -816,7 +818,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id,
             IsDeleted = false,
             DeletedAt = null,
@@ -835,15 +837,15 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         
-        Resource? updatedResource = await dbContext.Resources
+        Resource? deletedResource = await dbContext.Resources
             .AsNoTracking()
             .IgnoreQueryFilters()
             .SingleOrDefaultAsync(r => r.Id == resource.Id);
         
-        Assert.NotNull(updatedResource);
-        Assert.False(updatedResource.IsDeleted);
-        Assert.Null(updatedResource.DeletedAt);
-        Assert.Null(updatedResource.DeletedBy);
+        Assert.NotNull(deletedResource);
+        Assert.False(deletedResource.IsDeleted);
+        Assert.Null(deletedResource.DeletedAt);
+        Assert.Null(deletedResource.DeletedBy);
     }
 
     [Fact]
@@ -903,7 +905,7 @@ public class ResourceEndpointTests : IntegrationTestBase
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = anotherUser.Id,
             IsDeleted = false,
             DeletedAt = null,
@@ -922,14 +924,634 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         
-        Resource? updatedResource = await dbContext.Resources
+        Resource? deletedResource = await dbContext.Resources
             .AsNoTracking()
             .IgnoreQueryFilters()
             .SingleOrDefaultAsync(r => r.Id == resource.Id);
         
-        Assert.NotNull(updatedResource);
-        Assert.False(updatedResource.IsDeleted);
-        Assert.Null(updatedResource.DeletedAt);
-        Assert.Null(updatedResource.DeletedBy);
+        Assert.NotNull(deletedResource);
+        Assert.False(deletedResource.IsDeleted);
+        Assert.Null(deletedResource.DeletedAt);
+        Assert.Null(deletedResource.DeletedBy);
+    }
+
+    [Fact]
+    public async Task RestoreResourceById_WhenUserIsActive_ReturnsOk()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active,
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        Resource resource = new Resource
+        {
+            Title = "math",
+            ResourceType = ResourceType.Note,
+            UserId = user.Id,
+            IsDeleted = true,
+            DeletedAt = DateTime.UtcNow,
+            DeletedBy = user.Id
+        };
+        
+        dbContext.Resources.Add(resource);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"/resources/{resource.Id}/restore");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        
+        HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        
+        Resource? restoredResource = await dbContext.Resources
+            .AsNoTracking()
+            .SingleOrDefaultAsync(r => r.Id == resource.Id);
+        
+        Assert.NotNull(restoredResource);
+        Assert.False(restoredResource.IsDeleted);
+        Assert.Null(restoredResource.DeletedAt);
+        Assert.Null(restoredResource.DeletedBy);
+    }
+
+    [Fact]
+    public async Task RestoreResourceById_WhenUserIsNotActive_ReturnsForbidden()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Inactive,
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        Resource resource = new Resource
+        {
+            Title = "math",
+            ResourceType = ResourceType.Note,
+            UserId = user.Id,
+            IsDeleted = true,
+            DeletedAt = DateTime.UtcNow,
+            DeletedBy = user.Id
+        };
+        
+        dbContext.Resources.Add(resource);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"/resources/{resource.Id}/restore");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        
+        HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        
+        Resource? restoredResource = await dbContext.Resources
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .SingleOrDefaultAsync(r => r.Id == resource.Id);
+        
+        Assert.NotNull(restoredResource);
+        Assert.True(restoredResource.IsDeleted);
+        Assert.NotNull(restoredResource.DeletedAt);
+        Assert.NotNull(restoredResource.DeletedBy);
+        Assert.Equal(user.Id, restoredResource.UserId);
+    }
+
+    [Fact]
+    public async Task RestoreResourceById_WhenResourceDoesNotExist_ReturnsNotFound()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active,
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"/resources/{int.MaxValue}/restore");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        
+        HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RestoreResourceById_WhenUserDoesNotOwnResource_ReturnsForbidden()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active,
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        User anotherUser = new User
+        {
+            Email = "anotheruser@gmail.com",
+            PasswordHash = "another user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(anotherUser);
+        await dbContext.SaveChangesAsync();
+
+        Resource resource = new Resource
+        {
+            Title = "math",
+            ResourceType = ResourceType.Note,
+            UserId = anotherUser.Id,
+            IsDeleted = true,
+            DeletedAt = DateTime.UtcNow,
+            DeletedBy = anotherUser.Id
+        };
+        
+        dbContext.Resources.Add(resource);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"/resources/{resource.Id}/restore");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        
+        HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        
+        Resource? restoredResource = await dbContext.Resources
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .SingleOrDefaultAsync(r => r.Id == resource.Id);
+        
+        Assert.NotNull(restoredResource);
+        Assert.True(restoredResource.IsDeleted);
+        Assert.NotNull(restoredResource.DeletedAt);
+        Assert.NotNull(restoredResource.DeletedBy);
+        Assert.Equal(anotherUser.Id, restoredResource.UserId);
+    }
+
+    [Fact]
+    public async Task UploadFile_WhenUserIsActive_ReturnsCreated()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+        var uploadOptions = scope.ServiceProvider.GetRequiredService<IOptions<FileUploadOptions>>().Value;
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+
+        int fileSize = checked((int)uploadOptions.MaxFileSizeInBytes);
+        byte[] fileBytes = new byte[fileSize];
+        
+        using var fileContent = new ByteArrayContent(fileBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+
+        using var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/resources/files");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = multipartContent;
+
+        using var response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        
+        Resource? fileResource = await dbContext.Resources
+            .AsNoTracking()
+            .Include(fr => fr.StoredFile)
+            .SingleOrDefaultAsync(fr => fr.UserId == user.Id);
+
+        Assert.NotNull(fileResource);
+        Assert.NotNull(fileResource.StoredFile);
+    }
+
+    [Fact]
+    public async Task UploadFile_WhenUserIsNotActive_ReturnsForbidden()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+        var uploadOptions = scope.ServiceProvider.GetRequiredService<IOptions<FileUploadOptions>>().Value;
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Inactive
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+
+        int fileSize = checked((int)uploadOptions.MaxFileSizeInBytes);
+        byte[] fileBytes = new byte[fileSize];
+        
+        using var fileContent = new ByteArrayContent(fileBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+
+        using var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/resources/files");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = multipartContent;
+
+        using var response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        
+        Resource? fileResource = await dbContext.Resources
+            .AsNoTracking()
+            .SingleOrDefaultAsync(fr => fr.UserId == user.Id);
+
+        Assert.Null(fileResource);
+    }
+
+    [Fact]
+    public async Task UploadFile_WhenFileSizeIsExceeded_ReturnsFileSizeLimitExceeded()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+        var uploadOptions = scope.ServiceProvider.GetRequiredService<IOptions<FileUploadOptions>>().Value;
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+
+        int fileSize = checked((int)uploadOptions.MaxFileSizeInBytes + 1);
+        byte[] fileBytes = new byte[fileSize];
+        
+        using var fileContent = new ByteArrayContent(fileBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+
+        using var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/resources/files");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = multipartContent;
+
+        using var response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.RequestEntityTooLarge, response.StatusCode);
+        
+        Resource? fileResource = await dbContext.Resources
+            .AsNoTracking()
+            .SingleOrDefaultAsync(fr => fr.UserId == user.Id);
+
+        Assert.Null(fileResource);
+    }
+
+    [Fact]
+    public async Task UploadFile_WhenResourceAlreadyExists_ReturnsConflict()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+        var uploadOptions = scope.ServiceProvider.GetRequiredService<IOptions<FileUploadOptions>>().Value;
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        Resource resource = new Resource
+        {
+            Title = "note.pdf",
+            ResourceType = ResourceType.File,
+            UserId = user.Id
+        };
+
+        dbContext.Resources.Add(resource);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+
+        int fileSize = checked((int)uploadOptions.MaxFileSizeInBytes);
+        byte[] fileBytes = new byte[fileSize];
+        
+        using var fileContent = new ByteArrayContent(fileBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+
+        using var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/resources/files");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = multipartContent;
+
+        using var response = await Fixture.Client!.SendAsync(request);
+        
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+
+        List<Resource> fileResource = await dbContext.Resources
+            .AsNoTracking()
+            .Where(fr => fr.UserId == user.Id)
+            .ToListAsync();
+
+        Assert.Single(fileResource);
+    }
+
+    [Fact]
+    public async Task PreviewFile_WhenUserIsActive_ReturnsInlineFile()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+        
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+
+        byte[] expectedBytes = "%PDF-preview file content"u8.ToArray();
+
+        var fileContent = new ByteArrayContent(expectedBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        
+        var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        var uploadRequest = new HttpRequestMessage(HttpMethod.Post, "resources/files");
+        uploadRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        uploadRequest.Content = multipartContent;
+
+        using HttpResponseMessage uploadResponse = await Fixture.Client!.SendAsync(uploadRequest);
+        
+        Assert.Equal(HttpStatusCode.Created, uploadResponse.StatusCode);
+
+        Resource? resource = await dbContext.Resources
+            .AsNoTracking()
+            .SingleOrDefaultAsync(r => r.UserId == user.Id && r.Title == "note.pdf");
+        
+        Assert.NotNull(resource);
+        
+        using var previewRequest = new HttpRequestMessage(HttpMethod.Get, $"/resources/{resource.Id}/file");
+        previewRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using HttpResponseMessage previewResponse = await Fixture.Client!.SendAsync(previewRequest);
+        
+        Assert.Equal(HttpStatusCode.OK, previewResponse.StatusCode);
+        
+        Assert.Equal("application/pdf", previewResponse.Content.Headers.ContentType?.MediaType);
+        Assert.Null(previewResponse.Content.Headers.ContentDisposition);
+        
+        byte[] actualBytes = await previewResponse.Content.ReadAsByteArrayAsync();
+        Assert.Equal(expectedBytes, actualBytes);
+    }
+
+    [Fact]
+    public async Task PreviewFile_WhenResourceDoesNotExist_ReturnsNotFound()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+        
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        
+        using var previewRequest = new HttpRequestMessage(HttpMethod.Get, $"/resources/{int.MaxValue}/file");
+        previewRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using HttpResponseMessage previewResponse = await Fixture.Client!.SendAsync(previewRequest);
+        
+        Assert.Equal(HttpStatusCode.NotFound, previewResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task PreviewFile_WhenUserDoesNotOwnResource_ReturnsForbidden()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        User anotherUser = new User
+        {
+            Email = "anotheruser@gmail.com",
+            PasswordHash = "another user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(anotherUser);
+        await dbContext.SaveChangesAsync();
+        
+        string userAccessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        string anotherUserAccessToken = await tokenService.GenerateAccessToken(anotherUser.Id, CancellationToken.None);
+
+        byte[] expectedBytes = "%PDF-preview file content"u8.ToArray();
+
+        var fileContent = new ByteArrayContent(expectedBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        
+        var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        var uploadRequest = new HttpRequestMessage(HttpMethod.Post, "resources/files");
+        uploadRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", anotherUserAccessToken);
+        uploadRequest.Content = multipartContent;
+
+        using HttpResponseMessage uploadResponse = await Fixture.Client!.SendAsync(uploadRequest);
+        
+        Assert.Equal(HttpStatusCode.Created, uploadResponse.StatusCode);
+
+        Resource? resource = await dbContext.Resources
+            .AsNoTracking()
+            .SingleOrDefaultAsync(r => r.Title == "note.pdf");
+        
+        Assert.NotNull(resource);
+        
+        using var previewRequest = new HttpRequestMessage(HttpMethod.Get, $"/resources/{resource.Id}/file");
+        previewRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", userAccessToken);
+
+        using HttpResponseMessage previewResponse = await Fixture.Client!.SendAsync(previewRequest);
+        
+        Assert.Equal(HttpStatusCode.Forbidden, previewResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task PreviewFile_WhenResourceDoesNotContainAFile_ReturnsNotFound()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        Resource resource = new Resource
+        {
+            Title = "note.pdf",
+            ResourceType = ResourceType.File,
+            UserId = user.Id
+        };
+        
+        dbContext.Resources.Add(resource);
+        await dbContext.SaveChangesAsync();
+
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+        
+        using var previewRequest = new HttpRequestMessage(HttpMethod.Get, $"/resources/{resource.Id}/file");
+        previewRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using HttpResponseMessage previewResponse = await Fixture.Client!.SendAsync(previewRequest);
+        
+        Assert.Equal(HttpStatusCode.NotFound, previewResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task DownloadFile_WhenUserIsActive_ReturnsFileAsAttachment()
+    {
+        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User user = new User
+        {
+            Email = "user@gmail.com",
+            PasswordHash = "user password",
+            Status = UserStatus.Active
+        };
+        
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+        
+        string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
+
+        byte[] expectedBytes = "%PDF-preview file content"u8.ToArray();
+
+        var fileContent = new ByteArrayContent(expectedBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        
+        var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(fileContent, "file", "note.pdf");
+
+        var uploadRequest = new HttpRequestMessage(HttpMethod.Post, "resources/files");
+        uploadRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        uploadRequest.Content = multipartContent;
+
+        using HttpResponseMessage uploadResponse = await Fixture.Client!.SendAsync(uploadRequest);
+        
+        Assert.Equal(HttpStatusCode.Created, uploadResponse.StatusCode);
+
+        Resource? resource = await dbContext.Resources
+            .AsNoTracking()
+            .SingleOrDefaultAsync(r => r.UserId == user.Id && r.Title == "note.pdf");
+        
+        Assert.NotNull(resource);
+        
+        using var downloadRequest = new HttpRequestMessage(HttpMethod.Get, $"/resources/{resource.Id}/file/download");
+        downloadRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using HttpResponseMessage downloadResponse = await Fixture.Client!.SendAsync(downloadRequest);
+        
+        Assert.Equal(HttpStatusCode.OK, downloadResponse.StatusCode);
+        
+        Assert.Equal("application/pdf", downloadResponse.Content.Headers.ContentType?.MediaType);
+        
+        ContentDispositionHeaderValue? disposition =
+            downloadResponse.Content.Headers.ContentDisposition;
+        Assert.NotNull(disposition);
+        Assert.Equal("attachment", disposition.DispositionType);
+        
+        string? returnedFileName =
+            disposition.FileNameStar ??
+            disposition.FileName?.Trim('"');
+        Assert.Equal("note.pdf", returnedFileName);
+        
+        byte[] actualBytes = await downloadResponse.Content.ReadAsByteArrayAsync();
+        Assert.Equal(expectedBytes, actualBytes);
     }
 }

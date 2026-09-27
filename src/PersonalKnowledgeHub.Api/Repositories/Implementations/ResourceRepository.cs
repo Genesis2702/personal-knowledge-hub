@@ -35,6 +35,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                 .OrderBy(resource => resource.Id)
                 .Include(resource => resource.ResourceTags)
                 .ThenInclude(resourceTag => resourceTag.Tag)
+                .Include(resource => resource.StoredFile)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
@@ -46,6 +47,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.Resources
                 .Include(resource => resource.ResourceTags)
                 .ThenInclude(resourceTag => resourceTag.Tag)
+                .Include(resource => resource.StoredFile)
                 .SingleOrDefaultAsync(resource => resource.Id == resourceId, cancellationToken);
         }
 
@@ -55,6 +57,21 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                 .SingleOrDefaultAsync(resource => resource.Id == resourceId, cancellationToken);
         }
 
+        public async Task<List<Resource>> GetExpiredResourcesByBatchAsync(int batchSize, int lastResourceId, DateTime expirationDate, CancellationToken cancellationToken)
+        {
+            return await _dbContext.Resources
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Include(resource => resource.StoredFile)
+                .Where(resource =>
+                    resource.Id > lastResourceId &&
+                    resource.IsDeleted &&
+                    resource.DeletedAt < expirationDate)
+                .OrderBy(resource => resource.Id)
+                .Take(batchSize)
+                .ToListAsync(cancellationToken);
+        }
+        
         public async Task<Resource> AddResourceAsync(Resource resource, CancellationToken cancellationToken)
         {
             await _dbContext.Resources.AddAsync(resource, cancellationToken);
@@ -94,9 +111,12 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return resource;
         }
 
-        public async Task CleanUpResourcesAsync(CancellationToken cancellationToken)
+        public async Task CleanUpResourceByIdAsync(int resourceId, CancellationToken cancellationToken)
         {
-            await _dbContext.Resources.Where(resource => resource.IsDeleted).ExecuteDeleteAsync(cancellationToken);
+            await _dbContext.Resources
+                .IgnoreQueryFilters()
+                .Where(resource => resource.Id == resourceId && resource.IsDeleted)
+                .ExecuteDeleteAsync(cancellationToken);
         }
 
         public async Task<bool> IsTitleExistAsync(string resourceTitle, int userId, CancellationToken cancellationToken)

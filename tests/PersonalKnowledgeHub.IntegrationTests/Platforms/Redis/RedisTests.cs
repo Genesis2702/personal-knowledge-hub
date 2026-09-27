@@ -3,10 +3,10 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
-using PersonalKnowledgeHub.Common;
 using PersonalKnowledgeHub.Data;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Redis;
+using PersonalKnowledgeHub.Models;
 using PersonalKnowledgeHub.Services.Interfaces;
 
 namespace PersonalKnowledgeHub.IntegrationTests.Platforms.Redis;
@@ -42,7 +42,7 @@ public class RedisTests
         Resource resource = new Resource
         {
             Title = "math",
-            ResourceType = ResourceType.Book,
+            ResourceType = ResourceType.Note,
             UserId = user.Id
         };
         

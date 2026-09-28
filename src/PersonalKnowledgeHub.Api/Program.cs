@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -23,6 +24,7 @@ using Polly.Timeout;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.OpenApi;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using PersonalKnowledgeHub.Observability.Implementations;
@@ -43,7 +45,40 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes.Add("Bearer", new OpenApiSecurityScheme
+        { 
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT"
+        });
+        return Task.CompletedTask;
+    });
+    options.AddOperationTransformer((operation, context, cancellationToken) =>
+    {
+        var isAuthorize = context.Description.ActionDescriptor.EndpointMetadata
+            .OfType<IAuthorizeData>()
+            .Any();
+        var isAnonymous = context.Description.ActionDescriptor.EndpointMetadata
+            .OfType<IAllowAnonymous>()
+            .Any();
+
+        if (isAuthorize && !isAnonymous)
+        {
+            operation.Security = [new OpenApiSecurityRequirement
+            {
+                { new OpenApiSecuritySchemeReference("Bearer", context.Document), [] }
+            }];
+        }
+        
+        return Task.CompletedTask;
+    });
+});
 
 // Repositories
 builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();

@@ -64,7 +64,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok("Password reset mail sent");
         }
 
-        [EndpointSummary("Change current user's password")]
+        [EndpointSummary("Change the current user's password")]
         [HttpPost("change-password")]
         [Authorize(Policy = "ActiveAccount")]
         public async Task<IActionResult> ChangePassword(ResetPasswordRequestDto resetPasswordRequest, CancellationToken cancellationToken)
@@ -74,7 +74,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok("Password changed successfully");
         }
         
-        [EndpointSummary("Reset password using reset password token")]
+        [EndpointSummary("Reset a password using reset password token")]
         [HttpPost("reset-password")]
         [AllowAnonymous]
         public async Task<IActionResult> ResetPassword([FromQuery] string token, ResetPasswordRequestDto resetPasswordRequest, CancellationToken cancellationToken)
@@ -84,7 +84,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok("Password reset successfully");
         }
 
-        [EndpointSummary("Verify current user's email address")]
+        [EndpointSummary("Verify the current user's email address")]
         [HttpPost("mail-verification")]
         [Authorize(Policy = "PendingAccount")]
         public async Task<IActionResult> VerifyMail([FromQuery] string token, CancellationToken cancellationToken)
@@ -94,7 +94,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok("Email verified successfully");
         }
 
-        [EndpointSummary("Resend email verification message")]
+        [EndpointSummary("Resend the email verification message")]
         [HttpPost("resend-verification")]
         [Authorize(Policy = "PendingAccount")]
         public async Task<IActionResult> ResendMail(CancellationToken cancellationToken)

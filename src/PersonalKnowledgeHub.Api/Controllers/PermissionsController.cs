@@ -20,6 +20,7 @@ namespace PersonalKnowledgeHub.Controllers
             _permissionService = permissionService;
         }
 
+        [EndpointSummary("Get all permissions")]
         [HttpGet]
         public async Task<ActionResult<List<PermissionResponseDto>>> GetPermissions(CancellationToken cancellationToken)
         {
@@ -31,6 +32,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(permissionResponses);
         }
 
+        [EndpointSummary("Get a permission by id")]
         [HttpGet("{id}")]
         public async Task<ActionResult<PermissionResponseDto>> GetPermissionById(int id, CancellationToken cancellationToken)
         {
@@ -42,6 +44,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(permissionResponse);
         }
 
+        [EndpointSummary("Add a new permission")]
         [HttpPost]
         public async Task<ActionResult<PermissionResponseDto>> AddPermission(PermissionRequestDto permissionRequest, CancellationToken cancellationToken)
         {
@@ -53,6 +56,7 @@ namespace PersonalKnowledgeHub.Controllers
             return CreatedAtAction(nameof(GetPermissionById), new { id = permission.Id }, permissionResponse);
         }
 
+        [EndpointSummary("Update a permission by id")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePermissionById(int id, PermissionRequestDto permissionRequest, CancellationToken cancellationToken)
         {
@@ -60,6 +64,7 @@ namespace PersonalKnowledgeHub.Controllers
             return NoContent();
         }
 
+        [EndpointSummary("Delete a permission by id")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePermissionById(int id, CancellationToken cancellationToken)
         {

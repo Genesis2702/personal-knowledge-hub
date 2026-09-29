@@ -21,6 +21,7 @@ namespace PersonalKnowledgeHub.Controllers
             _tagService = tagService;
         }
 
+        [EndpointSummary("Create a new tag for the current user")]
         [HttpPost]
         public async Task<ActionResult<TagResponseDto>> AddTag(TagRequestDto tagRequest, CancellationToken cancellationToken)
         {
@@ -30,6 +31,7 @@ namespace PersonalKnowledgeHub.Controllers
             return CreatedAtAction(nameof(GetTagById), new { id = tag.Id }, tagResponse);
         }
 
+        [EndpointSummary("Get the current user's tags")]
         [HttpGet]
         public async Task<ActionResult<List<TagResponseDto>>> GetTags(CancellationToken cancellationToken)
         {
@@ -39,6 +41,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(tagResponses);
         }
 
+        [EndpointSummary("Get one of the current user's tag by ID")]
         [HttpGet("{id}")]
         public async Task<ActionResult<TagResponseDto>> GetTagById(int id, CancellationToken cancellationToken)
         {
@@ -48,6 +51,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(tagResponse);
         }
 
+        [EndpointSummary("Update one of the current user's tag by ID")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTagById(TagRequestDto tagRequest, int id, CancellationToken cancellationToken)
         {
@@ -55,6 +59,7 @@ namespace PersonalKnowledgeHub.Controllers
             return NoContent();
         }
 
+        [EndpointSummary("Soft delete one of the current user's tag by ID")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTagById(int id, CancellationToken cancellationToken)
         {
@@ -62,6 +67,7 @@ namespace PersonalKnowledgeHub.Controllers
             return NoContent();
         }
 
+        [EndpointSummary("Restore one of the current user's soft-deleted tag by ID")]
         [HttpPost("{id}/restore")]
         public async Task<ActionResult<TagResponseDto>> RestoreTagById(int id, CancellationToken cancellationToken)
         {

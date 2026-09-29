@@ -141,7 +141,7 @@ namespace PersonalKnowledgeHub.Controllers
             return File(result.Content, result.ContentType, enableRangeProcessing: true);
         }
 
-        [EndpointSummary("Delete one of the current user's file by resource ID")]
+        [EndpointSummary("Download one of the current user's file by resource ID")]
         [HttpGet("{id}/file/download")]
         public async Task<IActionResult> DownloadFile(int id, CancellationToken cancellationToken)
         {

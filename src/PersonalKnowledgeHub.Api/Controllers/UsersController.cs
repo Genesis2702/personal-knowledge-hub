@@ -22,6 +22,7 @@ namespace PersonalKnowledgeHub.Controllers
             _userService = userService;
         }
         
+        [EndpointSummary("Get all users")]
         [HttpGet]
         [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<PageResult<UserResponseDto>>> GetUsers([FromQuery] UserQueryRequestDto userQueryRequest, CancellationToken cancellationToken)
@@ -36,6 +37,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(userResponsesPageResult);
         }
 
+        [EndpointSummary("Get a user by ID")]
         [HttpGet("{id}")]
         [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<UserResponseDto>> GetUserById(int id, CancellationToken cancellationToken)
@@ -45,6 +47,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(userResponse);
         }
 
+        [EndpointSummary("Get the current user's profile")]
         [HttpGet("profile")]
         public async Task<ActionResult<UserResponseDto>> GetUserProfile(CancellationToken cancellationToken)
         {
@@ -54,6 +57,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(userResponse);
         }
 
+        [EndpointSummary("Update the current user's profile")]
         [HttpPatch("profile")]
         public async Task<IActionResult> UpdateUserProfile(UserUpdateRequestDto userUpdateRequest, CancellationToken cancellationToken)
         {
@@ -62,6 +66,7 @@ namespace PersonalKnowledgeHub.Controllers
             return NoContent();
         }
 
+        [EndpointSummary("Ban a user by ID")]
         [HttpPost("{id}/ban")]
         [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> BanUser(int id, CancellationToken cancellationToken)
@@ -70,6 +75,7 @@ namespace PersonalKnowledgeHub.Controllers
             return NoContent();
         }
 
+        [EndpointSummary("Unban a user by ID")]
         [HttpPost("{id}/unban")]
         [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> UnbanUser(int id, CancellationToken cancellationToken)
@@ -78,6 +84,7 @@ namespace PersonalKnowledgeHub.Controllers
             return NoContent();
         }
 
+        [EndpointSummary("Add a role to a user")]
         [HttpPost("{userId}/roles/{roleId}")]
         [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<UserResponseDto>> AddRoleToUser(int userId, int roleId, CancellationToken cancellationToken)
@@ -87,6 +94,7 @@ namespace PersonalKnowledgeHub.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, userResponse);
         }
 
+        [EndpointSummary("Remove a role from a user")]
         [HttpDelete("{userId}/roles/{roleId}")]
         [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> RemoveRoleFromUser(int userId, int roleId, CancellationToken cancellationToken)

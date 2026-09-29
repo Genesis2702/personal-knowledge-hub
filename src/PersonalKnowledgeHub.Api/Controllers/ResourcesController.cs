@@ -28,6 +28,7 @@ namespace PersonalKnowledgeHub.Controllers
             _fileResourceService = fileResourceService;
         }
 
+        [EndpointSummary("Get the current user's resources with optional filters")]
         [HttpGet]
         public async Task<ActionResult<PageResult<ResourceResponseDto>>> GetResources([FromQuery] ResourceQueryRequestDto resourceQueryRequest, CancellationToken cancellationToken)
         {
@@ -58,6 +59,7 @@ namespace PersonalKnowledgeHub.Controllers
             }
         }
 
+        [EndpointSummary("Get one of the current user's resource by ID")]
         [HttpGet("{id}")]
         public async Task<ActionResult<ResourceResponseDto>> GetResourceById(int id, CancellationToken cancellationToken)
         {
@@ -79,6 +81,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(response);
         }
 
+        [EndpointSummary("Create a new resource for the current user")]
         [HttpPost]
         public async Task<ActionResult<ResourceResponseDto>> AddResource(ResourceRequestDto resourceRequest, CancellationToken cancellationToken)
         {
@@ -88,6 +91,7 @@ namespace PersonalKnowledgeHub.Controllers
             return CreatedAtAction(nameof(GetResourceById), new { id = resource.Id }, resourceResponse);
         }
 
+        [EndpointSummary("Update one of the current user's resource by ID")]
         [HttpPatch("{id}")]
         public async Task<IActionResult> UpdateResourceById(ResourceUpdateRequestDto resourceUpdateRequest, int id, CancellationToken cancellationToken)
         {
@@ -95,6 +99,7 @@ namespace PersonalKnowledgeHub.Controllers
             return NoContent();
         }
 
+        [EndpointSummary("Soft delete one of the current user's resource by ID")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteResourceById(int id, CancellationToken cancellationToken)
         {
@@ -105,6 +110,7 @@ namespace PersonalKnowledgeHub.Controllers
             return NoContent();
         }
 
+        [EndpointSummary("Restore one of the current user's soft-deleted resource by ID")]
         [HttpPost("{id}/restore")]
         public async Task<ActionResult<ResourceResponseDto>> RestoreResourceById(int id, CancellationToken cancellationToken)
         {
@@ -113,6 +119,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(resourceResponse);
         }
 
+        [EndpointSummary("Upload a file for the current user")]
         [HttpPost("files")]
         [Consumes("multipart/form-data")]
         public async Task<ActionResult<ResourceResponseDto>> UploadFile([FromForm] FileUploadRequestDto fileUploadRequest,
@@ -125,6 +132,7 @@ namespace PersonalKnowledgeHub.Controllers
             return CreatedAtAction(nameof(GetResourceById), new { id = resource.Id }, resourceResponse);
         }
 
+        [EndpointSummary("Preview one of the current user's file by resource ID")]
         [HttpGet("{id}/file")]
         public async Task<IActionResult> PreviewFile(int id, CancellationToken cancellationToken)
         {
@@ -133,6 +141,7 @@ namespace PersonalKnowledgeHub.Controllers
             return File(result.Content, result.ContentType, enableRangeProcessing: true);
         }
 
+        [EndpointSummary("Delete one of the current user's file by resource ID")]
         [HttpGet("{id}/file/download")]
         public async Task<IActionResult> DownloadFile(int id, CancellationToken cancellationToken)
         {

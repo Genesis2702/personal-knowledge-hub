@@ -1,6 +1,6 @@
 ﻿namespace PersonalKnowledgeHub.Exceptions;
 
-public class UnsupportedMediaTypeException : Exception
+public class UnsupportedMediaTypeException : AppException
 {
-    public UnsupportedMediaTypeException(string message) : base(message) {}
+    public UnsupportedMediaTypeException(string message) : base(message,415, "Unsupported Media Type") { }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
 
 namespace PersonalKnowledgeHub.Middleware
@@ -21,11 +22,13 @@ namespace PersonalKnowledgeHub.Middleware
 
         private readonly IDatabase _redis;
         private readonly RequestDelegate _next;
+        private readonly IProblemDetailsService _problemDetailsService;
 
-        public RateLimitMiddleware(IConnectionMultiplexer connection, RequestDelegate next)
+        public RateLimitMiddleware(IConnectionMultiplexer connection, RequestDelegate next, IProblemDetailsService problemDetailsService)
         {
             _redis = connection.GetDatabase();
             _next = next;
+            _problemDetailsService = problemDetailsService;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -47,7 +50,27 @@ namespace PersonalKnowledgeHub.Middleware
                 else
                 {
                     context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                    await context.Response.WriteAsync("Invalid connection.");
+
+                    var problemDetails = new ProblemDetails
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        Title = "Invalid request",
+                        Detail = "Invalid IP Address",
+                        Instance = context.Request.Path
+                    };
+
+                    var written = await _problemDetailsService.TryWriteAsync(
+                        new ProblemDetailsContext
+                        {
+                            HttpContext = context,
+                            ProblemDetails = problemDetails
+                        });
+
+                    if (!written)
+                    {
+                        await context.Response.WriteAsJsonAsync(problemDetails);
+                    }
+                    
                     return;
                 }
             }
@@ -67,7 +90,27 @@ namespace PersonalKnowledgeHub.Middleware
             {
                 context.Response.Headers.RetryAfter = Math.Max(1, (int)Math.Ceiling(ttlMilliseconds / 1000d)).ToString();
                 context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                await context.Response.WriteAsync("Please try again later.");
+
+                var problemDetails = new ProblemDetails
+                {
+                    Status = StatusCodes.Status429TooManyRequests,
+                    Title = "Too Many Requests",
+                    Detail = "Please try again later",
+                    Instance = context.Request.Path
+                };
+
+                var written = await _problemDetailsService.TryWriteAsync(
+                    new ProblemDetailsContext
+                    {
+                        HttpContext = context,
+                        ProblemDetails = problemDetails
+                    });
+
+                if (!written)
+                {
+                    await context.Response.WriteAsJsonAsync(problemDetails);
+                }
+
                 return;
             }
             

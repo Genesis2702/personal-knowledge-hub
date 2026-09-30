@@ -4,38 +4,46 @@ using PersonalKnowledgeHub.Exceptions;
 
 namespace PersonalKnowledgeHub.Middleware;
 
-public class GlobalExceptionHandler : IExceptionHandler
+public sealed class GlobalExceptionHandler(IProblemDetailsService problemDetailsService, ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        if (exception is AppException appException)
+        var appException = exception as AppException;
+
+        if (appException is null)
         {
-            ProblemDetails problemDetails = new ProblemDetails
-            {
-                Status = appException.StatusCode,
-                Title = appException.Title,
-                Detail = appException.Message,
-                Instance = httpContext.Request.Path
-            };
-
-            httpContext.Response.StatusCode = appException.StatusCode;
-
-            await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
-
-            return true;
+            logger.LogError(
+                exception,
+                "Unhandled exception processing {Method} {Path}. TraceId: {TraceId}",
+                httpContext.Request.Method,
+                httpContext.Request.Path,
+                httpContext.TraceIdentifier);
         }
-        
-        ProblemDetails internalProblemDetails = new ProblemDetails
+
+        var statusCode = appException?.StatusCode ?? StatusCodes.Status500InternalServerError;
+        httpContext.Response.StatusCode = statusCode;
+
+        var problemDetails = new ProblemDetails
         {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "Internal Server Error",
-            Detail = "An unexpected error occured",
+            Status = statusCode,
+            Title = appException?.Title ?? "Internal Server Error",
+            Detail = appException?.Message ??
+                     "An unexpected error occurred.",
             Instance = httpContext.Request.Path
         };
 
-        httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        var written =  await problemDetailsService.TryWriteAsync(
+            new ProblemDetailsContext
+            {
+                HttpContext = httpContext,
+                ProblemDetails = problemDetails,
+                Exception = exception
+            });
 
-        await httpContext.Response.WriteAsJsonAsync(internalProblemDetails, cancellationToken);
+        if (!written)
+        {
+            await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+        }
 
         return true;
     }

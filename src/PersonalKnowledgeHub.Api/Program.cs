@@ -432,8 +432,6 @@ else
     app.UseSecurityHeaders("Production");   
 }
 
-app.UseExceptionHandler();
-
 app.Use(async (context, next) =>
 {
     context.Response.OnStarting(() =>
@@ -455,6 +453,9 @@ app.UseSerilogRequestLogging(options =>
         diagnosticContext.Set("RequestId", httpContext.TraceIdentifier);
     };
 });
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 app.UseAuthentication();
 

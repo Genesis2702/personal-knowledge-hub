@@ -51,7 +51,8 @@ builder.Services.AddOpenApi(options =>
     {
         document.Components ??= new OpenApiComponents();
         document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
-        document.Components.SecuritySchemes.Add("Bearer", new OpenApiSecurityScheme
+        document.Components.SecuritySchemes.Add("Be" +
+                                                "arer", new OpenApiSecurityScheme
         { 
             Type = SecuritySchemeType.Http,
             Scheme = "bearer",
@@ -404,6 +405,9 @@ else if (builder.Environment.IsProduction())
     builder.Services.AddScoped<IFileStorage, SupabaseStorage>();
 }
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -428,7 +432,7 @@ else
     app.UseSecurityHeaders("Production");   
 }
 
-app.UseMiddleware<MiddlewareException>();
+app.UseExceptionHandler();
 
 app.Use(async (context, next) =>
 {

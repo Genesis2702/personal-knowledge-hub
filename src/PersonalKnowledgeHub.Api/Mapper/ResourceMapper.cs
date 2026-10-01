@@ -48,6 +48,7 @@ public class ResourceMapper
             Items = resources,
             PageIndex = pageIndex,
             PageSize = pageSize,
+            ItemsCount = resourcesCount,
             PageCount = (int)Math.Ceiling((decimal)resourcesCount / pageSize)
         };
     }

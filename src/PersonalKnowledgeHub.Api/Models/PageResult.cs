@@ -5,6 +5,7 @@
         public List<T> Items { get; set; } = new List<T>();
         public int PageIndex { get; set; }
         public int PageSize { get; set; }
+        public int ItemsCount { get; set; }
         public int PageCount { get; set; }
         public bool HasNextPage => PageIndex < PageCount;
         public bool HasPreviousPage => PageIndex > 1;

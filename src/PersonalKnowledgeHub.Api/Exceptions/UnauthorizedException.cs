@@ -1,7 +1,7 @@
 ﻿namespace PersonalKnowledgeHub.Exceptions
 {
-    public class UnauthorizedException : Exception
+    public class UnauthorizedException : AppException
     {
-        public UnauthorizedException(string message) : base(message) { }
+        public UnauthorizedException(string message) : base(message, 401, "Unauthorized") { }
     }
 }

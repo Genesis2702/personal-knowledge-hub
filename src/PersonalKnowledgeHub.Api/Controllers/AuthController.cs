@@ -18,6 +18,7 @@ namespace PersonalKnowledgeHub.Controllers
             _authService = authService;
         }
 
+        [EndpointSummary("Register a new user account")]
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<ActionResult<AuthResponseDto>> Register(RegisterRequestDto registerRequest, CancellationToken cancellationToken)
@@ -26,6 +27,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Created("", authResponse);
         }
 
+        [EndpointSummary("Authenticate a user")]
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<ActionResult<AuthResponseDto>> Login(LoginRequestDto loginRequest, CancellationToken cancellationToken)
@@ -34,6 +36,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(authResponse);
         }
 
+        [EndpointSummary("Issue new tokens using refresh token")]
         [HttpPost("refresh")]
         [AllowAnonymous]
         public async Task<ActionResult<AuthResponseDto>> Refresh(RefreshRequestDto refreshRequest, CancellationToken cancellationToken)
@@ -42,6 +45,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(authResponse);
         }
         
+        [EndpointSummary("Logout a user")]
         [HttpPost("logout")]
         [Authorize(Policy = "PendingOrActiveAccount")]
         public async Task<IActionResult> Logout(LogoutRequestDto logoutRequest, CancellationToken cancellationToken)
@@ -51,6 +55,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok();
         }
 
+        [EndpointSummary("Send a password reset email")]
         [HttpPost("forgot-password")]
         [AllowAnonymous]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequest, CancellationToken cancellationToken)
@@ -59,6 +64,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok("Password reset mail sent");
         }
 
+        [EndpointSummary("Change the current user's password")]
         [HttpPost("change-password")]
         [Authorize(Policy = "ActiveAccount")]
         public async Task<IActionResult> ChangePassword(ResetPasswordRequestDto resetPasswordRequest, CancellationToken cancellationToken)
@@ -68,6 +74,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok("Password changed successfully");
         }
         
+        [EndpointSummary("Reset a password using reset password token")]
         [HttpPost("reset-password")]
         [AllowAnonymous]
         public async Task<IActionResult> ResetPassword([FromQuery] string token, ResetPasswordRequestDto resetPasswordRequest, CancellationToken cancellationToken)
@@ -77,6 +84,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok("Password reset successfully");
         }
 
+        [EndpointSummary("Verify the current user's email address")]
         [HttpPost("mail-verification")]
         [Authorize(Policy = "PendingAccount")]
         public async Task<IActionResult> VerifyMail([FromQuery] string token, CancellationToken cancellationToken)
@@ -86,6 +94,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok("Email verified successfully");
         }
 
+        [EndpointSummary("Resend the email verification message")]
         [HttpPost("resend-verification")]
         [Authorize(Policy = "PendingAccount")]
         public async Task<IActionResult> ResendMail(CancellationToken cancellationToken)

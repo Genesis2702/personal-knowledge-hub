@@ -21,6 +21,7 @@ namespace PersonalKnowledgeHub.Controllers
             _resourceTagService = resourceTagService;
         }
 
+        [EndpointSummary("Create a new resource tag for the current user")]
         [HttpPost]
         public async Task<ActionResult<ResourceResponseDto>> AddResourceTag(ResourceTagRequestDto resourceTagRequest, int resourceId, CancellationToken cancellationToken)
         {
@@ -30,6 +31,7 @@ namespace PersonalKnowledgeHub.Controllers
             return CreatedAtAction(nameof(ResourcesController.GetResourceById), "Resources", new { id = resource.Id }, resourceResponse);
         }
 
+        [EndpointSummary("Delete one of the current user's resource tag by ID")]
         [HttpDelete("{tagId}")]
         public async Task<IActionResult> DeleteResourceTag(int tagId, int resourceId, CancellationToken cancellationToken)
         {

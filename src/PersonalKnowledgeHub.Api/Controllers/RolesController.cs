@@ -20,6 +20,7 @@ namespace PersonalKnowledgeHub.Controllers
             _roleService = roleService;
         }
 
+        [EndpointSummary("Get all roles")]
         [HttpGet]
         public async Task<ActionResult<List<RoleResponseDto>>> GetRoles(CancellationToken cancellationToken)
         {
@@ -31,6 +32,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(roleResponses);
         }
 
+        [EndpointSummary("Get a role by ID")]
         [HttpGet("{id}")]
         public async Task<ActionResult<RoleResponseDto>> GetRoleById(int id, CancellationToken cancellationToken)
         {
@@ -42,6 +44,7 @@ namespace PersonalKnowledgeHub.Controllers
             return Ok(roleResponse);
         }
 
+        [EndpointSummary("Create a new role")]
         [HttpPost]
         public async Task<ActionResult<RoleResponseDto>> AddRole(RoleRequestDto roleRequest, CancellationToken cancellationToken)
         {
@@ -53,6 +56,7 @@ namespace PersonalKnowledgeHub.Controllers
             return CreatedAtAction(nameof(GetRoleById), new { id = role.Id }, roleResponse);
         }
 
+        [EndpointSummary("Update a role by ID")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRoleById(int id, RoleRequestDto roleRequest, CancellationToken cancellationToken)
         {
@@ -60,6 +64,7 @@ namespace PersonalKnowledgeHub.Controllers
             return NoContent();
         }
         
+        [EndpointSummary("Delete a role by ID")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRoleById(int id, CancellationToken cancellationToken)
         {
@@ -67,6 +72,7 @@ namespace PersonalKnowledgeHub.Controllers
            return NoContent();
         }
 
+        [EndpointSummary("Add a permission to a role")]
         [HttpPost("{roleId}/permissions/{permissionId}")]
         public async Task<ActionResult<RoleResponseDto>> AddPermissionToRole(int roleId, int permissionId, CancellationToken cancellationToken)
         {
@@ -78,6 +84,7 @@ namespace PersonalKnowledgeHub.Controllers
             return CreatedAtAction(nameof(GetRoleById), new { id = role.Id }, roleResponse);
         }
         
+        [EndpointSummary("Remove a permission from a role")]
         [HttpDelete("{roleId}/permissions/{permissionId}")]
         public async Task<IActionResult> RemovePermissionFromRole(int roleId, int permissionId, CancellationToken cancellationToken)
         {

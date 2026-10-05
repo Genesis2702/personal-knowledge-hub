@@ -1,4 +1,33 @@
 ﻿services: 
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5165:8080"
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      ConnectionStrings__DefaultConnection: ${POSTGRES_CONNECTION}
+      RedisCacheSettings__ConnectionString: ${REDIS_CONNECTION}
+      MailSettings__Host: ${MAILSETTINGS_HOST}
+      MailSettings__Port: ${MAILSETTINGS_PORT}
+      MailSettings__Name: ${MAILSETTINGS_NAME}
+      MailSettings__EmailId: ${MAILSETTINGS_EMAILID}
+      MailSettings__UserName: ${MAILSETTINGS_USERNAME}
+      MailSettings__Password: ${MAILSETTINGS_PASSWORD}
+      MailSettings__UseSSL: ${MAILSETTINGS_USESSL}
+      Supabase__Url: ${SUPABASE_URL}
+      Supabase__Key: ${SUPABASE_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  
   postgres:
     image: postgres:16
     container_name: postgres-server
@@ -11,16 +40,34 @@
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     
   redis:
     image: redis:7
     container_name: redis-server
     restart: unless-stopped
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
     ports: 
       - "6379:6379"
     volumes: 
       - redis_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "REDISCLI_AUTH=\"$${REDIS_PASSWORD}\" redis-cli ping | grep -q '^PONG$'"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     
   prometheus:
     image: prom/prometheus:latest

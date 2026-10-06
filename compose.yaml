@@ -27,6 +27,12 @@
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      start_period: 30s
+      interval: 5s
+      timeout: 5s
+      retries: 10
   
   postgres:
     image: postgres:16
@@ -41,11 +47,8 @@
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""
-        ]
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      start_period: 30s
       interval: 5s
       timeout: 5s
       retries: 10
@@ -54,23 +57,22 @@
     image: redis:7
     container_name: redis-server
     restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
     ports: 
       - "6379:6379"
     volumes: 
       - redis_data:/data
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "REDISCLI_AUTH=\"$${REDIS_PASSWORD}\" redis-cli ping | grep -q '^PONG$'"
-        ]
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$${REDIS_PASSWORD}\" redis-cli ping | grep -qx PONG" ]
+      start_period: 30s
       interval: 5s
       timeout: 5s
       retries: 10
     
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.15.0
     container_name: prometheus-server
     restart: unless-stopped
     ports: 
@@ -80,7 +82,7 @@
       - prometheus_data:/prometheus
     
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:13.2.3
     container_name: grafana-server
     restart: unless-stopped
     ports: 

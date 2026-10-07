@@ -3,10 +3,10 @@
 
 scrape_configs:
   - job_name: "personal-knowledge-hub-api"
-    scheme: "https"
+    scheme: "http"
     metrics_path: "/metrics"
     static_configs:
       - targets:
-          - "host.docker.internal:7037"
+          - "backend:8080"
     tls_config:
       insecure_skip_verify: true

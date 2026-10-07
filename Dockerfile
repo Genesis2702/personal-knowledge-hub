@@ -1,6 +1,10 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
 WORKDIR /app
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /app/Logs && chown "$APP_UID" /app/Logs
+USER $APP_UID
 EXPOSE 8080
 EXPOSE 8081
 

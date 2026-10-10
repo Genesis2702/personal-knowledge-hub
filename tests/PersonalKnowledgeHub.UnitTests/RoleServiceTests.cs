@@ -260,7 +260,7 @@ public class RoleServiceTests
     public async Task DeleteRoleById_WhenRoleIsAdmin_ThrowsConflictException()
     {
         int roleId = 1;
-        string roleName = "admin";
+        string roleName = "ADMIN";
 
         Role role = new Role
         {

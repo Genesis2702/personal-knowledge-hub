@@ -68,10 +68,30 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
                 _options.Mail.UseSsl.ToString());
         }
 
-        builder.ConfigureAppConfiguration((_, configuration) =>
+        if (_options.Provider == StorageProvider.Supabase)
         {
-            configuration.AddUserSecrets<Program>(optional: _options.Provider != StorageProvider.Supabase);
-        });
+            var supabaseSecrets = new ConfigurationBuilder()
+                .AddUserSecrets<Program>(optional: false)
+                .Build();
+            
+            string url = supabaseSecrets["Supabase:Url"]
+                         ?? throw new InvalidOperationException(
+                             "Supabase URL is missing from user secrets.");
+
+            string key = supabaseSecrets["Supabase:Key"]
+                         ?? throw new InvalidOperationException(
+                             "Supabase key is missing from user secrets.");
+
+            builder.ConfigureAppConfiguration((_, configuration) =>
+            {
+                configuration.AddInMemoryCollection(
+                    new Dictionary<string, string?>
+                    {
+                        ["Supabase:Url"] = url,
+                        ["Supabase:Key"] = key
+                    });
+            });
+        }
         
         builder.ConfigureServices((context, services) =>
         {

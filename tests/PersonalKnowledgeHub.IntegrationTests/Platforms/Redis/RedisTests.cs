@@ -1,9 +1,11 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using PersonalKnowledgeHub.Data;
+using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.IntegrationTests.Infrastructure.Redis;
 using PersonalKnowledgeHub.Models;
@@ -51,23 +53,23 @@ public class RedisTests
 
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
         
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "/resources");
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"/resources/{resource.Id}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         
         HttpResponseMessage response = await _fixture.Client!.SendAsync(request);
         
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        string cachedKey = $"resource:{user.Id}:1:10";
+        string cachedKey = $"resource:{user.Id}:{resource.Id}";
         string? cachedResources = await cache.GetStringAsync(cachedKey);
         
         Assert.NotNull(cachedResources);
-
-        PageResult<Resource>? result = JsonSerializer.Deserialize<PageResult<Resource>>(cachedResources);
+        
+        var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        jsonOptions.Converters.Add(new JsonStringEnumConverter());
+        ResourceResponseDto? result = JsonSerializer.Deserialize<ResourceResponseDto>(cachedResources, jsonOptions);
         
         Assert.NotNull(result);
-        Assert.Equal(1, result.PageIndex);
-        Assert.Equal(10, result.PageSize);
-        Assert.Contains(result.Items, r => r.Title == "math");
+        Assert.Equal(resource.Title, result.Title);
     }
 }

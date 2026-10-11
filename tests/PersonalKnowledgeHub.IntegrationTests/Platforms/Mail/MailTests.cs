@@ -34,23 +34,36 @@ public class MailTests
 
         using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(60));
 
-        while (!timeout.IsCancellationRequested)
+        bool delivered = false;
+        
+        try
         {
-            using HttpResponseMessage mailResponse = await _fixture.MailpitClient!.GetAsync("/api/v1/message/latest", timeout.Token);
-
-            if (mailResponse.StatusCode == HttpStatusCode.OK)
+            while (!timeout.IsCancellationRequested)
             {
-                message = await mailResponse.Content.ReadFromJsonAsync<MailpitMessage>(timeout.Token);
+                using HttpResponseMessage mailResponse =
+                    await _fixture.MailpitClient!.GetAsync("/api/v1/message/latest", timeout.Token);
 
-                if (message?.To.Any(address => address.Address == "user@gmail.com") == true)
+                if (mailResponse.StatusCode == HttpStatusCode.OK)
                 {
-                    break;
+                    message = await mailResponse.Content.ReadFromJsonAsync<MailpitMessage>(timeout.Token);
+
+                    if (message?.To.Any(address => address.Address == "user@gmail.com") == true)
+                    {
+                        delivered = true;
+                        break;
+                    }
                 }
+
+                await Task.Delay(200, timeout.Token);
             }
+        }
+        catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+        {
             
-            await Task.Delay(200, timeout.Token);
         }
         
+        Assert.True(delivered, "Verification email was not received by Mailpit within 60 seconds");
+
         Assert.NotNull(message);
         Assert.Equal("sender@test.local", message.From.Address);
         Assert.Contains(message.To, address => address.Address == "user@gmail.com");

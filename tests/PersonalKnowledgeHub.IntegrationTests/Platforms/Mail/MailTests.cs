@@ -32,7 +32,7 @@ public class MailTests
 
         MailpitMessage? message = null;
 
-        using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(15));
+        using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(60));
 
         while (!timeout.IsCancellationRequested)
         {

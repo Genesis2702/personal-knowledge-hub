@@ -53,7 +53,7 @@ public class HangfireTests
         
         RefreshToken refreshToken3 = await tokenService.GetRefreshToken(token3, CancellationToken.None);
         
-        backgroundJobClient.Enqueue<ITokenService>(service => service.CleanUpRefreshTokens(CancellationToken.None));
+        string jobId = backgroundJobClient.Enqueue<ITokenService>(service => service.CleanUpRefreshTokens(CancellationToken.None));
 
         var timeout = DateTime.UtcNow.AddSeconds(60);
         List<RefreshToken> remainingTokens = [];
@@ -69,8 +69,20 @@ public class HangfireTests
                 await assertDbContext.RefreshTokens.AsNoTracking().Where(rf => rf.UserId == user.Id).ToListAsync();
         }
         while (remainingTokens.Count != 1 && DateTime.UtcNow < timeout);
+
+        var storage = scope.ServiceProvider.GetRequiredService<JobStorage>();
+        using var connection = storage.GetConnection();
+
+        var state = connection.GetStateData(jobId);
         
-        Assert.Single(remainingTokens);
+        string stateDetails = state is null
+            ? "No state found"
+            : $"{state.Name}; {string.Join(", ",
+                state.Data.Select(pair => $"{pair.Key}={pair.Value}"))}";
+        
+        Assert.True(remainingTokens.Count == 1, 
+            $"Expected 1 refresh token, found {remainingTokens.Count} " +
+            $"Cleanup job {jobId}: {stateDetails}");
         Assert.Equal(refreshToken3.Id, remainingTokens[0].Id);
     }
 }

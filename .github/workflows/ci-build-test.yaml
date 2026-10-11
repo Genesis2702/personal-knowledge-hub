@@ -37,3 +37,6 @@ jobs:
           --configuration Release 
           --no-build 
           --filter "FullyQualifiedName!~SupabaseStorageTests"
+          
+      - name: Build Docker image
+        run: docker build -t personal-knowledge-hub:ci .

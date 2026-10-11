@@ -55,7 +55,7 @@ public class HangfireTests
         
         backgroundJobClient.Enqueue<ITokenService>(service => service.CleanUpRefreshTokens(CancellationToken.None));
 
-        var timeout = DateTime.UtcNow.AddSeconds(10);
+        var timeout = DateTime.UtcNow.AddSeconds(60);
         List<RefreshToken> remainingTokens = [];
         
         do

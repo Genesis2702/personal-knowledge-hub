@@ -262,7 +262,10 @@ if (enableHangfireStorage)
                 },
                 new PostgreSqlStorageOptions
                 {
-                    SchemaName = "hangfire"
+                    SchemaName = "hangfire",
+                    QueuePollInterval = builder.Environment.IsEnvironment("IntegrationTesting")
+                    ? TimeSpan.FromMilliseconds(200)
+                    : TimeSpan.FromSeconds(15)
                 });
     });
 }

@@ -8,6 +8,7 @@ on:
     
 permissions:
   contents: read
+  packages: write
     
 jobs:
   build-and-test:
@@ -38,5 +39,22 @@ jobs:
           --no-build 
           --filter "FullyQualifiedName!~SupabaseStorageTests"
           
-      - name: Build Docker image
-        run: docker build -t personal-knowledge-hub:ci .
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+        
+      - name: Login to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+          tags: |
+            ghcr.io/genesis2702/personal-knowledge-hub:latest
+            ghcr.io/genesis2702/personal-knowledge-hub:sha-${{ github.sha }}

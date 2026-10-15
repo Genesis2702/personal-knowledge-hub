@@ -56,5 +56,5 @@ jobs:
           context: .
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
           tags: |
-            ghcr.io/genesis2702/personal-knowledge-hub:latest
-            ghcr.io/genesis2702/personal-knowledge-hub:sha-${{ github.sha }}
+            ghcr.io/genesis2702/personal-knowledge-hub-api:latest
+            ghcr.io/genesis2702/personal-knowledge-hub-api:sha-${{ github.sha }}
